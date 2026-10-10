@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { createAppServer } from "../server.js";
 
-test("active local server serves the prototype and disables retired network integrations", async (t) => {
-  const server = createAppServer();
+test("active local server serves the workspace, preserves the guided story and disables retired APIs", async (t) => {
+  const server = createAppServer({ filename: ":memory:", apiKey: null });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   t.after(() => new Promise((resolve) => server.close(resolve)));
@@ -16,6 +16,10 @@ test("active local server serves the prototype and disables retired network inte
   assert.equal(status.persistence, "browser-memory");
   assert.match(
     await fetch(url).then((response) => response.text()),
+    /workspace\.js/,
+  );
+  assert.match(
+    await fetch(`${url}/story.html`).then((response) => response.text()),
     /pilot-app\.js/,
   );
   for (const path of [

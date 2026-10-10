@@ -206,3 +206,81 @@ export const audit = sqliteTable(
   },
   (t) => [index("audit_created").on(t.createdAt)],
 );
+
+// Live workspace state is isolated from the archived demonstration schema.
+// Sessions partition every run and care task; there are no real patient records.
+export const liveSessions = sqliteTable(
+  "live_sessions",
+  {
+    id: text("id").primaryKey(),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (t) => [index("live_sessions_expiry").on(t.expiresAt)],
+);
+
+export const liveRuns = sqliteTable(
+  "live_runs",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => liveSessions.id, { onDelete: "cascade" }),
+    question: text("question").notNull(),
+    mode: text("mode").notNull(),
+    count: integer("count").notNull(),
+    resultJson: text("result_json").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [index("live_runs_session").on(t.sessionId, t.createdAt)],
+);
+
+export const liveTasks = sqliteTable(
+  "live_tasks",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => liveSessions.id, { onDelete: "cascade" }),
+    patientId: text("patient_id").notNull(),
+    barrier: text("barrier").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    owner: text("owner").notNull(),
+    evidenceJson: text("evidence_json").notNull(),
+    status: text("status").notNull().default("draft"),
+    version: integer("version").notNull().default(1),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("live_tasks_patient_barrier").on(
+      t.sessionId,
+      t.patientId,
+      t.barrier,
+    ),
+    index("live_tasks_session").on(t.sessionId, t.updatedAt),
+    check(
+      "live_tasks_status",
+      sql`${t.status} IN ('draft','approved','completed')`,
+    ),
+  ],
+);
+
+export const liveUsage = sqliteTable(
+  "live_usage",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => liveSessions.id, { onDelete: "cascade" }),
+    modelRun: integer("model_run").notNull(),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+  },
+  (t) => [
+    index("live_usage_session").on(t.sessionId, t.createdAt),
+    index("live_usage_global").on(t.createdAt, t.modelRun),
+    index("live_usage_expiry").on(t.expiresAt),
+  ],
+);

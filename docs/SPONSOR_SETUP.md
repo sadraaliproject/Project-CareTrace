@@ -1,18 +1,20 @@
 # Optional services and judging setup
 
+> Archived setup for the earlier care-brief implementation. The current workspace uses the OpenAI investigation agent described in [README](../README.md) and [LIVE_WORKSPACE](LIVE_WORKSPACE.md). Gemini, ElevenLabs, and the earlier staff-sign-in flow are not active workspace features; adding their keys does not enable them in the current interface.
+
 Careweave's graph, exact SQL counts, source evidence and English/Spanish care briefs work with the synthetic local dataset. Device speech is available when the browser has a compatible voice. Gemini and ElevenLabs are optional live services; an API key or a green configuration indicator alone does not establish a successful live call.
 
 ## What fits the project
 
 The [Hacklanta prize page](https://www.mlh.com/events/hacklanta-db/prizes) lists the following opportunities. These are project mappings, not confirmed contest eligibility. Check the event's current submission rules and demonstrate actual service use before selecting a category.
 
-| Category | Careweave use | Current boundary |
-| --- | --- | --- |
-| Best Use of Gemini API | Order existing care actions using the patient's verified evidence | Optional integration; live verification requires a configured key and a successful request |
-| Best Use of ElevenLabs | Read the exact reviewed care brief aloud | Optional integration; live verification requires a configured key, permitted voice and a successful request |
-| DEV Writing Challenge | Explain how the graph connects hospital tables to clinical notes | [Article draft](./DEV_ARTICLE_DRAFT.md) only; not published or submitted |
-| Best Use of Auth0 | No integration in this build | Staff writes use the hosting platform's verified sign-in, not Auth0 |
-| Tiger Data, Solana, Vultr, GoDaddy Registry | No integration in this build | Adding another database, transaction network, host or domain was unnecessary for this workflow |
+| Category                                    | Careweave use                                                     | Current boundary                                                                                            |
+| ------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Best Use of Gemini API                      | Order existing care actions using the patient's verified evidence | Optional integration; live verification requires a configured key and a successful request                  |
+| Best Use of ElevenLabs                      | Read the exact reviewed care brief aloud                          | Optional integration; live verification requires a configured key, permitted voice and a successful request |
+| DEV Writing Challenge                       | Explain how the graph connects hospital tables to clinical notes  | [Article draft](./DEV_ARTICLE_DRAFT.md) only; not published or submitted                                    |
+| Best Use of Auth0                           | No integration in this build                                      | Staff writes use the hosting platform's verified sign-in, not Auth0                                         |
+| Tiger Data, Solana, Vultr, GoDaddy Registry | No integration in this build                                      | Adding another database, transaction network, host or domain was unnecessary for this workflow              |
 
 More logos are not evidence of a better solution. The demonstration should explain what a service does, what is locally computed and what was actually tested.
 
@@ -55,14 +57,14 @@ Until those service calls succeed, describe the integration as implemented with 
 
 ## Three-minute judging route
 
-| Time | Show | Explain |
-| --- | --- | --- |
-| 0:00–0:30 | Search the clinical notes with the main question below | Search finds passages. It does not compute the hospital-wide answer. |
-| 0:30–1:00 | Run the graph investigation with the same question | The fresh synthetic baseline returns **78** patients. The exact count comes from SQL; modified rehearsal data can change it. |
-| 1:00–1:35 | Open **P0412**, then her evidence graph and bedside nursing note | The missed visit and uncollected insulin connect to a documented transport barrier, even without a coded social need. |
-| 1:35–2:10 | Open her care brief, inspect its evidence and switch to Spanish | A patient-friendly handoff preserves the known facts and permitted next steps. Identify local text versus a successful Gemini action-ordering call accurately. |
-| 2:10–2:30 | Review the brief and play its audio | The audible message matches the reviewed text. Identify ElevenLabs or device speech accurately. Nothing is sent to a patient. |
-| 2:30–3:00 | Preview a resolved transport sentence; for the prepared staff rehearsal, save it and rerun | New evidence changes the current answer and invalidates outdated work. The graph is a record of what supports today's action. |
+| Time      | Show                                                                                       | Explain                                                                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00–0:30 | Search the clinical notes with the main question below                                     | Search finds passages. It does not compute the hospital-wide answer.                                                                                           |
+| 0:30–1:00 | Run the graph investigation with the same question                                         | The fresh synthetic baseline returns **78** patients. The exact count comes from SQL; modified rehearsal data can change it.                                   |
+| 1:00–1:35 | Open **P0412**, then her evidence graph and bedside nursing note                           | The missed visit and uncollected insulin connect to a documented transport barrier, even without a coded social need.                                          |
+| 1:35–2:10 | Open her care brief, inspect its evidence and switch to Spanish                            | A patient-friendly handoff preserves the known facts and permitted next steps. Identify local text versus a successful Gemini action-ordering call accurately. |
+| 2:10–2:30 | Review the brief and play its audio                                                        | The audible message matches the reviewed text. Identify ElevenLabs or device speech accurately. Nothing is sent to a patient.                                  |
+| 2:30–3:00 | Preview a resolved transport sentence; for the prepared staff rehearsal, save it and rerun | New evidence changes the current answer and invalidates outdated work. The graph is a record of what supports today's action.                                  |
 
 Main question:
 

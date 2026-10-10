@@ -1,5 +1,9 @@
 export const PUBLIC_ASSETS = Object.freeze([
   "index.html",
+  "story.html",
+  "workspace.js",
+  "workspace.css",
+  "workspace-graph.js",
   "pilot.css",
   "pilot-app.js",
   "pilot-graph.js",

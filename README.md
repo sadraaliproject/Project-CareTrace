@@ -1,41 +1,47 @@
 # Careweave
 
-**We discharged them. Let’s help them get back on track.**
+**Find the missed care. Understand the reason. Prepare the next step.**
 
-Careweave connects missed follow-up visits and medication pickup with the reasons written in hospital notes. Its guided demonstration shows the patient, the evidence, the graph calculation and a next step for the responsible hospital team.
+Careweave connects dated hospital records and nursing notes in an inspectable patient graph. The workspace turns a question into a counted group of patients, exact evidence, and a care-team task ready for human review.
 
-[Open the demonstration](https://careweave-barrier-intelligence.muddyape9.chatgpt.site/)
+[Open Careweave](https://careweave-barrier-intelligence.muddyape9.chatgpt.site/) · [GitHub](https://github.com/sadraaliproject/Hackathon-26)
 
 ## Start locally
 
-Install Node.js 24 or newer, open this folder in VS Code, and run:
+Use Node.js 24 or newer:
 
 ```sh
 npm ci
 npm start
 ```
 
-Open [localhost:4173](http://localhost:4173). No API keys or developer accounts are needed. VS Code's **Careweave: Run and debug** launch configuration also starts the app. The existing `Careweave.code-workspace` opens the project.
+Open [localhost:4173](http://localhost:4173). VS Code's **Careweave: Run and debug** configuration also starts the workspace. A local SQLite database is initialized at `data/careweave-live.sqlite`; it is ignored by Git.
 
-## Present it
+The app works immediately in **rules mode**. For real model-driven investigations, copy `.env.example` to `.env`, add `OPENAI_API_KEY`, and keep the key local. Restart the local server after adding or changing the key. `OPENAI_MODEL` selects the model; the default is `gpt-4.1-mini`. The public Site has separate server secrets and does not receive local `.env` values automatically.
 
-Nine screens tell one story: disconnected hospital systems → graph construction → note search → note reading → investigation → discharge funnel → answer → discharge-day rewind → Monday work lists.
+## A three-minute demonstration
 
-Engine view starts open. Press **E** to switch to Product view; use **Next**, **Back**, **Pause**, **Replay**, or **Step** to control the presentation. Choose any of 15 prepared questions, inspect a patient, or try **Random patient**. Mark a barrier resolved to update the graph and counts immediately; **Reset** or reloading restores the original records.
+1. Start with Mavis: the missed visit and medicine pickup are visible, but the reason is in a bedside note.
+2. Ask **Which discharged patients have a follow-up gap and a documented barrier?** The backend computes the group and shows the filters and actual tool results.
+3. Open a patient. Follow the graph to the original sentence, its author, and its date. Compare today with discharge day.
+4. Try a different question or narrow the result by age or hospital unit. Inspect the actual agent prompt and available tools.
+5. Prepare a care task, review its evidence, and approve it in the demo queue. Reload: the task and investigation remain in this browser's server session.
 
-See [the presenter guide](DEMO.md), [measured results](docs/ENHANCEMENT_REPORT.md), and [machine-readable metrics](docs/ENHANCEMENT_METRICS.json).
+The earlier nine-screen presentation is preserved at [Guided story](https://careweave-barrier-intelligence.muddyape9.chatgpt.site/story.html). It is labeled as a prepared presentation; its browser-local simulations do not change the live workspace.
 
-## What actually runs
+## What runs on the backend
 
-- An in-memory graph built from 1,000 synthetic adult discharges and 600 clinical notes. The fixed reference date is October 10, 2026.
-- Text-only sentence reading with evidence spans, confidence and context checks. A separate authored answer key measures precision, recall, false positives and missed sentences.
-- Graph queries that compute counts, primary action groups, dated records and trace ledgers. The inspector shows a Cypher-style explanation of the JavaScript operation; no Neo4j server is running.
-- Browser TF-IDF search, barrier term expansion, cosine ranking and centered PCA, including the query vector.
-- Prepared question routes and explanation templates authored with a language model during development. They are replayed; there is no model call at request time. Unmatched free text selects a clearly labeled closest prepared question.
+- **Graph service:** builds the hospital evidence graph from the versioned synthetic dataset and executes validated, composable filters. The backend computes exact counts and stable result fingerprints.
+- **OpenAI agent:** uses the Responses API with strict function schemas, bounded tool calls, timeouts, and an inspectable versioned system prompt. It queries the graph, inspects patients, reads sources, and can request a reversible what-if calculation. Source text is treated as evidence, never as instructions.
+- **Rules mode:** a separate, honestly labeled parser handles supported questions without a key. It does not silently call a prepared answer "AI". Unsupported questions return a useful error; model failures do not silently become successful AI results.
+- **Evidence:** exact note spans and source IDs accompany the result. The server composes the factual answer from executed tools so generated wording cannot replace the calculated count.
+- **Durability:** SQLite locally and D1 on the public Site store investigations, review tasks, and usage reservations. The synthetic source dataset remains immutable and versioned in Git. Graph calculations run in server memory over that dataset; no Neo4j service is claimed.
+- **Visitor isolation:** an opaque HttpOnly session cookie separates each visitor's saved work. Viewing or trying the public demo does not edit the source or another visitor's queue. This is browser-session persistence, not cross-device staff identity.
+- **Review workflow:** draft → approved → completed. These are demonstration task states; no message is sent, no ride is booked, and no clinical record is changed.
 
-The graph counts its extracted facts exactly; imperfect extraction can still omit or misidentify a patient. The demo exposes that distinction. These synthetic measurements and simplified date rules are not clinical validation.
+The note reader remains the frozen, measured text-pattern reader. A live model investigation does not turn that reader into a clinically validated extractor. The fixed reference date is October 10, 2026; all 1,000 people and 600 notes are fictional.
 
-## Verify and rebuild
+## Verify
 
 ```sh
 npm run check
@@ -45,25 +51,20 @@ npm run build
 node scripts/verify-worker.js
 ```
 
-`npm run test:pilot` runs only the new graph, reader, search and HTTP tests. `npm test` also retains earlier integration regressions. The tests for earlier APIs explicitly import `backend/archive-server.js`; that server is not started or bundled by the active app.
+The tests cover graph filters, source references, real function-call orchestration with a mocked OpenAI transport, session separation, task transitions, durable storage, and HTTP behavior. The Worker check runs the production bundle against a SQLite-backed D1 adapter and the actual migrations. Mocked model tests do not establish account access or real model behavior; a live smoke test is required after adding a key.
 
-`node scripts/generate-pilot-data.js` regenerates the fixed synthetic scenarios from the retained source identities. `npm run prepare:pilot` refreshes the prepared routes and reader examples. The reader source digest is pinned to document that it was frozen before evaluation; do not reformat it casually. The evaluation provenance records the subsequent addition of eight context-challenge notes.
+The new migration is additive. Older migration history and earlier integration regressions are retained. Current source uses hospital and care-team language; the audit reports immutable historical exceptions explicitly.
 
-## Active source map
+## Key files
 
-| File | Purpose |
-|---|---|
-| `dist/pilot-app.js`, `pilot.css`, `pilot-graph.js` | Guided interface, graph and inspectable engine |
-| `dist/pilot-data.js` | Synthetic discharge rows and note text |
-| `dist/pilot-reader.js` | Frozen text-only pattern reader |
-| `dist/pilot-labels.js` | Evaluation-only answer key; never used by the reader or graph |
-| `dist/pilot-engine.js` | Graph construction, queries, dates, actions, traces and reset |
-| `dist/pilot-support.js` | Search, PCA, evaluation and prepared-route selection |
-| `dist/prepared/*.json` | Prepared routes, templates and actual reader examples |
-| `server.js`, `worker/index.js`, `backend/prototype.js` | Local/hosted serving with an explicit asset allowlist |
+| Area                               | Files                                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Workspace                          | `dist/workspace.js`, `workspace.css`, `workspace-graph.js`                                           |
+| HTTP integration                   | `server.js`, `worker/index.js`, `backend/live-api.js`                                                |
+| Agent and prompt                   | `backend/live-agent.js`, `backend/prompts/investigator.js`                                           |
+| Graph tools                        | `backend/live-graph.js`                                                                              |
+| Persistence                        | `backend/live-store.js`, `backend/live-sqlite.js`, `db/schema.js`, `drizzle/0002_live_workspace.sql` |
+| Guided story                       | `dist/story.html`, `pilot-app.js`, `pilot.css`, `pilot-engine.js`                                    |
+| Synthetic data and measured reader | `dist/pilot-data.js`, `pilot-reader.js`, `pilot-labels.js`                                           |
 
-The active version does not read environment secrets, contact AI services, persist edits, send messages, book rides, or connect to a hospital. Earlier integration modules, migrations and local database files are preserved, but excluded from the shipped serving path. The prior architecture and demo guides are retained under `docs/PREVIOUS_*` for historical context only.
-
-## Source and hosting
-
-GitHub: [sadraaliproject/Hackathon-26](https://github.com/sadraaliproject/Hackathon-26). The Site builds a small Worker with embedded assets. Historical storage bindings remain intact; this prototype does not read or modify their data. Local `.env` files remain ignored. Public visitors can inspect the demonstration without modifying anyone else's state.
+Read [the presenter guide](DEMO.md), [the agent architecture](docs/LIVE_WORKSPACE.md), and [the extraction measurements](docs/ENHANCEMENT_REPORT.md). Earlier integrations under `backend/agent.js`, `backend/api.js`, and the archived server are retained for reference and regression checks, but are not the active workspace API.

@@ -1,9 +1,9 @@
 {
   "name": "careweave",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "Careweave guided hospital evidence graph prototype",
+  "description": "Careweave evidence graph workspace with a bounded AI agent and durable review tasks",
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
@@ -15,7 +15,8 @@
     "test:pilot": "node --test tests/pilot-*.test.js tests/prototype-server.test.js",
     "train": "node scripts/train-model.js",
     "db:generate": "drizzle-kit generate",
-    "demo:reset": "node scripts/reset-demo.js"
+    "demo:reset": "node scripts/reset-demo.js",
+    "test:live": "node --test tests/live-*.test.js"
   },
   "dependencies": {
     "cytoscape": "3.33.1"

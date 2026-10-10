@@ -1,19 +1,52 @@
 # Careweave presenter guide
 
-Open the app before presenting. The date is fixed to October 10, 2026, so every run uses the same dated evidence. The **Prototype · synthetic patients** chip explains prepared routes, actual calculations and measured limitations.
+The central story: **the hospital already wrote down the reason. Careweave connects it to missed care and prepares a next step.**
 
-1. **One patient:** “We discharged them. Let’s help them get back on track.” Point to the missed visit, uncollected insulin and bedside note. Let the graph connect them.
-2. **Build the graph:** Watch rows and notes become source-linked nodes and edges. Open the inspector to show actual records and counts.
-3. **What search finds:** Show the closest five notes, then move to 20. Similar text alone cannot check a missed visit or medication pickup. The dot map uses real TF-IDF vectors and PCA.
-4. **Read the note:** Highlight the current difficulty. Open the negated and resolved examples. Inspect one real false positive and one missed sentence.
-5. **The investigation:** Follow the planned route and actual trace. Pause at the empty coded-needs lookup. Show how the path continues into the clinical note.
-6. **Every discharge:** Narrow 1,000 discharges through diabetes and open follow-up gaps to the detected barrier group. Counts come from the graph.
-7. **The answer:** Explain the one-primary-group rule, additional needs and standard follow-up list. Open the search comparison and the measured evaluation.
-8. **Discharge-day rewind:** Jump back to discharge day. The note was already present, while later outcomes were not. Return to today to reveal the missed steps.
-9. **Monday morning:** Show the work grouped by responsible team, with the least time remaining first. Inspect a patient, mark the barrier resolved and show the new count. Reset after the example.
+## Before judging
 
-For another route, choose **Hospital units**, **Known before discharge**, or **Emergency returns**. Each changes both the route and answer shape. Free text selects the closest prepared question; it does not invoke a model.
+- Open the public workspace. Confirm its status badge: **Rules engine** without a key, **OpenAI agent** only after a key is configured. Never describe rules mode as a live model.
+- Open the original guided story if you want a paced visual explanation.
+- The demonstration uses a fixed reference date and fictional patients. A task approval affects your demonstration queue only.
 
-Use **E** to switch between the care-team interface and the engine. **Pause**, **Replay**, and **Step** let judges inspect details. **Back** and **Next** move between screens. The compact mobile layout keeps the graph first and puts engine details in a bottom sheet.
+## 1. Start with one person
 
-Be precise when asked about AI: the plans and explanation templates were authored with a language model ahead of time. The prototype reads notes with inspectable text patterns, and the graph computes each answer. The reader's measured errors are visible. No external call or care action is sent.
+"Mavis left the hospital. The clinic sees a missed visit. The pharmacy sees medicine not picked up. The bedside nurse had already recorded that she could not get a ride. Those systems need to tell one story."
+
+Open the featured patient, select the nursing note, and point to the exact quoted sentence. The graph connects the visit and medicine facts through the patient to the barrier and responsible care-team role.
+
+## 2. Ask across the hospital
+
+Ask: **Which discharged patients have a follow-up gap and a documented barrier?**
+
+The current graph computes **26** patients. The broader funnel is 1,000 discharges → 150 diabetes-related admissions → 60 follow-up gaps → 26 with detected barriers. The separate answer key contains 27; the note reader misses one. Exact graph counts do not imply perfect extraction.
+
+Try a supported variation:
+
+- Who has a transportation barrier and missed follow-up?
+- Who cannot afford their discharge insulin?
+- Of those, how many are age 65 or older?
+- Which patients have both cost and transportation barriers?
+
+The workspace shows the filters it actually used. Open the tool trace to show operations after they execute. Model mode chooses the tool calls; rules mode parses supported fields directly. The agent prompt and tool definitions are inspectable from the workspace.
+
+## 3. Show the earlier opportunity
+
+Open a qualifying patient and rewind to discharge day. The dated records change, while future outcomes remain unavailable. The purpose is to show what the team could have known then, not to assert that an action would certainly prevent a later event.
+
+## 4. Finish with work ready for review
+
+Prepare the care task for the current barrier. Show the proposed action, accountable role, and exact evidence. Approve it in the demo, then reload the page to demonstrate server persistence. Nothing is sent to a real patient or hospital.
+
+A what-if calculation temporarily removes one barrier for its query. It shows how the group and suggested action would change. It is a software simulation, not a prediction of clinical outcomes.
+
+## Questions to expect
+
+**Why a graph?** It joins the patient, dated visit and medication facts, notes, barriers, and responsible actions. A source can be inspected and a count recomputed from the same filters.
+
+**Is this real AI?** When configured, the server runs a real OpenAI function-calling loop. Without a key it clearly uses rules mode. The original guided story uses prepared routes. The note extractor is a frozen text-pattern reader with measured errors.
+
+**Is anything saved?** Investigations and task states are saved in SQLite locally and D1 on the hosted app. Each browser has its own server session; the source data and other visitors' work remain separate.
+
+**Can the AI act by itself?** Its tools read and calculate. Preparing and approving a demonstration task are explicit user actions. It cannot contact anyone, book transport, or change medical care.
+
+**What still needs validation?** Real OpenAI account connectivity once a key is added, performance on varied questions with the chosen model, and any clinical or hospital use beyond this fictional demonstration.
