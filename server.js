@@ -1,147 +1,58 @@
 import { createServer } from "node:http";
-import { readFile, stat, mkdir, copyFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { dirname, resolve, extname, sep } from "node:path";
+import { readFile } from "node:fs/promises";
+import { dirname, resolve, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createApi } from "./backend/api.js";
-import { createSqliteRepository } from "./backend/sqlite.js";
+import { PUBLIC_ASSETS, prototypeResponse } from "./backend/prototype.js";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const envFile = resolve(root, ".env");
-if (existsSync(envFile)) process.loadEnvFile(envFile);
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".ico": "image/x-icon",
+  ".json": "application/json; charset=utf-8",
 };
 
-export function createAppServer(options = {}) {
-  const {
-    fetchImpl = fetch,
-    filename = resolve(root, "data/careweave.sqlite"),
-  } = options;
-  let repositoryPromise;
-  const getRepository = () =>
-    (repositoryPromise ||= createSqliteRepository({ filename }).then(
-      async (repo) => {
-        await repo.seed();
-        return repo;
-      },
-    ));
-  const config = () => {
-    // Keys added during the preview become available on the next request.
-    if (existsSync(envFile)) process.loadEnvFile(envFile);
-    const setting = (option, name) =>
-      Object.hasOwn(options, option) ? options[option] : process.env[name];
-    return {
-      apiKey: setting("apiKey", "OPENAI_API_KEY"),
-      model: options.model || process.env.OPENAI_MODEL || "gpt-4.1-mini",
-      geminiApiKey: setting("geminiApiKey", "GEMINI_API_KEY"),
-      geminiModel: setting("geminiModel", "GEMINI_MODEL"),
-      elevenLabsApiKey: setting("elevenLabsApiKey", "ELEVENLABS_API_KEY"),
-      elevenLabsVoiceId: setting("elevenLabsVoiceId", "ELEVENLABS_VOICE_ID"),
-      elevenLabsModel: setting("elevenLabsModel", "ELEVENLABS_MODEL"),
-      fetchImpl,
-    };
-  };
-  const api = createApi({ getRepository, config, storage: "sqlite" });
-  const publicRoot = resolve(root, "dist");
-  const server = createServer(async (req, res) => {
-    const json = (status, data) => {
-      res.writeHead(status, {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      });
-      res.end(JSON.stringify(data));
-    };
+/** The active prototype never loads environment secrets or calls external services. */
+export function createAppServer() {
+  return createServer(async (req, res) => {
     try {
-      const url = new URL(req.url, `http://127.0.0.1:${req.socket.localPort}`);
-      if (url.pathname.startsWith("/api/")) {
-        const init = { method: req.method, headers: req.headers };
-        if (!["GET", "HEAD"].includes(req.method)) {
-          const chunks = [];
-          let length = 0;
-          for await (const chunk of req) {
-            length += chunk.length;
-            if (length > 12000)
-              return json(413, { ok: false, error: "Request is too large." });
-            chunks.push(chunk);
-          }
-          init.body = Buffer.concat(chunks);
-        }
-        const response = await api(new Request(url, init));
+      const url = new URL(req.url, "http://localhost");
+      const response = prototypeResponse(url.pathname, req.method);
+      if (response) {
         res.writeHead(response.status, Object.fromEntries(response.headers));
-        if (response.body)
-          for await (const chunk of response.body) {
-            if (res.destroyed) break;
-            res.write(chunk);
-          }
-        res.end();
+        res.end(req.method === "HEAD" ? undefined : await response.text());
         return;
       }
-      if (!["GET", "HEAD"].includes(req.method))
-        return json(405, { error: "Method not allowed." });
-      const decoded = decodeURIComponent(
-        url.pathname === "/" ? "/index.html" : url.pathname,
-      );
-      if (
-        decoded.includes("\\") ||
-        decoded
-          .split("/")
-          .some((segment) => segment.startsWith(".") || segment === "server")
-      )
-        return json(403, { error: "Forbidden." });
-      const path = resolve(publicRoot, "." + decoded);
-      if (!path.startsWith(publicRoot + sep))
-        return json(403, { error: "Forbidden." });
-      if (!(await stat(path)).isFile())
-        return json(404, { error: "Not found." });
-      const content = await readFile(path);
+      const file = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
+      if (!PUBLIC_ASSETS.includes(file)) {
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        res.end("Not found");
+        return;
+      }
+      const content = await readFile(resolve(root, "dist", file));
       res.writeHead(200, {
-        "Content-Type": mime[extname(path)] || "application/octet-stream",
+        "Content-Type": mime[extname(file)],
         "Cache-Control": "no-cache",
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "same-origin",
       });
       res.end(req.method === "HEAD" ? undefined : content);
-    } catch (error) {
-      if (!res.headersSent)
-        json(error.code === "ENOENT" || error.code === "ENOTDIR" ? 404 : 500, {
-          ok: false,
-          error: "Resource unavailable.",
-        });
-      else res.end();
+    } catch {
+      res.writeHead(500, { "Content-Type": "text/plain" });
+      res.end("Unable to load this resource.");
     }
   });
-  server.on("close", () => {
-    repositoryPromise?.then((repo) => repo.close()).catch(() => {});
-  });
-  return server;
 }
 
 if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const vendor = resolve(root, "dist/vendor");
-  await mkdir(vendor, { recursive: true });
-  try {
-    await copyFile(
-      resolve(root, "node_modules/cytoscape/dist/cytoscape.min.js"),
-      resolve(vendor, "cytoscape.min.js"),
-    );
-  } catch {
-    console.error("Run npm install to enable the interactive graph library.");
-  }
   const port = Number(process.env.PORT || 4173);
   const server = createAppServer();
   server.listen(port, "127.0.0.1", () =>
     console.log(
-      `Careweave ready: http://127.0.0.1:${port}\nPersistent SQLite backend · synthetic data only\nOpenAI: ${process.env.OPENAI_API_KEY ? "configured" : "add OPENAI_API_KEY to .env to enable live tool calling"}`,
+      `Careweave ready: http://127.0.0.1:${port}\nGuided graph prototype · synthetic patients · no API keys required`,
     ),
   );
   server.on("error", (error) => {

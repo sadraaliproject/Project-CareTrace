@@ -1,0 +1,92 @@
+{
+  "main": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "cost": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "return-risk": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "units": {
+    "summary": "{count} patients are grouped by their discharging unit.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "before-discharge": {
+    "summary": "{count} patients had an earlier documented barrier without a recorded action.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "ed-returns": {
+    "summary": "{count} patients returned after a missed follow-up.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "transportation": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "food": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "health-literacy": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "dual": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "within30": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "standard": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "uncoded": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "no-pickup": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  },
+  "all": {
+    "summary": "{count} patients match this question.",
+    "evidence": "Every displayed patient and count comes from the current graph. Select a patient to inspect the dated evidence.",
+    "primary": "{barrier} is the first action because {reason}",
+    "action": "{owner}: {action}"
+  }
+}

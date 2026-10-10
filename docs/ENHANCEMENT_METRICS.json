@@ -1,0 +1,389 @@
+{
+  "asOf": "2026-10-10",
+  "funnel": {
+    "discharges": 1000,
+    "diabetes": 150,
+    "gaps": 60,
+    "barrier": 26,
+    "standard": 34,
+    "within30": 19,
+    "preDischarge": 19,
+    "missedByTables": 21,
+    "groups": [
+      {
+        "type": "transportation",
+        "label": "Transportation",
+        "count": 8,
+        "action": "Book hospital patient transport for the visit and offer a video visit as the alternative.",
+        "owner": "Care transitions nurse",
+        "patientIds": [
+          "P0001",
+          "P0002",
+          "P0003",
+          "P0004",
+          "P0005",
+          "P0006",
+          "P0007",
+          "P0008"
+        ]
+      },
+      {
+        "type": "cost",
+        "label": "Cost",
+        "count": 11,
+        "action": "Ask the outpatient pharmacist to review a lower-cost formulation, deliver the first fill to the bedside or home, and refer to financial counseling.",
+        "owner": "Outpatient pharmacist",
+        "patientIds": [
+          "P0009",
+          "P0010",
+          "P0011",
+          "P0012",
+          "P0013",
+          "P0014",
+          "P0015",
+          "P0016",
+          "P0017",
+          "P0018",
+          "P0019"
+        ]
+      },
+      {
+        "type": "food",
+        "label": "Food insecurity",
+        "count": 4,
+        "action": "Arrange a dietitian consult and referral to the hospital food pharmacy or a medically tailored meal program.",
+        "owner": "Social worker and dietitian",
+        "patientIds": [
+          "P0020",
+          "P0021",
+          "P0022",
+          "P0023"
+        ]
+      },
+      {
+        "type": "health_literacy",
+        "label": "Health literacy",
+        "count": 3,
+        "action": "Arrange a diabetes educator session with teach-back, simplified one-page insulin instructions, and a 48-hour call.",
+        "owner": "Diabetes educator",
+        "patientIds": [
+          "P0024",
+          "P0026",
+          "P0027"
+        ]
+      }
+    ]
+  },
+  "totals": {
+    "nodes": 4418,
+    "edges": 3488,
+    "notesRead": 600,
+    "byNodeType": {
+      "Patient": 1000,
+      "Admission": 1000,
+      "Condition": 1000,
+      "LabResult": 300,
+      "Medication": 300,
+      "Appointment": 150,
+      "FollowUpGap": 60,
+      "ClinicalNote": 600,
+      "Barrier": 4,
+      "Action": 4
+    },
+    "byEdgeType": {
+      "HAD_ADMISSION": 1000,
+      "HAS_CONDITION": 1000,
+      "HAS_RESULT": 300,
+      "PRESCRIBED_AT_DISCHARGE": 300,
+      "HAS_APPOINTMENT": 150,
+      "HAS_NOTE": 600,
+      "HAS_GAP": 60,
+      "REPORTED_BARRIER": 60,
+      "ADDRESSED_BY": 4,
+      "LIKELY_TO_RETURN": 14
+    },
+    "baseEdgeTypes": 9,
+    "derivedEdges": 74
+  },
+  "evaluation": {
+    "overall": {
+      "tp": 49,
+      "fp": 6,
+      "fn": 5,
+      "precision": 0.8909090909090909,
+      "recall": 0.9074074074074074
+    },
+    "byType": {
+      "transportation": {
+        "tp": 17,
+        "fp": 2,
+        "fn": 1,
+        "precision": 0.8947368421052632,
+        "recall": 0.9444444444444444
+      },
+      "cost": {
+        "tp": 22,
+        "fp": 2,
+        "fn": 1,
+        "precision": 0.9166666666666666,
+        "recall": 0.9565217391304348
+      },
+      "food": {
+        "tp": 6,
+        "fp": 1,
+        "fn": 2,
+        "precision": 0.8571428571428571,
+        "recall": 0.75
+      },
+      "health_literacy": {
+        "tp": 4,
+        "fp": 1,
+        "fn": 1,
+        "precision": 0.8,
+        "recall": 0.8
+      }
+    },
+    "falsePositives": [
+      {
+        "noteId": "P0101-N01",
+        "patientId": "P0101",
+        "type": "cost"
+      },
+      {
+        "noteId": "P0102-N01",
+        "patientId": "P0102",
+        "type": "transportation"
+      },
+      {
+        "noteId": "P0103-N01",
+        "patientId": "P0103",
+        "type": "cost"
+      },
+      {
+        "noteId": "P0104-N01",
+        "patientId": "P0104",
+        "type": "food"
+      },
+      {
+        "noteId": "P0106-N01",
+        "patientId": "P0106",
+        "type": "health_literacy"
+      },
+      {
+        "noteId": "P0107-N01",
+        "patientId": "P0107",
+        "type": "transportation"
+      }
+    ],
+    "falseNegatives": [
+      {
+        "noteId": "P0006-N01",
+        "patientId": "P0006",
+        "type": "transportation"
+      },
+      {
+        "noteId": "P0015-N01",
+        "patientId": "P0015",
+        "type": "cost"
+      },
+      {
+        "noteId": "P0021-N04",
+        "patientId": "P0021",
+        "type": "food"
+      },
+      {
+        "noteId": "P0024-N04",
+        "patientId": "P0024",
+        "type": "food"
+      },
+      {
+        "noteId": "P0025-N05",
+        "patientId": "P0025",
+        "type": "health_literacy"
+      }
+    ]
+  },
+  "retrieval": [
+    {
+      "k": 5,
+      "right": 1,
+      "wrong": 4,
+      "uniquePatients": 5,
+      "neverRead": 595,
+      "noteIds": [
+        "P0075-N01",
+        "P0097-N01",
+        "P0074-N01",
+        "P0027-N04",
+        "P0104-N01"
+      ]
+    },
+    {
+      "k": 20,
+      "right": 7,
+      "wrong": 12,
+      "uniquePatients": 19,
+      "neverRead": 580,
+      "noteIds": [
+        "P0075-N01",
+        "P0097-N01",
+        "P0074-N01",
+        "P0027-N04",
+        "P0104-N01",
+        "P0096-N01",
+        "P0069-N01",
+        "P0078-N01",
+        "P0007-N01",
+        "P0063-N01",
+        "P0017-N01",
+        "P0080-N01",
+        "P0068-N01",
+        "P0009-N01",
+        "P0067-N01",
+        "P0095-N01",
+        "P0025-N05",
+        "P0009-N02",
+        "P0023-N03",
+        "P0010-N05"
+      ]
+    }
+  ],
+  "graphComparison": {
+    "count": 26,
+    "right": 26,
+    "wrong": 0,
+    "labeledTotal": 27,
+    "missed": [
+      "P0025"
+    ]
+  },
+  "featured": {
+    "id": "P0001",
+    "day": 14,
+    "remaining": 16,
+    "noteId": "P0001-N01",
+    "writtenAt": "2026-09-24T08:00:00-04:00",
+    "dischargeAt": "2026-09-26T15:30:00-04:00",
+    "author": "Inpatient nurse AM",
+    "unit": "4 West Medical",
+    "sentence": "At the bedside, pt has no reliable ride to the Endocrinology Clinic visit.",
+    "charSpan": [
+      67,
+      141
+    ]
+  },
+  "questions": [
+    {
+      "id": "main",
+      "shape": "patients",
+      "graphCount": 26,
+      "labeledCount": 27
+    },
+    {
+      "id": "cost",
+      "shape": "patients",
+      "graphCount": 11,
+      "labeledCount": 11
+    },
+    {
+      "id": "return-risk",
+      "shape": "patients",
+      "graphCount": 14,
+      "labeledCount": 14
+    },
+    {
+      "id": "units",
+      "shape": "units",
+      "graphCount": 32,
+      "labeledCount": 27
+    },
+    {
+      "id": "before-discharge",
+      "shape": "noteTypes",
+      "graphCount": 22,
+      "labeledCount": 16
+    },
+    {
+      "id": "ed-returns",
+      "shape": "returns",
+      "graphCount": 6,
+      "labeledCount": 6
+    },
+    {
+      "id": "transportation",
+      "shape": "patients",
+      "graphCount": 9,
+      "labeledCount": 9
+    },
+    {
+      "id": "food",
+      "shape": "patients",
+      "graphCount": 5,
+      "labeledCount": 6
+    },
+    {
+      "id": "health-literacy",
+      "shape": "patients",
+      "graphCount": 4,
+      "labeledCount": 5
+    },
+    {
+      "id": "dual",
+      "shape": "patients",
+      "graphCount": 3,
+      "labeledCount": 4
+    },
+    {
+      "id": "within30",
+      "shape": "patients",
+      "graphCount": 19,
+      "labeledCount": 19
+    },
+    {
+      "id": "standard",
+      "shape": "patients",
+      "graphCount": 34,
+      "labeledCount": 33
+    },
+    {
+      "id": "uncoded",
+      "shape": "patients",
+      "graphCount": 21,
+      "labeledCount": 22
+    },
+    {
+      "id": "no-pickup",
+      "shape": "patients",
+      "graphCount": 60,
+      "labeledCount": 60
+    },
+    {
+      "id": "all",
+      "shape": "patients",
+      "graphCount": 1000,
+      "labeledCount": 1000
+    }
+  ],
+  "provenance": {
+    "source": "Official Synthea COVID-19 10K CSV sample",
+    "sourceUrl": "https://synthetichealth.github.io/synthea-sample-data/downloads/10k_synthea_covid19_csv.zip",
+    "downloadPage": "https://synthetichealth.github.io/downloads.html",
+    "archiveSha256": "559757dc849f4361a328f456d2c0a20c6df72419068321c753c6be787161e937",
+    "selectedAdults": 1000,
+    "availableAdults": 8740,
+    "asOf": "2026-10-10",
+    "importedFields": [
+      "synthetic identifier",
+      "name",
+      "birth date",
+      "sex",
+      "active problem code and description"
+    ],
+    "adaptation": "Synthetic source demographics and active problems are imported. Admissions, clinical events, dates and notes are authored hospital scenarios. Patient counts are computed from these records.",
+    "scenarioSeed": 20261010,
+    "readerVersion": "2026-10-10.1",
+    "frozenReaderSha256": "62159925fbc35cd871ad0de4a5beafd8ae8770725e6599c3df0f0c3e2582fb6f",
+    "evaluationSetVersion": "2026-10-10.2",
+    "evaluationHistory": "Initial 600-note measurement: 49 true positives, 0 false positives, 5 false negatives. Eight contextual notes then added to cover cross-sentence references, educational examples and corrected old quotations. Reader unchanged; updated scores are computed separately."
+  }
+}

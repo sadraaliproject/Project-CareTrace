@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createAppServer } from "../server.js";
+import { createArchivedAppServer as createAppServer } from "../backend/archive-server.js";
 test("hospital HTTP workflow persists exact cohorts, evidence changes, review versions and audit", async (t) => {
   const server = createAppServer({ filename: ":memory:", apiKey: "" });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -55,3 +55,4 @@ test("hospital HTTP workflow persists exact cohorts, evidence changes, review ve
   assert.ok(search.data.passages.length);
   assert.equal("count" in search.data, false);
 });
+

@@ -1,0 +1,579 @@
+[
+  {
+    "noteId": "P0001-N05",
+    "kind": "featured",
+    "label": "A current problem hidden in the bedside note",
+    "patientId": "P0001",
+    "note": {
+      "id": "P0001-N05",
+      "patientId": "P0001",
+      "admissionId": "P0001-A01",
+      "note_type": "Post-discharge nurse call note",
+      "author_role": "Care transitions nurse",
+      "author_initials": "DN",
+      "authorRole": "Care transitions nurse",
+      "authorInitials": "DN",
+      "unit": "Care Transitions Office",
+      "written_datetime": "2026-09-28T11:44:00-04:00",
+      "writtenDatetime": "2026-09-28T11:44:00-04:00",
+      "date": "2026-09-28",
+      "daysFromDischarge": 2,
+      "action_recorded": false,
+      "actionRecorded": false,
+      "text": "Reached pt at the documented home number; identity confirmed. On the 48-hour call, pt has no reliable ride to the Endocrinology Clinic visit. Callback number repeated and pt agrees to the next scheduled check-in. Note signed electronically."
+    },
+    "version": "2026-10-10.1",
+    "sentences": [
+      {
+        "text": "Reached pt at the documented home number; identity confirmed.",
+        "start": 0,
+        "end": 61,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0.43
+        },
+        "cues": [
+          {
+            "type": "health_literacy",
+            "label": "self-care task",
+            "text": "number",
+            "weight": 0.31
+          },
+          {
+            "type": "health_literacy",
+            "label": "instruction detail",
+            "text": "number",
+            "weight": 0.12
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "Related language is below the evidence threshold.",
+        "status": "active"
+      },
+      {
+        "text": "On the 48-hour call, pt has no reliable ride to the Endocrinology Clinic visit.",
+        "start": 62,
+        "end": 141,
+        "scores": {
+          "transportation": 0.98,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [
+          {
+            "type": "transportation",
+            "label": "travel resource",
+            "text": "ride",
+            "weight": 0.38
+          },
+          {
+            "type": "transportation",
+            "label": "travel obstacle",
+            "text": "no reliable ride",
+            "weight": 0.52
+          },
+          {
+            "type": "transportation",
+            "label": "appointment destination",
+            "text": "Clinic",
+            "weight": 0.18
+          }
+        ],
+        "assertions": [
+          {
+            "type": "transportation",
+            "status": "active",
+            "resolved": false,
+            "quote": "On the 48-hour call, pt has no reliable ride to the Endocrinology Clinic visit.",
+            "evidence_sentence": "On the 48-hour call, pt has no reliable ride to the Endocrinology Clinic visit.",
+            "char_span": [
+              62,
+              141
+            ],
+            "confidence": 0.98,
+            "note_id": "P0001-N05",
+            "documentId": "P0001-N05",
+            "note_type": "Post-discharge nurse call note",
+            "date": "2026-09-28",
+            "written_datetime": "2026-09-28T11:44:00-04:00",
+            "sourceKind": "note",
+            "authorRole": "Care transitions nurse",
+            "daysFromDischarge": 2,
+            "action_recorded": false,
+            "actionRecorded": false
+          }
+        ],
+        "outcome": "edge_created",
+        "reason": "Current patient-specific difficulty supported by text cues.",
+        "status": "active"
+      },
+      {
+        "text": "Callback number repeated and pt agrees to the next scheduled check-in.",
+        "start": 142,
+        "end": 212,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0.43
+        },
+        "cues": [
+          {
+            "type": "health_literacy",
+            "label": "self-care task",
+            "text": "number",
+            "weight": 0.31
+          },
+          {
+            "type": "health_literacy",
+            "label": "instruction detail",
+            "text": "number",
+            "weight": 0.12
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "Related language is below the evidence threshold.",
+        "status": "active"
+      },
+      {
+        "text": "Note signed electronically.",
+        "start": 213,
+        "end": 240,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      }
+    ],
+    "assertions": [
+      {
+        "type": "transportation",
+        "status": "active",
+        "resolved": false,
+        "quote": "On the 48-hour call, pt has no reliable ride to the Endocrinology Clinic visit.",
+        "evidence_sentence": "On the 48-hour call, pt has no reliable ride to the Endocrinology Clinic visit.",
+        "char_span": [
+          62,
+          141
+        ],
+        "confidence": 0.98,
+        "note_id": "P0001-N05",
+        "documentId": "P0001-N05",
+        "note_type": "Post-discharge nurse call note",
+        "date": "2026-09-28",
+        "written_datetime": "2026-09-28T11:44:00-04:00",
+        "sourceKind": "note",
+        "authorRole": "Care transitions nurse",
+        "daysFromDischarge": 2,
+        "action_recorded": false,
+        "actionRecorded": false
+      }
+    ]
+  },
+  {
+    "noteId": "P0061-N01",
+    "kind": "negation",
+    "label": "The patient says the problem is absent",
+    "patientId": "P0061",
+    "note": {
+      "id": "P0061-N01",
+      "patientId": "P0061",
+      "admissionId": "P0061-A01",
+      "note_type": "Bedside nursing note",
+      "author_role": "Inpatient nurse",
+      "author_initials": "DN",
+      "authorRole": "Inpatient nurse",
+      "authorInitials": "DN",
+      "unit": "4 West Medical",
+      "written_datetime": "2026-09-07T08:00:00-04:00",
+      "writtenDatetime": "2026-09-07T08:00:00-04:00",
+      "date": "2026-09-07",
+      "daysFromDischarge": -2,
+      "action_recorded": false,
+      "actionRecorded": false,
+      "text": "Pt awake, conversant, resting in chair after morning observations. Denies transportation concerns; wife drives to appointments. Call light in reach; bedside handover completed. Note signed electronically."
+    },
+    "version": "2026-10-10.1",
+    "sentences": [
+      {
+        "text": "Pt awake, conversant, resting in chair after morning observations.",
+        "start": 0,
+        "end": 66,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0.12
+        },
+        "cues": [
+          {
+            "type": "health_literacy",
+            "label": "instruction detail",
+            "text": "morning",
+            "weight": 0.12
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "Related language is below the evidence threshold.",
+        "status": "active"
+      },
+      {
+        "text": "Denies transportation concerns; wife drives to appointments.",
+        "start": 67,
+        "end": 127,
+        "scores": {
+          "transportation": 0.56,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [
+          {
+            "type": "transportation",
+            "label": "travel resource",
+            "text": "transportation",
+            "weight": 0.38
+          },
+          {
+            "type": "transportation",
+            "label": "appointment destination",
+            "text": "appointments",
+            "weight": 0.18
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "The note explicitly denies a current difficulty.",
+        "status": "negated"
+      },
+      {
+        "text": "Call light in reach; bedside handover completed.",
+        "start": 128,
+        "end": 176,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      },
+      {
+        "text": "Note signed electronically.",
+        "start": 177,
+        "end": 204,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      }
+    ],
+    "assertions": []
+  },
+  {
+    "noteId": "P0069-N01",
+    "kind": "resolved",
+    "label": "The problem has already ended",
+    "patientId": "P0069",
+    "note": {
+      "id": "P0069-N01",
+      "patientId": "P0069",
+      "admissionId": "P0069-A01",
+      "note_type": "Bedside nursing note",
+      "author_role": "Inpatient nurse",
+      "author_initials": "DN",
+      "authorRole": "Inpatient nurse",
+      "authorInitials": "DN",
+      "unit": "3 South Medicine",
+      "written_datetime": "2026-07-16T08:56:00-04:00",
+      "writtenDatetime": "2026-07-16T08:56:00-04:00",
+      "date": "2026-07-16",
+      "daysFromDischarge": -2,
+      "action_recorded": false,
+      "actionRecorded": false,
+      "text": "Pt awake, conversant, resting in chair after morning observations. Transport arranged by SW prior to discharge; no ride remains outstanding. Call light in reach; bedside handover completed. Note signed electronically."
+    },
+    "version": "2026-10-10.1",
+    "sentences": [
+      {
+        "text": "Pt awake, conversant, resting in chair after morning observations.",
+        "start": 0,
+        "end": 66,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0.12
+        },
+        "cues": [
+          {
+            "type": "health_literacy",
+            "label": "instruction detail",
+            "text": "morning",
+            "weight": 0.12
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "Related language is below the evidence threshold.",
+        "status": "active"
+      },
+      {
+        "text": "Transport arranged by SW prior to discharge; no ride remains outstanding.",
+        "start": 67,
+        "end": 140,
+        "scores": {
+          "transportation": 0.9,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [
+          {
+            "type": "transportation",
+            "label": "travel resource",
+            "text": "Transport",
+            "weight": 0.38
+          },
+          {
+            "type": "transportation",
+            "label": "travel obstacle",
+            "text": "no ride",
+            "weight": 0.52
+          }
+        ],
+        "assertions": [
+          {
+            "type": "transportation",
+            "status": "resolved",
+            "resolved": true,
+            "quote": "Transport arranged by SW prior to discharge; no ride remains outstanding.",
+            "evidence_sentence": "Transport arranged by SW prior to discharge; no ride remains outstanding.",
+            "char_span": [
+              67,
+              140
+            ],
+            "confidence": 0.9,
+            "note_id": "P0069-N01",
+            "documentId": "P0069-N01",
+            "note_type": "Bedside nursing note",
+            "date": "2026-07-16",
+            "written_datetime": "2026-07-16T08:56:00-04:00",
+            "sourceKind": "note",
+            "authorRole": "Inpatient nurse",
+            "daysFromDischarge": -2,
+            "action_recorded": false,
+            "actionRecorded": false
+          }
+        ],
+        "outcome": "rejected",
+        "reason": "The note records that help is already in place.",
+        "status": "resolved"
+      },
+      {
+        "text": "Call light in reach; bedside handover completed.",
+        "start": 141,
+        "end": 189,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      },
+      {
+        "text": "Note signed electronically.",
+        "start": 190,
+        "end": 217,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      }
+    ],
+    "assertions": [
+      {
+        "type": "transportation",
+        "status": "resolved",
+        "resolved": true,
+        "quote": "Transport arranged by SW prior to discharge; no ride remains outstanding.",
+        "evidence_sentence": "Transport arranged by SW prior to discharge; no ride remains outstanding.",
+        "char_span": [
+          67,
+          140
+        ],
+        "confidence": 0.9,
+        "note_id": "P0069-N01",
+        "documentId": "P0069-N01",
+        "note_type": "Bedside nursing note",
+        "date": "2026-07-16",
+        "written_datetime": "2026-07-16T08:56:00-04:00",
+        "sourceKind": "note",
+        "authorRole": "Inpatient nurse",
+        "daysFromDischarge": -2,
+        "action_recorded": false,
+        "actionRecorded": false
+      }
+    ]
+  },
+  {
+    "noteId": "P0077-N01",
+    "kind": "third_party",
+    "label": "The note describes someone else",
+    "patientId": "P0077",
+    "note": {
+      "id": "P0077-N01",
+      "patientId": "P0077",
+      "admissionId": "P0077-A01",
+      "note_type": "Bedside nursing note",
+      "author_role": "Inpatient nurse",
+      "author_initials": "DN",
+      "authorRole": "Inpatient nurse",
+      "authorInitials": "DN",
+      "unit": "5 East Step-Down",
+      "written_datetime": "2026-08-15T08:52:00-04:00",
+      "writtenDatetime": "2026-08-15T08:52:00-04:00",
+      "date": "2026-08-15",
+      "daysFromDischarge": -2,
+      "action_recorded": false,
+      "actionRecorded": false,
+      "text": "Pt awake, conversant, resting in chair after morning observations. Pt's brother lost his job and cannot afford his own medications. Call light in reach; bedside handover completed. Note signed electronically."
+    },
+    "version": "2026-10-10.1",
+    "sentences": [
+      {
+        "text": "Pt awake, conversant, resting in chair after morning observations.",
+        "start": 0,
+        "end": 66,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0.12
+        },
+        "cues": [
+          {
+            "type": "health_literacy",
+            "label": "instruction detail",
+            "text": "morning",
+            "weight": 0.12
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "Related language is below the evidence threshold.",
+        "status": "active"
+      },
+      {
+        "text": "Pt's brother lost his job and cannot afford his own medications.",
+        "start": 67,
+        "end": 131,
+        "scores": {
+          "transportation": 0,
+          "cost": 0.98,
+          "food": 0.52,
+          "health_literacy": 0
+        },
+        "cues": [
+          {
+            "type": "cost",
+            "label": "medication resource",
+            "text": "medications",
+            "weight": 0.25
+          },
+          {
+            "type": "cost",
+            "label": "payment obstacle",
+            "text": "cannot afford",
+            "weight": 0.48
+          },
+          {
+            "type": "cost",
+            "label": "unmet medication need",
+            "text": "cannot",
+            "weight": 0.25
+          },
+          {
+            "type": "food",
+            "label": "nutrition obstacle",
+            "text": "cannot afford",
+            "weight": 0.52
+          }
+        ],
+        "assertions": [],
+        "outcome": "rejected",
+        "reason": "The difficulty belongs to another person.",
+        "status": "third_party"
+      },
+      {
+        "text": "Call light in reach; bedside handover completed.",
+        "start": 132,
+        "end": 180,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      },
+      {
+        "text": "Note signed electronically.",
+        "start": 181,
+        "end": 208,
+        "scores": {
+          "transportation": 0,
+          "cost": 0,
+          "food": 0,
+          "health_literacy": 0
+        },
+        "cues": [],
+        "assertions": [],
+        "outcome": "no_signal",
+        "reason": "No barrier-related language.",
+        "status": "active"
+      }
+    ],
+    "assertions": []
+  }
+]

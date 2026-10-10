@@ -1,33 +1,20 @@
 import { build } from "esbuild";
 import { readFile, writeFile, copyFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-await mkdir("dist/vendor", { recursive: true });
-await copyFile(
-  "node_modules/cytoscape/dist/cytoscape.min.js",
-  "dist/vendor/cytoscape.min.js",
-);
+import { PUBLIC_ASSETS } from "../backend/prototype.js";
+
 await mkdir(".sites-runtime", { recursive: true });
 const assets = {};
-const files = [
-  "index.html",
-  "styles.css",
-  "app.js",
-  "engine.js",
-  "graph.js",
-  "hospital-data.js",
-  "ontology.js",
-  "care-studio.js",
-  "care-studio.css",
-  "vendor/cytoscape.min.js",
-];
-for (const file of files)
+for (const file of PUBLIC_ASSETS)
   assets["/" + file] = {
     content: await readFile(resolve("dist", file), "utf8"),
     type: file.endsWith(".js")
       ? "text/javascript; charset=utf-8"
       : file.endsWith(".css")
         ? "text/css; charset=utf-8"
-        : "text/html; charset=utf-8",
+        : file.endsWith(".json")
+          ? "application/json; charset=utf-8"
+          : "text/html; charset=utf-8",
   };
 await writeFile(".sites-runtime/assets.json", JSON.stringify(assets));
 await mkdir("dist/server", { recursive: true });
@@ -42,4 +29,6 @@ await build({
 });
 await mkdir("dist/.openai", { recursive: true });
 await copyFile(".openai/hosting.json", "dist/.openai/hosting.json");
-console.log("Built shared API + D1 Worker and embedded frontend assets.");
+console.log(
+  `Built guided prototype Worker with ${PUBLIC_ASSETS.length} embedded assets. No model or database connection in the serving path.`,
+);

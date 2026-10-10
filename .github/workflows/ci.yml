@@ -14,5 +14,6 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
+      - run: npm run verify:pilot
       - run: npm run build
       - run: node scripts/verify-worker.js

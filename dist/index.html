@@ -1,27 +1,28 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#112b36" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1724" />
     <meta
       name="description"
-      content="A hospital system’s view of the first 30 days home. Connect follow-up visits, medication pickup, and clinical notes using synthetic data."
+      content="Follow the evidence from hospital records to the right next step. An inspectable graph demonstration using synthetic patients."
     />
-    <title>Careweave · Hospital care transitions</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <link rel="stylesheet" href="./care-studio.css" />
+    <title>Careweave · From evidence to action</title>
+    <link rel="stylesheet" href="/pilot.css" />
+    <script type="module" src="/pilot-app.js"></script>
   </head>
   <body>
     <div id="app">
-      <div class="boot">
-        <span>✳</span>
-        <p>Connecting the hospital discharge story…</p>
+      <div style="padding: 3rem; font: 18px system-ui">
+        Loading Careweave’s patient graph…
       </div>
     </div>
     <div id="overlay-root"></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="./vendor/cytoscape.min.js"></script>
-    <script type="module" src="./app.js"></script>
+    <noscript
+      >This interactive demonstration needs JavaScript enabled in your
+      browser.</noscript
+    >
   </body>
 </html>

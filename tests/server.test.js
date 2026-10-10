@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { request } from "node:http";
-import { createAppServer } from "../server.js";
+import { createArchivedAppServer as createAppServer } from "../backend/archive-server.js";
 
 import { defaultPlan } from "../planner.js";
 const validPlan = () => ({ ...defaultPlan(), barriers: ["transportation"] });
@@ -279,3 +279,4 @@ test("static requests cannot read environment or server source outside dist", as
     }
   });
 });
+

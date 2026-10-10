@@ -1,0 +1,614 @@
+[
+  {
+    "id": "main",
+    "label": "Who needs help?",
+    "question": "Which patients discharged after a diabetes-related admission have an open follow-up gap and a documented barrier we can act on, and what is the right action for each?",
+    "shape": "patients",
+    "filters": {
+      "id": "main"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_CONDITION",
+        "to": "Condition",
+        "thought": "Confirm that this admission was related to diabetes."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_APPOINTMENT",
+        "to": "Appointment",
+        "thought": "Read the appointment row to separate a scheduled visit from a completed or missed visit."
+      },
+      {
+        "from": "Patient",
+        "edge": "PRESCRIBED_AT_DISCHARGE",
+        "to": "Medication",
+        "thought": "Join the new discharge medicine to its dated pharmacy pickup record."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "help action diabetes barriers"
+  },
+  {
+    "id": "cost",
+    "label": "Insulin and cost",
+    "question": "Which patients report a cost barrier and never picked up their discharge insulin?",
+    "shape": "patients",
+    "filters": {
+      "id": "cost"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "PRESCRIBED_AT_DISCHARGE",
+        "to": "Medication",
+        "thought": "Join the new discharge medicine to its dated pharmacy pickup record."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "cost afford insulin money pickup"
+  },
+  {
+    "id": "return-risk",
+    "label": "Return review",
+    "question": "Who is likely to return?",
+    "shape": "patients",
+    "filters": {
+      "id": "return-risk"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_RESULT",
+        "to": "LabResult",
+        "thought": "Read the admission A1c value before applying the review-priority rule."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_APPOINTMENT",
+        "to": "Appointment",
+        "thought": "Read the appointment row to separate a scheduled visit from a completed or missed visit."
+      },
+      {
+        "from": "Patient",
+        "edge": "PRESCRIBED_AT_DISCHARGE",
+        "to": "Medication",
+        "thought": "Join the new discharge medicine to its dated pharmacy pickup record."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Patient",
+        "edge": "LIKELY_TO_RETURN",
+        "to": "Admission",
+        "thought": "Apply the stated review-priority rule to observed facts; this is not a validated prediction."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "return risk review"
+  },
+  {
+    "id": "units",
+    "label": "Hospital units",
+    "question": "Which unit discharged the most patients with an unaddressed barrier?",
+    "shape": "units",
+    "filters": {
+      "id": "units"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      }
+    ],
+    "keywords": "units wards rank hospital"
+  },
+  {
+    "id": "before-discharge",
+    "label": "Known before discharge",
+    "question": "Which barriers were documented before discharge with no action recorded, grouped by note type?",
+    "shape": "noteTypes",
+    "filters": {
+      "id": "before-discharge"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "before discharge earlier unaddressed note types"
+  },
+  {
+    "id": "ed-returns",
+    "label": "Emergency returns",
+    "question": "Who returned to the emergency department after a missed follow-up, and how many days later?",
+    "shape": "returns",
+    "filters": {
+      "id": "ed-returns"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_APPOINTMENT",
+        "to": "Appointment",
+        "thought": "Read the appointment row to separate a scheduled visit from a completed or missed visit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      }
+    ],
+    "keywords": "emergency ED return after missed visit"
+  },
+  {
+    "id": "transportation",
+    "label": "Getting to the visit",
+    "question": "Which patients with an open follow-up gap need transportation help?",
+    "shape": "patients",
+    "filters": {
+      "id": "transportation"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_APPOINTMENT",
+        "to": "Appointment",
+        "thought": "Read the appointment row to separate a scheduled visit from a completed or missed visit."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "transportation transport ride bus visit"
+  },
+  {
+    "id": "food",
+    "label": "Food and safe recovery",
+    "question": "Which patients with an open follow-up gap have a current food barrier?",
+    "shape": "patients",
+    "filters": {
+      "id": "food"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "food meals groceries hungry"
+  },
+  {
+    "id": "health-literacy",
+    "label": "Understanding instructions",
+    "question": "Which patients with an open follow-up gap need help understanding their diabetes instructions?",
+    "shape": "patients",
+    "filters": {
+      "id": "health-literacy"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "PRESCRIBED_AT_DISCHARGE",
+        "to": "Medication",
+        "thought": "Join the new discharge medicine to its dated pharmacy pickup record."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "literacy understand instructions dosing dose"
+  },
+  {
+    "id": "dual",
+    "label": "Two barriers",
+    "question": "Which patients with an open follow-up gap have two current barriers, and which action comes first?",
+    "shape": "patients",
+    "filters": {
+      "id": "dual"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_APPOINTMENT",
+        "to": "Appointment",
+        "thought": "Read the appointment row to separate a scheduled visit from a completed or missed visit."
+      },
+      {
+        "from": "Patient",
+        "edge": "PRESCRIBED_AT_DISCHARGE",
+        "to": "Medication",
+        "thought": "Join the new discharge medicine to its dated pharmacy pickup record."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "dual two multiple first primary"
+  },
+  {
+    "id": "within30",
+    "label": "Still within 30 days",
+    "question": "Which patients with an open gap and a current barrier are still within the first 30 days after discharge?",
+    "shape": "patients",
+    "filters": {
+      "id": "within30"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "30 days window remaining"
+  },
+  {
+    "id": "standard",
+    "label": "Standard follow-up",
+    "question": "Which patients have an open follow-up gap but no current documented barrier?",
+    "shape": "patients",
+    "filters": {
+      "id": "standard"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      }
+    ],
+    "keywords": "standard routine no barrier"
+  },
+  {
+    "id": "uncoded",
+    "label": "Hidden in notes",
+    "question": "Which patients with an open gap have a barrier documented in notes but no coded social need?",
+    "shape": "patients",
+    "filters": {
+      "id": "uncoded"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_GAP",
+        "to": "FollowUpGap",
+        "thought": "Check the dated follow-up rule; a concerning note alone does not establish a missed step."
+      },
+      {
+        "from": "Patient",
+        "edge": "REPORTED_BARRIER",
+        "to": "Barrier",
+        "thought": "First inspect the coded need. If no row exists, follow the note-derived evidence and distinguish current from resolved language."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_NOTE",
+        "to": "ClinicalNote",
+        "thought": "Read the original note and keep the exact sentence, author, time and character span."
+      },
+      {
+        "from": "Barrier",
+        "edge": "ADDRESSED_BY",
+        "to": "Action",
+        "thought": "Map each current barrier to a hospital-owned action and accountable role."
+      }
+    ],
+    "keywords": "uncoded hidden notes tables code"
+  },
+  {
+    "id": "no-pickup",
+    "label": "Medicine not collected",
+    "question": "Which diabetes patients have not picked up a newly started discharge medication?",
+    "shape": "patients",
+    "filters": {
+      "id": "no-pickup"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      },
+      {
+        "from": "Patient",
+        "edge": "HAS_CONDITION",
+        "to": "Condition",
+        "thought": "Confirm that this admission was related to diabetes."
+      },
+      {
+        "from": "Patient",
+        "edge": "PRESCRIBED_AT_DISCHARGE",
+        "to": "Medication",
+        "thought": "Join the new discharge medicine to its dated pharmacy pickup record."
+      }
+    ],
+    "keywords": "medication pickup collected new medicine"
+  },
+  {
+    "id": "all",
+    "label": "All discharges",
+    "question": "Show all hospital discharges in the last 90 days.",
+    "shape": "patients",
+    "filters": {
+      "id": "all"
+    },
+    "route": [
+      {
+        "from": "Patient",
+        "edge": "HAD_ADMISSION",
+        "to": "Admission",
+        "thought": "Start with the discharge record so the time window and hospital unit are explicit."
+      }
+    ],
+    "keywords": "all discharges hospital 90 days"
+  }
+]
