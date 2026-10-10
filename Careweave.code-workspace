@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "Careweave",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true
+    },
+    "search.exclude": {
+      "**/exports": true
+    }
+  }
+}

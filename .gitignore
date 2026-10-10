@@ -9,3 +9,6 @@ coverage/
 test-results/
 playwright-report/
 exports/
+
+# Existing nested clone; the application root is the working repository.
+/Hackathon 26/

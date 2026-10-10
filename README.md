@@ -23,6 +23,14 @@ npm test
 
 The core demo runs without an API key. Patient generation, evidence extraction, cohort queries, and task drafting execute locally in the browser. The optional server route can use OpenAI to translate a natural-language question into a structured query plan. The local engine validates and executes the plan against the same dataset.
 
+### Open in Visual Studio Code
+
+Open `Careweave.code-workspace`, then press **F5** and select **Careweave: Run and debug**. VS Code starts the server and opens the local demo. Stop an existing server on port 4173 before launching another.
+
+Use **Terminal > Run Task** for the included start, test, JavaScript check, and data export tasks. **Ctrl+Shift+B** runs the JavaScript check. No extensions or package installation are required for the core demo.
+
+The GitHub repository is [sadraaliproject/Hackathon-26](https://github.com/sadraaliproject/Hackathon-26).
+
 ### Optional language-model planning
 
 Copy `.env.example` to `.env`, add an API key, and restart the local server. Never place secrets in the static frontend or commit `.env`.
