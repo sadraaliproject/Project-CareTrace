@@ -1,261 +1,175 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AS_OF, BARRIERS, patients, parseQuestion, runQuery, extractBarriers, reconcileBarriers, makeDraft, getMetrics, evaluateExtraction, buildGraph } from '../dist/engine.js';
+import { readFileSync } from 'node:fs';
+import { patients, ontology, BARRIERS, AS_OF, deriveFollowUp, deriveLikelyReturn, extractBarriers, reconcileBarriers, parseQuestion, runQuery, buildGraph, evaluateExtraction, sourceProvenance } from '../dist/engine.js';
 
-const query = (text, previous) => {
-  const parsed = parseQuestion(text, previous);
-  assert.equal(parsed.ok, true, parsed.error);
-  return { ...parsed, result: runQuery(parsed.plan) };
-};
-const doc = (text, date = AS_OF, id = 'test-source') => ({ id, text, date, type: 'Synthetic test note' });
+const anchor = () => structuredClone(patients.find(patient => patient.id === 'P0412'));
+const truth = JSON.parse(readFileSync(new URL('../ml/hospital-ground-truth.json', import.meta.url)));
+const active = text => extractBarriers(text).filter(assertion => assertion.status === 'active').map(assertion => assertion.type).sort();
 
-test('synthetic snapshot has 1,000 unique patients, 3,000 unique sources and internally consistent A1c gaps', () => {
+test('source is 1,000 distinct adult Synthea identities, with an auditable allowlisted import', () => {
   assert.equal(patients.length, 1000);
-  assert.equal(new Set(patients.map(p => p.id)).size, 1000);
-  assert.equal(new Set(patients.flatMap(p => p.documents.map(d => d.id))).size, 3000);
-  assert.equal(getMetrics().diabetes, 800);
-  for (const p of patients) {
-    assert.equal(p.gapOpen, p.diabetes && (p.daysOverdue > 0 || p.a1c > 9));
-    assert.equal(new Set(p.barriers.map(b => b.type)).size, p.barriers.length);
-    assert.ok(p.documents.every(d => d.text.includes('Synthetic')));
-    assert.ok(p.priority >= 0 && p.priority <= 100);
+  assert.equal(new Set(patients.map(patient => patient.syntheaId)).size, 1000);
+  assert.ok(patients.every(patient => patient.age >= 18));
+  assert.equal(sourceProvenance.availableAdults, 8740);
+  assert.match(sourceProvenance.archiveSha256, /^[a-f0-9]{64}$/);
+  assert.ok(patients.every(patient => patient.admission.dischargeDate <= AS_OF && patient.daysSinceDischarge >= 0 && patient.daysSinceDischarge <= 90));
+  assert.equal(patients.filter(patient => patient.admission.diabetesRelated).length, 150);
+});
+
+test('day 14 is eligible and day 13 is not', () => {
+  const patient = anchor();
+  patient.admission.dischargeDate = '2026-09-27';
+  assert.equal(deriveFollowUp(patient).eligible, false);
+  patient.admission.dischargeDate = '2026-09-26';
+  assert.equal(deriveFollowUp(patient).eligible, true);
+  assert.equal(deriveFollowUp(patient).open, true);
+  patient.admission.diabetesRelated = false;
+  assert.equal(deriveFollowUp(patient).open, false);
+});
+
+test('a completed visit on day 14 and medication pickup on day 3 meet both boundaries', () => {
+  const patient = anchor();
+  patient.admission.dischargeDate = '2026-09-10';
+  patient.appointments = [{ date: '2026-09-24', status: 'completed' }];
+  patient.medications = [{ newStart: true, pickedUp: true, pickupDate: '2026-09-13' }];
+  assert.deepEqual(deriveFollowUp(patient).reasons, []);
+  patient.appointments[0].date = '2026-09-25';
+  assert.deepEqual(deriveFollowUp(patient).reasons, ['follow_up_not_completed_within_14_days']);
+  patient.appointments[0].date = '2026-09-24';
+  patient.medications[0].pickupDate = '2026-09-14';
+  assert.deepEqual(deriveFollowUp(patient).reasons, ['new_medication_not_picked_up_within_3_days']);
+});
+
+test('missing, cancelled, and missed appointments are not completed visits', () => {
+  for (const status of ['scheduled', 'cancelled', 'no-show']) {
+    const patient = anchor();
+    patient.appointments[0].status = status;
+    assert.ok(deriveFollowUp(patient).reasons.includes('follow_up_not_completed_within_14_days'));
   }
-  assert.ok(patients.some(p => p.diabetes && p.refillGap > 30 && !p.gapOpen), 'Refill delay alone must not create an A1c gap');
+  const patient = anchor();
+  patient.appointments = [];
+  assert.ok(deriveFollowUp(patient).reasons.includes('follow_up_not_completed_within_14_days'));
 });
 
-test('headline cohort has an exact stable count with overdue A1c and current transportation evidence', () => {
-  const { plan, result } = query('Find diabetic patients missing an A1c test because they cannot get transportation');
-  assert.equal(result.count, 82);
-  assert.equal(result.patients.length, 82);
-  assert.deepEqual(result.patients.map(p => p.id), runQuery(plan).patients.map(p => p.id));
-  assert.equal(result.fingerprint, runQuery(plan).fingerprint);
-  assert.equal(new Set(result.patients.map(p => p.id)).size, result.count);
-  assert.ok(result.patients.every(p => p.diabetes && p.daysOverdue > 0 && p.barriers.some(b => b.type === 'transportation' && b.status === 'active')));
-  assert.ok(result.excludedResolved > 0);
+test('late pickup stays a timing gap, but picked-up insulin cannot trigger the inferred edge', () => {
+  const patient = anchor();
+  patient.medications[0].pickedUp = true;
+  patient.medications[0].pickupDate = '2026-08-15';
+  assert.ok(deriveFollowUp(patient).reasons.includes('new_medication_not_picked_up_within_3_days'));
+  assert.equal(deriveLikelyReturn(patient), false);
 });
 
-test('P0412 demonstrates a true structured-data miss and a linked document fallback', () => {
-  const { result } = query('Find diabetic patients missing important tests because they cannot get transportation');
-  const p = result.patients.find(p => p.id === 'P0412');
-  assert.ok(p);
-  assert.equal(p.structuredBarrierCode, false);
-  const lookup = result.events.find(e => e.tool === 'lookup_structured_barrier');
-  assert.equal(lookup.found, 0);
-  const fallback = result.events.find(e => e.tool === 'retrieve_source_assertion');
-  assert.ok(fallback.evidence.some(b => b.documentId === 'P0412-D02'));
-  assert.equal(p.barriers.length, 1, 'A family cost problem must not become the patient’s cost barrier');
-});
-
-test('AND, OR, and result limits preserve exact total counts', () => {
-  const and = query('Find patients with medication cost and food insecurity barriers').result;
-  const or = query('Find patients with medication cost or food insecurity barriers').result;
-  assert.equal(and.count, 15);
-  assert.ok(or.count > and.count);
-  assert.ok(and.patients.every(p => ['cost', 'food'].every(type => p.barriers.some(b => b.type === type && b.status === 'active'))));
-  const limited = query('Show top 5 patients with open care gaps and transportation barriers').result;
-  assert.equal(limited.patients.length, 5);
-  assert.equal(limited.count, 123);
-});
-
-test('followups inherit clinical scope and can change the barrier or age without restart', () => {
-  const first = query('Find diabetic patients missing an A1c test because they cannot get transportation');
-  const second = query('Now only over 65', first.plan);
-  assert.equal(second.plan.ageMin, 66);
-  assert.equal(second.plan.gapType, 'overdue');
-  assert.deepEqual(second.plan.barriers, ['transportation']);
-  const third = query('What about food insecurity?', second.plan);
-  assert.deepEqual(third.plan.barriers, ['food']);
-  assert.equal(third.plan.ageMin, 66);
-});
-
-test('also followups narrow the prior cohort and reject unrepresentable nested filters', () => {
-  const first = query('Find diabetic patients missing A1c tests with transportation barriers');
-  for (const question of ['Now also medication cost barriers', 'Of those also with food insecurity']) {
-    const second = query(question, first.plan);
-    assert.equal(second.plan.barrierMode, 'all', question);
-    assert.equal(second.plan.gapType, 'overdue');
-    assert.ok(second.result.patients.every(patient => first.result.patients.some(prior => prior.id === patient.id)), question);
-    assert.ok(second.result.count < first.result.count, question);
-  }
-  const union = query('Find patients with transportation or food barriers');
-  const nested = parseQuestion('Now also medication cost barriers', union.plan);
-  assert.equal(nested.ok, false);
-  assert.match(nested.error, /nested/);
-  for (const question of ['Now also transportation barriers', 'Of those also with food insecurity']) {
-    const repeatedLabel = parseQuestion(question, union.plan);
-    assert.equal(repeatedLabel.ok, false, 'A repeated label still adds a narrowing predicate to an OR cohort');
-    assert.match(repeatedLabel.error, /explicit filter/);
-  }
-});
-
-test('empty barrier list means no barrier restriction and explicit generic barriers require evidence', () => {
-  const all = query('Show all patients').result;
-  assert.equal(all.count, 1000);
-  const barrier = query('Show all patients with a barrier').result;
-  assert.ok(barrier.count < 1000);
-  assert.ok(barrier.patients.every(p => p.barriers.some(b => b.status === 'active')));
-});
-
-test('negated, family-only, and conditional statements do not create active barriers', () => {
-  for (const text of [
-    'Patient denies food insecurity.',
-    'Patient has reliable transportation to the clinic.',
-    'Her mother cannot afford the medication copay.',
-    'Patient reports that her mother cannot afford the medication copay.',
-    'If the patient needs transportation help, provide a resource list.',
-    'Patient might have food insecurity.',
-  ]) assert.deepEqual(extractBarriers(doc(text)), [], text);
-  assert.deepEqual(extractBarriers(doc('I no longer need transportation help.')).map(b => [b.type, b.status]), [['transportation', 'resolved']]);
-});
-
-test('the latest patient denial supersedes active history regardless of input document order', () => {
-  const old = doc('Patient cannot get a ride to the clinic.', '2026-08-01', 'old');
-  const recent = doc('Patient denies transportation problems.', '2026-10-09', 'recent');
-  const later = doc('I have no transportation to my appointments.', AS_OF, 'later');
-  const resolved = reconcileBarriers([recent, old]);
-  assert.equal(resolved[0].status, 'resolved');
-  assert.equal(resolved[0].documentId, 'recent');
-  const activeAgain = reconcileBarriers([recent, later, old]);
-  assert.equal(activeAgain[0].status, 'active');
-  assert.equal(activeAgain[0].documentId, 'later');
-  assert.deepEqual(reconcileBarriers([recent]), [], 'A denial without positive history is not a newly discovered barrier');
-});
-
-test('negation is scoped to the assertion and does not suppress another real barrier', () => {
-  const items = extractBarriers(doc('Patient denies transportation problems but cannot afford the medication copay.'));
-  assert.deepEqual(items.map(b => [b.type, b.status]), [['cost', 'active']]);
-  assert.equal(items[0].quote, 'cannot afford the medication copay.');
-});
-
-test('independent clauses keep barrier-specific negation and resolution', () => {
-  const cases = [
-    ['Transportation is resolved and I cannot afford the medication copay.', [['transportation', 'resolved'], ['cost', 'active']]],
-    ['Patient has reliable transportation and cannot afford the medication copay.', [['cost', 'active']]],
-    ['Patient denies transportation problems and cannot afford medication.', [['cost', 'active']]],
-    ['Transportation is resolved, medication is unaffordable.', [['transportation', 'resolved'], ['cost', 'active']]],
-    ['Patient cannot afford medication while food insecurity is resolved.', [['cost', 'active'], ['food', 'resolved']]],
-    ['Her mother cannot get a ride and cannot afford the medication copay.', []],
-    ['If the patient cannot get transportation and cannot afford medication, discuss resources.', []],
-    ['Her mother cannot get transportation and the patient cannot afford medication.', [['cost', 'active']]],
+test('the inferred edge requires every independent fact and A1c strictly above nine', () => {
+  assert.equal(deriveLikelyReturn(anchor()), true);
+  const changes = [
+    patient => { patient.labs[0].value = 9; },
+    patient => { patient.appointments[0].status = 'completed'; },
+    patient => { patient.medications[0].pickedUp = true; },
+    patient => { patient.medications[0].newStart = false; },
+    patient => { patient.barriers = []; },
+    patient => { patient.admission.diabetesRelated = false; },
   ];
-  for (const [text, expected] of cases) {
-    const actual = extractBarriers(doc(text));
-    assert.deepEqual(actual.map(b => [b.type, b.status]), expected, text);
-    assert.ok(actual.every(b => text.includes(b.quote)), 'Every clause must retain a verbatim source quote');
-  }
-  const history = reconcileBarriers([
-    doc('Patient cannot afford the medication copay.', '2026-09-01', 'old-cost'),
-    doc('Patient has reliable transportation and cannot afford the medication copay.', AS_OF, 'new-cost')
-  ]);
-  assert.equal(history.find(b => b.type === 'cost').status, 'active');
-  assert.equal(history.find(b => b.type === 'cost').documentId, 'new-cost');
+  for (const change of changes) { const patient = anchor(); change(patient); assert.equal(deriveLikelyReturn(patient), false); }
+  const patient = anchor();
+  patient.appointments[0] = { date: '2026-09-15', status: 'completed' };
+  assert.equal(deriveLikelyReturn(patient), false);
 });
 
-test('food and ride affordability are not misclassified as medication cost', () => {
-  assert.deepEqual(extractBarriers(doc('Patient cannot afford food.')).map(b => [b.type, b.status]), [['food', 'active']]);
-  assert.deepEqual(extractBarriers(doc('Patient cannot afford a ride to the clinic.')).map(b => [b.type, b.status]), [['transportation', 'active']]);
-  assert.deepEqual(extractBarriers(doc('Patient cannot afford the medication copay.')).map(b => [b.type, b.status]), [['cost', 'active']]);
+test('all five intentional hard cases create no active reported edge', () => {
+  const cases = truth.cases.filter(item => !['routine-note', 'current-patient-barrier'].includes(item.category));
+  assert.equal(cases.length, 60);
+  assert.equal(new Set(cases.map(item => item.category)).size, 5);
+  for (const item of cases) assert.deepEqual(active(item.text), [], item.category);
 });
 
-test('temporal negation distinguishes loss of a ride from resolution of transportation need', () => {
-  for (const text of [
-    'I no longer have a ride.',
-    'The bus route no longer reaches the laboratory.',
-    'Patient no longer has reliable transportation.',
-    'My usual ride is no longer available for medical visits.',
-    'The transportation barrier is not resolved.'
-  ]) {
-    const assertions = extractBarriers(doc(text));
-    assert.deepEqual(assertions.map(b => [b.type, b.status]), [['transportation', 'active']], text);
-    assert.equal(assertions[0].quote, text);
-  }
-  assert.deepEqual(extractBarriers(doc('I no longer need transportation help.')).map(b => [b.type, b.status]), [['transportation', 'resolved']]);
-  assert.deepEqual(extractBarriers(doc('Patient no longer has a transportation barrier.')).map(b => [b.type, b.status]), [['transportation', 'resolved']]);
-  assert.deepEqual(extractBarriers(doc('Patient no longer has food insecurity.')).map(b => [b.type, b.status]), [['food', 'resolved']]);
-  assert.deepEqual(extractBarriers(doc('Patient denies transportation problems.')), []);
+test('independent barrier clauses preserve their own status and exact source spans', () => {
+  const text = 'Transportation is resolved and I cannot afford the insulin prescription.';
+  const assertions = extractBarriers(text);
+  assert.deepEqual(assertions.map(value => [value.type, value.status]), [['transportation', 'resolved'], ['cost', 'active']]);
+  assert.ok(assertions.every(assertion => text.includes(assertion.quote)));
+  assert.deepEqual(active('Pt cannot afford food.'), ['food']);
+  assert.deepEqual(active('Pt has reliable transportation and cannot afford the insulin prescription.'), ['cost']);
+  assert.deepEqual(active('Has not picked up insulin. States it was $90 at the counter and she left it.'), ['cost']);
 });
 
-test('a later loss of access reopens a previously resolved barrier, retaining the new source', () => {
-  const history = [
-    doc('Patient cannot get a ride to the clinic.', '2026-07-01', 'need'),
-    doc('I no longer need transportation help.', '2026-08-01', 'help-arranged'),
-    doc('I no longer have a ride.', '2026-10-09', 'ride-lost')
+test('a later resolved note removes a prior assertion and does not create a reported edge', () => {
+  const notes = [
+    { id: 'N1', date: '2026-08-04', note_type: 'Bedside nursing note', text: 'Pt has no ride to the clinic.' },
+    { id: 'N2', date: '2026-08-05', note_type: 'Social work and case management note', text: 'Transport arranged by SW prior to discharge.' },
   ];
-  const barriers = reconcileBarriers(history.reverse());
-  assert.equal(barriers.length, 1);
-  assert.equal(barriers[0].status, 'active');
-  assert.equal(barriers[0].documentId, 'ride-lost');
-  assert.equal(barriers[0].quote, 'I no longer have a ride.');
+  assert.deepEqual(reconcileBarriers(notes), []);
+  assert.equal(reconcileBarriers(notes.slice(0, 1))[0].documentId, 'N1');
 });
 
-test('the default ingestion note resolves transportation with its exact new source', () => {
-  const text = 'Patient: My daughter now drives me to appointments. Transportation is no longer a problem.';
-  const latest = doc(text, '2026-10-10', 'default-ingestion-note');
-  assert.deepEqual(extractBarriers(latest).map(b => [b.type, b.status, b.quote]), [['transportation', 'resolved', 'Transportation is no longer a problem.']]);
-  const reconciled = reconcileBarriers([doc('I have no transportation to my appointments.', '2026-10-07', 'previous-need'), latest]);
-  assert.equal(reconciled[0].status, 'resolved');
-  assert.equal(reconciled[0].documentId, 'default-ingestion-note');
-  for (const [type, sentence] of [
-    ['cost', 'Medication cost is no longer a barrier.'],
-    ['food', 'Food access is no longer an issue.'],
-    ['health_literacy', 'Understanding the instructions is no longer difficult.']
-  ]) assert.deepEqual(extractBarriers(doc(sentence)).map(b => [b.type, b.status]), [[type, 'resolved']]);
+test('coded social needs are valid source-linked assertions, with no extra graph node type', () => {
+  const values = reconcileBarriers([], [{ id: 'Z1', type: 'transportation', code: 'Z59.82', display: 'Transportation', date: '2026-08-04' }]);
+  assert.equal(values[0].sourceKind, 'coded');
+  assert.equal(values[0].documentId, 'Z1');
+  assert.equal(values[0].note_type, 'Coded social need');
 });
 
-test('the graph is a valid typed projection and graph metrics count its actual contents', () => {
+test('three consecutive queries return the same computed exact count and source-linked graph', () => {
+  const plan = parseQuestion('Which patients discharged after a diabetes-related admission have an open follow-up gap and a documented barrier we can act on?');
+  const runs = Array.from({ length: 3 }, () => runQuery(plan));
+  assert.equal(runs[0].count, 78);
+  assert.ok(runs.every(run => run.fingerprint === runs[0].fingerprint && run.count === runs[0].count));
+  const graph = buildGraph(runs[0].patients);
+  for (const edge of graph.edges.filter(edge => edge.type === 'REPORTED_BARRIER')) {
+    assert.ok(edge.documentId && edge.note_type && edge.quote);
+    const patient = patients.find(value => value.id === edge.patientId);
+    assert.ok(edge.sourceKind === 'coded' ? patient.socialNeeds.some(row => row.id === edge.documentId && row.display === edge.quote) : patient.notes.some(note => note.id === edge.documentId && note.text.includes(edge.quote)));
+  }
+});
+
+test('the fifth group and unscripted insulin question have independent query semantics', () => {
+  const standard = runQuery(parseQuestion('Patients with an open follow-up gap and no documented barrier'));
+  assert.equal(standard.count, 51);
+  assert.ok(standard.patients.every(patient => !patient.barriers.length));
+  const plan = parseQuestion('Which patients report a cost barrier and never picked up their discharge insulin?').plan;
+  assert.equal(plan.gapOnly, false);
+  assert.equal(plan.insulinNotPickedUp, true);
+  assert.deepEqual(plan.barriers, ['cost']);
+  assert.ok(runQuery(plan).patients.every(patient => patient.barriers.some(value => value.type === 'cost') && patient.medications.some(value => value.isInsulin && !value.pickedUp)));
+  const second = parseQuestion('Of those also with food insecurity', parseQuestion('Transportation barriers')).plan;
+  assert.equal(second.barrierMode, 'all');
+  assert.deepEqual(second.barriers, ['transportation', 'food']);
+});
+
+test('the ten node types and nine base relationships are exact, with inference separate', () => {
+  assert.equal(ontology.nodeTypes.length, 10);
+  assert.equal(ontology.relationships.length, 9);
+  assert.deepEqual(ontology.inferredRelationships, ['LIKELY_TO_RETURN']);
   const graph = buildGraph();
-  const ids = new Set(graph.nodes.map(n => n.id));
-  assert.equal(ids.size, graph.nodes.length);
-  assert.equal(new Set(graph.edges.map(e => e.id)).size, graph.edges.length);
-  assert.ok(graph.edges.every(e => ids.has(e.source) && ids.has(e.target)));
-  assert.equal(getMetrics().nodes, graph.nodes.length);
-  assert.equal(getMetrics().edges, graph.edges.length);
-  for (const edge of graph.edges.filter(e => e.type === 'EVIDENCES')) {
-    const source = graph.nodes.find(n => n.id === edge.source);
-    assert.ok(source.text.includes(edge.quote));
-  }
-  const one = buildGraph(['P0412']);
-  assert.equal(one.nodes.filter(n => n.type === 'Patient').length, 1);
-  assert.ok(one.edges.some(e => e.type === 'EVIDENCES' && e.source === 'P0412-D02'));
+  assert.deepEqual(new Set(graph.nodes.map(node => node.type)), new Set(ontology.nodeTypes));
+  assert.deepEqual(new Set(graph.edges.map(edge => edge.type)), new Set([...ontology.relationships, ...ontology.inferredRelationships]));
+  for (const edge of graph.edges) assert.ok(graph.nodes.some(node => node.id === edge.source) && graph.nodes.some(node => node.id === edge.target));
+  assert.equal(Object.keys(BARRIERS).length, 4);
 });
 
-test('draft preparation requires an active barrier, cites evidence, and explicitly remains unsent', () => {
-  const p = patients.find(p => p.id === 'P0412');
-  const draft = makeDraft(p, 'transportation');
-  assert.ok(draft.body.includes('P0412-D02'));
-  assert.ok(draft.body.includes(p.barriers[0].quote));
-  assert.ok(draft.body.includes('No message has been sent'));
-  assert.equal(draft.intervention, BARRIERS.transportation.intervention);
-  assert.throws(() => makeDraft(p, 'food'), /active/);
-  assert.throws(() => makeDraft({ ...p, gapOpen: false }, 'transportation'), /open A1c/);
+test('precision and recall are recomputed from hidden labels, including hard cases', () => {
+  const result = evaluateExtraction(truth);
+  assert.equal(result.total, 600);
+  assert.equal(result.truePositive, 127);
+  assert.equal(result.falsePositive, 0);
+  assert.equal(result.falseNegative, 0);
+  assert.equal(result.precision, 1);
+  assert.equal(result.recall, 1);
+  assert.deepEqual(result.hardCases, { passed: 60, total: 60 });
+  const altered = structuredClone(truth);
+  altered.cases.find(item => item.expected.length).expected = [];
+  assert.ok(evaluateExtraction(altered).precision < result.precision);
 });
 
-test('synthetic extraction evaluation reports actual outcomes and its validation limits', () => {
-  const evaluation = evaluateExtraction();
-  assert.equal(evaluation.total, 20);
-  assert.equal(evaluation.cases.length, 20);
-  assert.ok(evaluation.cases.every(c => typeof c.passed === 'boolean' && Array.isArray(c.actual)));
-  assert.equal(evaluation.passed, evaluation.cases.filter(c => c.passed).length);
-  assert.equal(evaluation.precision, evaluation.tp / (evaluation.tp + evaluation.fp));
-  assert.equal(evaluation.corpus.total, 1000);
-  assert.equal(evaluation.corpus.passed, 1000);
-  assert.match(evaluation.note, /not independently validated/);
-});
-
-test('unsupported or ambiguous filters refuse rather than return a different cohort', () => {
-  for (const question of [
-    'Find female diabetic patients',
-    'Find patients with A1c over 10',
-    'Find patients with transportation barriers not resolved',
-    'Find patients with current transportation and no longer cost barriers',
-    'Find patients without medication',
-    'Find patients with completed A1c tests',
-    'Find patients with no overdue tests',
-    'Find patients without an open care gap',
-    'Find patients with high A1c and an overdue A1c test',
-    'Find patients with transportation barriers over 50 years ago',
-    'Find patients with refill gaps for 30 days',
-    'Find top 0 patients',
-    'Find patients sorted by copay amount',
-  ]) assert.equal(parseQuestion(question).ok, false, question);
+test('per-barrier precision and recall expose individual misses without hiding them in the aggregate', () => {
+  const result = evaluateExtraction({ cases: [
+    { text: 'Patient has no ride to the clinic.', expected: [{ type: 'transportation', status: 'active' }], category: 'current-patient-barrier' },
+    { text: 'Patient has no ride to the clinic.', expected: [], category: 'routine-note' },
+    { text: 'Reviewed discharge instructions.', expected: [{ type: 'cost', status: 'active' }], category: 'current-patient-barrier' },
+  ] });
+  assert.deepEqual(result.perBarrier.transportation, { precision: 0.5, recall: 1, truePositive: 1, falsePositive: 1, falseNegative: 0 });
+  assert.deepEqual(result.perBarrier.cost, { precision: 0, recall: 0, truePositive: 0, falsePositive: 0, falseNegative: 1 });
+  assert.equal(Object.values(result.perBarrier).reduce((sum, metrics) => sum + metrics.truePositive, 0), result.truePositive);
+  assert.equal(Object.values(result.perBarrier).reduce((sum, metrics) => sum + metrics.falsePositive, 0), result.falsePositive);
+  assert.equal(Object.values(result.perBarrier).reduce((sum, metrics) => sum + metrics.falseNegative, 0), result.falseNegative);
 });

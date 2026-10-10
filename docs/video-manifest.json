@@ -1,0 +1,22 @@
+{
+  "artifact": "hospital-demo-walkthrough.mp4",
+  "description": "A fallback walkthrough assembled from actual local UI screenshots. Recorded demo states; not a continuous screen recording.",
+  "execution": "Local deterministic hospital engine and SQLite repository; all data synthetic.",
+  "snapshot": "2026-10-10",
+  "durationSeconds": 60,
+  "framesPerSecond": 24,
+  "resolution": { "width": 1920, "height": 1200 },
+  "audio": false,
+  "captureDirectory": "hospital-demo-captures, beside the careweave checkout",
+  "disclosure": "Recorded demo states | Local execution | Synthetic data | Not a continuous screen recording",
+  "states": [
+    { "file": "01-hospital.png", "seconds": 7.5, "title": "Hospital-owned facts + clinical notes" },
+    { "file": "02-graph.png", "seconds": 7.5, "title": "One patient's discharge story in the graph" },
+    { "file": "03-cohort.png", "seconds": 7.5, "title": "An exact cohort of 78 patients, with hospital actions and responsible roles" },
+    { "file": "04-evidence.png", "seconds": 7.5, "title": "P0412: the exact bedside sentence, written 2 days before discharge" },
+    { "file": "05-task.png", "seconds": 7.5, "title": "A source-backed task, ready for human review; nothing has been sent" },
+    { "file": "06-new-question.png", "seconds": 7.5, "title": "A different question: cost barrier + discharge insulin not picked up = 13 patients" },
+    { "file": "07-proof.png", "seconds": 7.5, "title": "Seeded extraction accuracy and live repeatability checks" },
+    { "file": "08-closing.png", "seconds": 7.5, "title": "78 patients in the answer; 16 can still be reached before day 30" }
+  ]
+}

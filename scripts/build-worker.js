@@ -5,7 +5,7 @@ await mkdir('dist/vendor', { recursive: true });
 await copyFile('node_modules/cytoscape/dist/cytoscape.min.js', 'dist/vendor/cytoscape.min.js');
 await mkdir('.sites-runtime', { recursive: true });
 const assets = {};
-const files = ['index.html', 'styles.css', 'app.js', 'engine.js', 'graph.js', 'vendor/cytoscape.min.js'];
+const files = ['index.html', 'styles.css', 'app.js', 'engine.js', 'graph.js', 'hospital-data.js', 'ontology.js', 'vendor/cytoscape.min.js'];
 for (const file of files) assets['/' + file] = { content: await readFile(resolve('dist', file), 'utf8'), type: file.endsWith('.js') ? 'text/javascript; charset=utf-8' : file.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/html; charset=utf-8' };
 await writeFile('.sites-runtime/assets.json', JSON.stringify(assets));
 await mkdir('dist/server', { recursive: true });

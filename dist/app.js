@@ -1,438 +1,806 @@
-import * as engine from './engine.js';
-import { createGraph, graphColors } from './graph.js';
+import { AS_OF, BARRIERS, makeDraft, matchesPlan } from "./engine.js";
+import { NOTE_TYPES } from "./ontology.js";
+import { createGraph, graphColors } from "./graph.js";
 
-const { BARRIERS, parseQuestion, runQuery, makeDraft, getMetrics, evaluateExtraction, extractBarriers } = engine;
-let patients = engine.patients;
-const $ = (s, root = document) => root.querySelector(s);
-const e = value => String(value ?? '').replace(/[&<>"']/g, x => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
-const icons = {
- grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
- queue:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h3"/>',
- lab:'<path d="M9 3h6M10 3v6l-6 10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2L14 9V3M8 15h8"/>',
- info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
- arrow:'<path d="M5 12h14M14 7l5 5-5 5"/>',
- chevron:'<path d="m9 5 7 7-7 7"/>',
- left:'<path d="m15 5-7 7 7 7"/>',
- search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
- sparkle:'<path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6ZM20 2v4M18 4h4"/>',
- check:'<path d="m5 12 4 4L19 6"/>',
- shield:'<path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/>',
- people:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 5v2"/>',
- clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
- document:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9ZM14 3v6h6M8 13h8M8 17h5"/>',
- download:'<path d="M12 3v12m-5-5 5 5 5-5M4 15v5h16v-5"/>',
- car:'<path d="m5 6-2 7v5h2m14 0h2v-5l-2-7ZM3 12h18M6 16h2M16 16h2M5 18v3M19 18v3"/>',
- coin:'<circle cx="12" cy="12" r="9"/><path d="M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9M12 6v12"/>',
- food:'<path d="M6 3v8M3 3v4a3 3 0 0 0 6 0V3M6 11v10M16 3v18M16 3c-4 4-4 10 0 10h3V3Z"/>',
- language:'<path d="M3 5h12M9 3v2M5 5c0 7 9 10 9 10M13 5c0 7-9 10-9 10M14 21l4-10 4 10M15.5 17h5"/>',
- home:'<path d="m3 10 9-8 9 8M5 9v12h14V9M9 21v-7h6v7"/>',
- filter:'<path d="M4 5h16l-6 7v7l-4 2v-9Z"/>',
- chart:'<path d="M4 3v17h17M8 15v-4M13 15V7M18 15v-7"/>',
- nodes:'<circle cx="5" cy="12" r="3"/><circle cx="19" cy="5" r="3"/><circle cx="19" cy="19" r="3"/><path d="m8 10 8-4M8 14l8 4"/>',
- close:'<path d="m6 6 12 12M6 18 18 6"/>',
- refresh:'<path d="M20 7v5h-5M4 17v-5h5M6 7a7 7 0 0 1 12-2l2 3M4 16l2 3a7 7 0 0 0 12-2"/>',
- lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/>',
- send:'<path d="m3 3 18 9-18 9 4-9ZM7 12h14"/>',
- copy:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/>',
- leaf:'<path d="M20 3C4 2 2 9 5 16c5 6 15 2 15-13ZM5 21l9-12"/>',
- target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
- code:'<path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18"/>',
- history:'<path d="M3 4v6h6M4 10a9 9 0 1 1 0 6M12 7v6l3 2"/>',
+const QUESTIONS = {
+  main: "Which patients discharged after a diabetes-related admission have an open follow-up gap and a documented barrier we can act on, and what is the right action for each?",
+  cost: "Which patients report a cost barrier and never picked up their discharge insulin?",
+  return: "Who is likely to return?",
 };
-const icon = (name, cls='') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.nodes}</svg>`;
-const brand = `<svg class="brand-mark" viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M12 3h8v10h10v8H20v12h-8V21H2v-8h10V3Z" fill="currentColor" opacity=".95"/><path d="M12 3v10H2M30 21H20v12" stroke="#122d38" stroke-width="3"/><path d="M20 3v10h10M2 21h10v12" stroke="#a5e4cf" stroke-width="2"/></svg>`;
-const barrierIcon = type => ({transportation:'car',cost:'coin',food:'food',health_literacy:'document'}[type] || 'nodes');
-const barrierLabel = type => BARRIERS[type]?.label || type.replaceAll('_',' ');
-const initials = patient => String(patient.name || patient.id).split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
-const num = value => Number(value || 0).toLocaleString();
-const date = value => value ? new Date(`${String(value).slice(0,10)}T12:00:00`).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'Date unavailable';
-const pct = value => `${Math.round(Number(value || 0) * (Number(value) <= 1 ? 100 : 1))}%`;
-const STORAGE = 'careweave.tasks.v1';
-let savedTasks = [];
-try { savedTasks = JSON.parse(localStorage.getItem(STORAGE) || '[]'); if (!Array.isArray(savedTasks)) savedTasks = []; } catch { savedTasks = []; }
+const TABLES = [
+  "Admissions and discharges",
+  "Problem list",
+  "Lab results",
+  "Discharge medications",
+  "Outpatient pharmacy",
+  "Appointments",
+  "Emergency department visits",
+  "Coded social needs",
+];
+const $ = (selector) => document.querySelector(selector);
+const esc = (value) =>
+  String(value ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+const num = (value) => Number(value || 0).toLocaleString();
+const date = (value) =>
+  value
+    ? new Date(`${String(value).slice(0, 10)}T12:00:00Z`).toLocaleDateString(
+        "en-US",
+        { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" },
+      )
+    : "Not recorded";
+const label = (type) =>
+  BARRIERS[type]?.label ||
+  (type === "standard"
+    ? "Standard discharge call"
+    : String(type || "").replaceAll("_", " "));
+const owner = (type) => BARRIERS[type]?.owner || "Care transitions nurse";
+const nextAction = (type) =>
+  BARRIERS[type]?.action ||
+  "Make the standard discharge call and reschedule the follow-up visit.";
+const pct = (value) =>
+  Number.isFinite(value) ? `${Math.round(value * 1000) / 10}%` : "—";
+const relative = (note) => {
+  const days = Number(note.daysFromDischarge || 0);
+  return days === 0
+    ? "on discharge day"
+    : `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} ${days < 0 ? "before" : "after"} discharge`;
+};
+const reasons = (p) =>
+  (p.followUpGap?.reasons || [])
+    .map((r) =>
+      typeof r === "string" ? r.replaceAll("_", " ") : r.label || r.reason,
+    )
+    .join("; ");
+const pill = (text, tone = "") =>
+  `<span class="pill ${tone}">${esc(text)}</span>`;
+const btn = (text, cmd, attributes = "", style = "") =>
+  `<button class="btn ${style}" data-cmd="${cmd}" ${attributes}>${text}</button>`;
+const empty = (title, body) =>
+  `<div class="empty"><span>✳</span><h2>${title}</h2><p>${body}</p></div>`;
+const heading = (eyebrow, title, description, controls = "") =>
+  `<div class="page-heading"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="subtitle">${description}</p></div>${controls}</div>`;
 const state = {
- view: 'graph', question:'Find diabetic patients who are overdue for an A1c test and have transportation barriers.',
- plan:null, result:null, summary:'', queryError:'', stale:false, page:0, perPage:7, busy:false,
- capacity:20, tasks:savedTasks, queueFilter:'pending', api:{model:false}, drawer:null,
- labText:'I used to miss appointments because I had no ride, but my daughter now drives me and transportation is no longer a problem.',
- labResult:null, repeat:null, queryId:0, lastRun:null,
- graphMode:'population', graphData:null, graphPatient:'P0412', graphSelected:null, graphError:'', graphLoading:false,
- events:[], runs:[], answer:'', connected:false, mlMetrics:null, mlPrediction:null, runId:null, queryMode:'agent', lastEngine:null,
- ingest:{patientId:'P0412',date:'2026-10-10',type:'Care coordinator call',text:'Patient: My daughter now drives me to appointments. Transportation is no longer a problem.',preview:null,committed:null,busy:false,error:''},
- impact:{budget:1000,outreachCapacity:20,barriers:Object.keys(BARRIERS),scope:'population',result:null,graph:null,selected:null,busy:false,error:'',dirty:false,request:0,comparison:'optimized'},
- proof:{text:'Patient: I no longer need transportation assistance. My daughter now drives me to appointments.',result:null,busy:false,error:''},
+  view: "home",
+  connected: false,
+  status: {},
+  patients: [],
+  metrics: {},
+  tasks: [],
+  runs: [],
+  question: QUESTIONS.main,
+  plan: null,
+  result: null,
+  events: [],
+  answer: "",
+  elapsed: null,
+  busy: false,
+  error: "",
+  stale: false,
+  baseline: null,
+  graph: null,
+  graphExpanded: false,
+  graphMode: "patient",
+  patientId: "P0412",
+  selected: null,
+  page: 0,
+  filter: "all",
+  taskFilter: "pending",
+  evaluation: null,
+  proof: null,
+  proofText: "Denies transportation concerns. Wife drives.",
+  note: {
+    patientId: "P0412",
+    text: "Transport arranged by SW prior to discharge.",
+    date: AS_OF,
+    type: NOTE_TYPES[4],
+    preview: null,
+  },
+  simulation: null,
+  budget: 1000,
+  capacity: 20,
+  strategy: "optimized",
+  drawer: null,
 };
-let graphController=null;
-let graphRequest=0;
-let metrics;
-try { metrics = getMetrics(); } catch { metrics = {}; }
-let evaluation;
-let toastTimer;
-let drawerReturnFocus;
-
-function toast(message) { const node=$('#toast'); node.textContent=message; node.classList.add('visible'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>node.classList.remove('visible'),4000); }
-function saveTasks() { try { localStorage.setItem(STORAGE,JSON.stringify(state.tasks)); } catch { toast('Browser storage is unavailable. Keep this tab open to retain drafts.'); } }
-function eligible(patient) { return !state.stale && state.plan?.status!=='resolved' && Boolean(patient.gapOpen) && patient.barriers?.some(b=>b.status==='active'&&(!state.plan?.barriers?.length||state.plan.barriers.includes(b.type))); }
-function chosenBarrier(patient) {
- const list=patient.barriers || [];
- const status=state.plan?.status || 'active';
- return list.find(b=>(status==='any'||b.status===status) && (!state.plan?.barriers?.length||state.plan.barriers.includes(b.type))) || list.find(b=>b.status==='active') || list[0];
-}
-function displayGap(patient,queryAware=true) { return queryAware&&state.plan?.refillMin != null ? 'Medication refill' : queryAware&&state.plan?.gapType==='elevated' ? 'Elevated A1c review' : patient.daysOverdue>0 ? 'A1c blood test' : patient.gapOpen ? 'Elevated A1c review' : 'No open care gap'; }
-function gapDetail(patient) { return state.plan?.refillMin!=null?`${num(patient.refillGap)} days since refill due`:state.plan?.gapType==='elevated'?`A1c ${patient.a1c}% · demo rule`:patient.daysOverdue>0?`${num(patient.daysOverdue)} days overdue`:patient.gapOpen?`A1c ${patient.a1c}% · demo rule`:'No open care gap'; }
-function highPriority(patient) { return typeof patient.priority==='number' ? patient.priority>=70 : /high|urgent/i.test(patient.priority); }
-function patientMarkup(patient, compact=false) { return `<div class="patient-cell"><span class="avatar patient-avatar">${e(initials(patient))}</span><div><strong>${e(patient.name)}</strong><small>${e(patient.id)}${compact?'':` <span aria-hidden="true">·</span> ${e(patient.age)} years`}</small></div></div>`; }
-function barrierPill(b) { return b ? `<span class="barrier-pill ${e(b.type)} ${b.status==='resolved'?'resolved':''}">${icon(barrierIcon(b.type))}${e(barrierLabel(b.type))}${b.status==='resolved'?' · resolved':''}</span>` : '<span class="mini-label">No active barrier</span>'; }
-function stat(label,value,suffix,description,iconName,green=false){return `<div class="card stat-card"><div class="stat-top">${label}<span class="stat-icon">${icon(iconName)}</span></div><div class="stat-value">${e(value)}${suffix?`<small>${suffix}</small>`:''}</div><div class="stat-description ${green?'green':''}">${green?icon('check'):''}${description}</div></div>`;}
-function filterTags(){
- if(!state.plan)return '';
- const p=state.plan;
- return [p.diabetesOnly?'Diabetes':null,p.gapOnly?p.gapType==='overdue'?'A1c overdue':p.gapType==='elevated'?'Elevated A1c':'Open care gap':null,p.refillMin!=null?`Refill gap ≥ ${p.refillMin} days`:null,...(p.barriers||[]).map(barrierLabel),p.status==='resolved'?'Resolved barriers':p.status==='any'?'All barrier states':'Active barriers',p.ageMin!=null?`Age ≥ ${p.ageMin}`:null,p.ageMax!=null?`Age ≤ ${p.ageMax}`:null,p.limit?`Top ${p.limit}`:null].filter(Boolean).map(x=>`<span class="filter-tag">${e(x)}</span>`).join('');
-}
-function footer(){return `<footer class="footnote"><div>${icon('shield')}100% fictional patient data. Human approval required for all demo tasks.</div><div>${icon('nodes')}Structured results. Source-linked evidence. Reproducible answers.</div></footer>`;}
-
-function render(){
- graphController?.destroy();graphController=null;
- const views=[['graph','nodes','Care graph'],['workbench','grid','Cohort workbench'],['impact','target','Impact studio'],['proof','shield','Proof challenge'],['queue','queue','Care queue'],['ingest','document','Live note lab'],['lab','lab','Evidence lab'],['runs','history','Run history']];
- const labels=Object.fromEntries(views.map(([v,i,l])=>[v,l]));
- $('#app').innerHTML=`<div class="app-shell"><aside class="sidebar"><div class="brand">${brand}<span>careweave</span></div><div class="brand-caption">Every barrier has a story</div><div class="nav-label">CARE INTELLIGENCE</div><nav class="nav" aria-label="Main navigation">${views.map(([v,i,l])=>`<button class="nav-item ${state.view===v?'active':''}" data-action="view" data-view="${v}" title="${l}" ${state.view===v?'aria-current="page"':''}>${icon(i)}<span>${l}</span>${v==='queue'&&state.tasks.filter(t=>t.status==='pending').length?`<span class="nav-count">${state.tasks.filter(t=>t.status==='pending').length}</span>`:''}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="sidebar-health"><span class="status-dot ${state.connected?'online':''}"></span><b>${state.connected?'Backend connected':'Static preview'}</b><small>${state.connected?`${e(state.api.storage||'Persistent')} · ${state.api.model?'OpenAI configured':'Local baseline'}`:'Server features unavailable'}</small></div><p>Find the missing context.<br>Make the next step count.</p><button class="text-button" data-action="view" data-view="about">How Careweave works ${icon('arrow')}</button></div></aside><header class="topbar"><div class="breadcrumbs">Care intelligence ${icon('chevron')}<b>${labels[state.view]||'About Careweave'}</b></div><div class="topbar-right"><span class="live-badge"><i></i>${num(patients.length)} fictional patients</span><span class="environment-badge">DEMO WORKSPACE</span><div class="avatar" title="Demo workspace">CW</div></div></header><main class="content ${state.view==='graph'?'graph-content':''}" id="main-content">${state.view==='graph'?graphView():state.view==='workbench'?workbench():state.view==='impact'?impactView():state.view==='proof'?proofView():state.view==='queue'?queueView():state.view==='ingest'?ingestView():state.view==='lab'?labView()+mlLab():state.view==='runs'?runsView():aboutView()}${footer()}</main></div>`;
- bindEvents();
- if(state.view==='graph')mountGraph();
- if(state.view==='impact')mountImpactGraph();
-}
-
-function workbench(){
- const r=state.result;
- const list=r?.patients||[];
- const evidenceCount=list.filter(p=>chosenBarrier(p)?.documentId).length;
- const overdue=list.map(p=>p.daysOverdue||0).sort((a,b)=>a-b);
- const median=overdue.length?overdue[Math.floor(overdue.length/2)]:0;
- return `<div class="page-heading"><div><div class="eyebrow">${icon('sparkle')}The story behind the care gap</div><h1>Find the reason. Close the gap.</h1><p class="subtitle">Turn the context hidden in patient notes into a clearer path to care.</p></div><button class="btn" data-action="audit">${icon('download')}Export audit</button></div><section class="card query-card ${state.busy?'busy':''}" aria-labelledby="query-title"><div class="query-label"><strong id="query-title">${icon('sparkle')}Ask your care population</strong>${engineToggle()}</div><form id="query-form"><div class="query-input-wrap">${icon('search')}<label class="sr-only" for="question">Ask about the synthetic patient population</label><textarea id="question" rows="1" placeholder="Who is missing care, and what is getting in the way?">${e(state.question)}</textarea><button class="btn btn-primary" type="submit" ${state.busy?'disabled':''}>${state.busy?icon('refresh','busy-icon'):icon('sparkle')}${state.busy?'Analyzing…':'Run analysis'}${state.busy?'':icon('arrow')}</button></div></form><div class="query-chips"><span>TRY ASKING</span><button class="chip" data-action="example" data-example="transport">${icon('car')}Transportation + A1c</button><button class="chip" data-action="example" data-example="cost">${icon('coin')}Cost + missed refills</button><button class="chip" data-action="example" data-example="food">${icon('food')}Food insecurity</button><button class="chip" data-action="example" data-example="resolved">${icon('history')}What changed?</button><button class="chip" data-action="example" data-example="followup">${icon('filter')}Narrow to age 65+</button></div>${state.queryError?`<div class="query-message" role="alert">${e(state.queryError)}${state.stale?' The previous result is still shown below.':''}</div>`:''}</section><div class="stats-grid">${stat('Patients in this cohort',r?num(r.count):'—','',`${r?'Exact match across '+num(patients.length)+' records':'Ready to analyze your population'}`,'people')}${stat('Source-linked results',r?`${evidenceCount}`:'—',r&&list.length?`/ ${list.length}`:'','Displayed patients with barrier evidence','shield',true)}${stat('Typical time overdue',r?median:'—','days','Median across matched A1c records','clock')}${stat('Resolved barriers excluded',r?num(r.excludedResolved):'—','','Status-aware, beyond keyword matching','history',true)}</div><div class="workspace-grid"><div><section class="card results-card" aria-labelledby="cohort-title"><div class="section-header results-header"><div><div class="section-title"><h2 id="cohort-title">Your care cohort</h2><span class="number-badge">${r?num(r.count):0}</span>${state.stale?'<span class="stale-tag">Previous result</span>':''}</div><div class="subcopy">${e(state.summary||'Each patient, connected to the reason their care is overdue.')}${state.result?`<span class="result-engine-inline">${e(resultEngineName())}</span>`:''}</div></div><button class="btn btn-sm" data-action="csv" ${!list.length?'disabled':''}>${icon('download')}Export CSV</button></div><div class="filter-strip">${icon('filter')}${filterTags()}<span class="match-rule">${state.plan?.barrierMode==='all'?'ALL':'ANY'} barrier match</span></div>${resultsTable()}<div class="table-footer"><span>${list.length?`Showing ${state.page*state.perPage+1}–${Math.min((state.page+1)*state.perPage,list.length)} of ${num(list.length)} patients`:'No matching patients'} ${list.length?'· sorted by '+(state.plan?.sort==='age'?'age':'outreach priority'):''}</span><div class="pagination"><button class="icon-btn" aria-label="Previous page" data-action="prev" ${state.page===0?'disabled':''}>${icon('left')}</button><span>${state.page+1} / ${Math.max(1,Math.ceil(list.length/state.perPage))}</span><button class="icon-btn" aria-label="Next page" data-action="next" ${(state.page+1)*state.perPage>=list.length?'disabled':''}>${icon('chevron')}</button></div></div></section>${capacityCard()}</div><aside class="insights-column" aria-label="Evidence and reasoning">${evidencePreview(list.find(p=>p.id==='P0412')||list[0])}${tracePanel()}${graphPanel()}</aside></div>`;
-}
-function resultsTable(){
- const list=state.result?.patients||[];
- if(!list.length)return `<div class="empty-state">${icon('search')}<h3>${state.result?'No patients match these filters':'Your next insight starts with a question'}</h3><p>${state.result?'Try broadening the barrier, removing an age filter, or including resolved barriers. An empty cohort is an answer, too.':'Ask about transportation, medication costs, food access, health literacy barriers in the fictional diabetes population.'}</p></div>`;
- return `<div class="table-container"><table><thead><tr><th>Patient</th><th>Care gap</th><th>Hidden barrier</th><th class="evidence-column">Evidence</th><th>Priority</th><th><span class="sr-only">Open patient</span></th></tr></thead><tbody>${list.slice(state.page*state.perPage,(state.page+1)*state.perPage).map(p=>{const b=chosenBarrier(p);return `<tr data-patient="${e(p.id)}" tabindex="0" role="button" aria-label="View evidence and next step for ${e(p.name)}"><td>${patientMarkup(p)}</td><td><div class="gap-cell"><strong>${e(displayGap(p))}</strong><small>${e(gapDetail(p))}</small></div></td><td>${barrierPill(b)}</td><td class="evidence-column">${b?`<span class="evidence-ok">${icon('shield')}Source linked</span>`:'<span class="mini-label">No barrier evidence</span>'}</td><td><span class="priority ${highPriority(p)?'high':'medium'}"><i></i>${highPriority(p)?'High':'Standard'}</span></td><td><span class="row-arrow">${icon('arrow')}</span></td></tr>`}).join('')}</tbody></table></div>`;
-}
-function evidencePreview(patient){
- if(!patient)return `<div class="card evidence-card"><div class="section-header"><h2>Evidence, before action</h2>${icon('document')}</div><div class="empty-state"><p>Patient source quotes appear here when a cohort is found.</p></div></div>`;
- const b=chosenBarrier(patient);
- if(!b)return '';
- return `<section class="card evidence-card"><div class="section-header"><div class="section-title"><h2>Context that changes care</h2></div>${icon('document')}</div><div class="evidence-person"><span class="avatar">${e(initials(patient))}</span><div><strong>${e(patient.name)}</strong> <small>· ${e(patient.id)}</small></div></div><blockquote class="evidence-quote">“${e(b.quote)}”</blockquote><div class="quote-source">${icon('document')}${e(b.source||'Patient note')} <span>·</span> ${date(b.date)}</div><div class="evidence-bottom"><span class="evidence-ok">${icon('shield')}${b.status==='resolved'?'Resolution recognized':'Exact source excerpt'}</span><button class="text-button" data-action="patient" data-id="${e(patient.id)}">Inspect evidence ${icon('arrow')}</button></div></section>`;
-}
-function tracePanel(){
- const r=state.result;
- const events=r?.events||[];
- const traces=events;
- return `<section class="card trace-card"><div class="section-header"><h2>How we got here</h2><span class="trace-time">${state.lastRun?'Execution complete':'Ready'}</span></div><div class="trace-list">${traces.map((ev,i)=>`<div class="trace-step"><span class="trace-dot">${icon('check')}</span><strong>${e(({plan_cohort:'Understand the question',query_clinical_facts:'Find the clinical care gaps',traverse_barrier_evidence:'Connect the barrier evidence',validate_and_count:'Verify and count patients',lookup_patient:'Check patient context',lookup_structured_barrier:'Check the structured record',search_patient_notes:'Inspect the original notes'}[ev.tool])||String(ev.tool||ev.step).replaceAll('_',' '))}</strong><p>${e(ev.say||`${num(ev.found)} records matched`)}</p></div>`).join('')}</div>${r?`<details class="trace-details"><summary>Inspect the query & provenance</summary><pre>${e(JSON.stringify({plan:state.plan,fingerprint:r.fingerprint,events},null,2))}</pre></details>`:''}</section>`;
-}
-function graphMarkup(patient=null,selectedBarrier=null){
- const barrier=selectedBarrier||(patient?chosenBarrier(patient):null);
- const label=patient?'Patient':`${num(state.result?.count)} patients`;
- const bLabel=barrier?barrierLabel(barrier.type):(state.result?.groups||[]).length===1?state.result.groups[0].label:'Care barriers';
- return `<svg class="cohort-graph" viewBox="0 0 280 132" role="img" aria-label="${e(label)} connected to care gap, documented barrier, and source evidence"><defs><marker id="graph-arrow-${patient?'p':'c'}" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"><path d="M0 0 4 2 0 4Z" fill="#b9cec4"/></marker></defs><path d="M66 68 130 34M66 68h64M66 68l64 34M155 34l66 34M155 68h66M155 102l66-34" stroke="#c4d8d0" stroke-width="1.2" fill="none"/><circle cx="53" cy="68" r="21" fill="#e5f1ec" stroke="#b9d9c9"/><circle cx="53" cy="63" r="4" fill="none" stroke="#6a9b83" stroke-width="1.5"/><path d="M46 75v-2a7 7 0 0 1 14 0v2" stroke="#6a9b83" fill="none" stroke-width="1.5"/><rect x="116" y="20" width="65" height="22" rx="6" fill="#f2f6fa" stroke="#dce6ef"/><text x="148.5" y="34" fill="#7290aa" font-size="7.5" text-anchor="middle" font-family="DM Sans,sans-serif">${e(bLabel).slice(0,22)}</text><rect x="116" y="57" width="65" height="22" rx="6" fill="#f8f4ee" stroke="#eae1d3"/><text x="148.5" y="71" fill="#ac9576" font-size="7.5" text-anchor="middle" font-family="DM Sans,sans-serif">Care gap</text><rect x="116" y="94" width="65" height="22" rx="6" fill="#f2f5f4" stroke="#e0e7e4"/><text x="148.5" y="108" fill="#88a094" font-size="7.5" text-anchor="middle" font-family="DM Sans,sans-serif">Source note</text><circle cx="230" cy="68" r="19" fill="#eef7f1" stroke="#c8e0d2"/><path d="m222 68 5 5 10-10" fill="none" stroke="#75a78b" stroke-width="1.5"/><text x="53" y="103" fill="#789288" font-size="8" text-anchor="middle" font-family="DM Sans,sans-serif">${e(label)}</text><text x="230" y="103" fill="#789288" font-size="8" text-anchor="middle" font-family="DM Sans,sans-serif">${barrier?.status==='resolved'?'Resolved':'Next step'}</text></svg>`;
-}
-function graphPanel(){return `<section class="card graph-card"><h3>A connected care story</h3><div class="subcopy">The evidence behind every recommendation</div>${graphMarkup()}<div class="graph-caption">Patient → barrier → source → coordinated care</div></section>`;}
-function capacityCard(){
- const list=(state.result?.patients||[]).filter(eligible);
- const cap=Math.min(state.capacity,list.length);
- return `<section class="card capacity-card"><div class="capacity-heading"><span class="capacity-icon">${icon('target')}</span><div><h2>Make a small team go further</h2><p>Plan an outreach batch that fits today’s capacity.</p></div><span class="unique-tag">Capacity planner</span></div><div class="capacity-body"><div><label class="range-meta" for="capacity">Available outreach slots <strong id="capacity-label">${state.capacity} patients</strong></label><input type="range" id="capacity" min="1" max="100" value="${state.capacity}" aria-describedby="capacity-note"/><div class="range-labels"><span>1 patient</span><span>100 patients</span></div></div><div class="capacity-estimate"><strong id="capacity-count">${cap}</strong><span> / ${list.length}</span><p>eligible patients in reach<br>with your available capacity</p></div></div><div class="capacity-bottom"><span id="capacity-note">Opportunity estimate, not a clinical outcome.<br>Patients ranked by demo outreach priority.</span><button class="btn btn-soft btn-sm" data-action="batch" ${!list.length?'disabled':''}>${icon('queue')}Prepare <span id="batch-count">${cap}</span> drafts ${icon('arrow')}</button></div></section>`;
-}
-
-function labView(){
- if(!evaluation)evaluation=evaluateExtraction();
- const cases=evaluation.cases||[];
- return `<div class="page-heading"><div><div class="eyebrow">${icon('lab')}Trust is something you can test</div><h1>Show your work. Every time.</h1><p class="subtitle">Probe the extraction rules, test a tricky sentence, and reproduce a cohort.</p></div><button class="btn" data-action="lab-export">${icon('download')}Export test results</button></div><div class="lab-grid"><div><section class="card lab-card"><h2>Language changes the answer.</h2><p>A mention of a barrier is not always a current patient barrier. Try a negation, a family member, or a problem that has been resolved.</p><label class="field-label" for="lab-text">Paste a fictional note excerpt</label><textarea class="text-field" id="lab-text">${e(state.labText)}</textarea><button class="btn btn-primary" data-action="check-sentence">${icon('lab')}Inspect this sentence</button>${state.labResult!==null?`<div class="lab-result"><p>${state.labResult.length?`${state.labResult.length} patient-specific assertion${state.labResult.length===1?'':'s'} found.`:'No active or resolved patient-specific barrier was extracted.'}</p>${state.labResult.length?state.labResult.map(b=>`<div style="margin-top:12px">${barrierPill(b)}<p style="margin-top:8px">“${e(b.quote)}”</p></div>`).join(''):''}</div>`:''}<p class="inline-note">This demo uses inspectable, deterministic extraction rules. The evaluation measures this included synthetic fixture set; it does not establish clinical validity or performance on real records.</p></section><section class="card lab-card"><h2>Same question. Same cohort.</h2><p>Execute the current structured query twice and compare the exact ordered patient IDs and result fingerprints.</p><button class="btn btn-soft" data-action="repeat">${icon('refresh')}Run repeatability check</button>${state.repeat?`<div class="lab-result"><p>${state.repeat.ok?'✓ Identical patient IDs and fingerprints across both runs.':'Results differed between the two executions.'}</p><pre>${e(JSON.stringify(state.repeat,null,2))}</pre></div>`:''}</section></div><section class="card lab-card"><div class="section-title"><h2>Extraction scorecard</h2><span class="number-badge">${num(evaluation.total||cases.length)} fixtures</span></div><div class="lab-metrics"><div class="lab-metric"><strong>${pct(evaluation.precision)}</strong><small>Precision</small></div><div class="lab-metric"><strong>${pct(evaluation.recall)}</strong><small>Recall</small></div><div class="lab-metric"><strong>${pct(evaluation.f1)}</strong><small>F1 score</small></div></div><p>Executed against the same extractor used to build the patient graph. Expand any case to inspect expected and actual assertions.</p><div>${cases.map(c=>`<div class="test-row"><details><summary>${e(c.name||c.id||'Extraction case')}</summary><p>“${e(c.text)}”</p><p><b>Expected:</b> ${e(JSON.stringify(c.expected))}<br><b>Actual:</b> ${e(JSON.stringify(c.actual))}</p></details><span class="test-pass ${c.passed?'':'test-fail'}">${c.passed?'PASS':'FAIL'}</span></div>`).join('')}</div></section></div>`;
-}
-function aboutView(){return `<div class="page-heading"><div><div class="eyebrow">${icon('leaf')}Care is more than a clinical record</div><h1>Built for the reason behind the gap.</h1><p class="subtitle">A focused prototype that connects evidence to useful, human-approved action.</p></div></div><div class="about-grid"><section class="card about-card">${icon('people')}<h2>One fictional population</h2><p>${num(patients.length)} synthetic patients, ${num(metrics.docs)} fictional notes, and a diabetes-focused care workflow. There are no real patient records in this demo.</p></section><section class="card about-card">${icon('nodes')}<h2>Structured, auditable answers</h2><p>Patient facts and current barrier assertions form a persisted, typed graph. Queries select exact cohorts. Every barrier is attached to its original source document.</p></section><section class="card about-card">${icon('queue')}<h2>A next step, with oversight</h2><p>The capacity planner turns a cohort into editable coordination drafts. You inspect the evidence, review the next step, and explicitly approve. Nothing is sent externally.</p></section></div><section class="card about-bottom"><h2>What makes Careweave different</h2><p>Context is temporal. “I have no ride” and “I no longer need help with rides” should never lead to the same care task. Careweave tracks the latest patient-specific assertion, preserves source documents, and lets you inspect resolved barriers directly. The evidence lab makes its limitations and consistency testable.</p><p>Priority and overdue thresholds are fixed demonstration policies. Program eligibility, clinical decisions, and any actual contact require review by a qualified care team. The backend stores patients, graph facts, drafts, approvals, and run history. An optional server-side OpenAI agent calls constrained tools; exact filtering and counts remain deterministic.</p><button class="btn btn-soft" data-action="view" data-view="lab">Test the evidence engine ${icon('arrow')}</button></section>`;}
-
-async function api(path,options={}){
- const response=await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:options.signal||AbortSignal.timeout(60000)});
- let data;try{data=await response.json();}catch{throw new Error('The backend did not return JSON. Start the Careweave server.');}
- if(!response.ok||data.ok===false)throw new Error(data.error||`Request failed (${response.status}).`);
- return data;
-}
-async function refreshData(){
- const data=await api('/api/bootstrap');
- if(Array.isArray(data.patients))patients=data.patients;
- if(data.metrics)metrics=data.metrics;
- if(data.tasks)state.tasks=data.tasks;
- if(data.runs)state.runs=data.runs;
- return data;
-}
-function engineToggle(){return state.api.model?`<div class="engine-switch" role="group" aria-label="Query engine"><button data-action="engine-mode" data-mode="agent" class="${state.queryMode==='agent'?'active':''}" ${state.busy?'disabled':''}>${icon('sparkle')}OpenAI agent</button><button data-action="engine-mode" data-mode="baseline" class="${state.queryMode==='baseline'?'active':''}" ${state.busy?'disabled':''}>${icon('code')}Local baseline</button></div>`:`<span class="engine-local-label">${icon('code')}Local baseline · ${state.connected?'SQL graph queries':'static preview'}</span>`;}
-function resultEngineName(){return state.lastEngine==='model-agent'?'OpenAI agent':state.lastEngine==='static-baseline'?'Static baseline':'Local baseline';}
-const money = value => Number(value||0).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
-function impactView(){
- const s=state.impact,r=s.result,a=r?.optimized,b=r?.baseline,selected=(r?.[s.comparison]?.allocations||[]).find(x=>x.patientId===s.selected);
- return `<div class="page-heading"><div><div class="eyebrow">${icon('target')}The next question after finding the barrier</div><h1>What if help arrived together?</h1><p class="subtitle">Give the same resources to two planning strategies. Compare support coverage and priority tradeoffs.</p></div><span class="scenario-tag">${icon('lab')}SIMULATION · NO RECORDS CHANGED</span></div>
- <div class="impact-layout"><section class="card impact-controls"><div class="section-title"><h2>Your resources</h2><span class="number-badge">01</span></div><p class="subtitle">Adjust the budget, choose available supports, and let the graph connect the needs.</p><div class="budget-presets"><button class="chip" data-action="impact-preset" data-budget="350">Try a tight $350 budget</button><button class="chip" data-action="impact-preset" data-budget="1000">$1,000</button></div><label class="range-meta" for="impact-budget">Illustrative support budget <strong id="impact-budget-value">${money(s.budget)}</strong></label><input type="range" id="impact-budget" min="0" max="5000" step="50" value="${s.budget}"/><div class="range-labels"><span>$0</span><span>$5,000</span></div><label class="range-meta" for="impact-capacity">Outreach capacity <strong id="impact-capacity-value">${s.outreachCapacity} patients</strong></label><input type="range" id="impact-capacity" min="1" max="100" value="${s.outreachCapacity}"/><div class="range-labels"><span>1 patient</span><span>100 patients</span></div><span class="field-label">Available supports</span><div class="support-options">${Object.keys(BARRIERS).map(type=>`<label><input type="checkbox" class="impact-support" value="${type}" ${s.barriers.includes(type)?'checked':''}/><span class="support-icon ${type}">${icon(barrierIcon(type))}</span><span>${e(barrierLabel(type))}<small>${money(r?.scenario?.costs?.[type]??({transportation:40,cost:25,food:30,health_literacy:15}[type]))} / support · ${r?.scenario?.capacities?.[type]??20} slots</small></span></label>`).join('')}</div><label class="field-label" for="impact-scope">Patient population</label><select id="impact-scope" class="text-field"><option value="population" ${s.scope==='population'?'selected':''}>All eligible fictional patients</option><option value="cohort" ${s.scope==='cohort'?'selected':''} ${!state.result||state.stale?'disabled':''}>Current displayed cohort (${state.result?.patients?.length||0})</option></select><button class="btn btn-primary" data-action="simulate" ${s.busy||!state.connected?'disabled':''}>${icon(s.busy?'refresh':'nodes',s.busy?'busy-icon':'')}${s.busy?'Comparing strategies…':'Run resource simulation'}${icon('arrow')}</button><p class="inline-note" id="impact-state">${!state.connected?'Start the backend to run this simulation.':s.dirty?'Controls changed. Recalculate to refresh the comparison.':'One outreach slot per patient; each selected support consumes budget and program capacity.'}</p>${s.error?`<div class="query-message" role="alert">${e(s.error)}</div>`:''}</section>
- <div class="impact-results ${s.dirty?'scenario-dirty':''}">${r?`<div class="impact-comparison" aria-live="polite"><div class="comparison-card"><span class="mini-label">PRIORITY-FIRST BASELINE</span><strong>${num(b.allBarriersAddressed)}</strong><span>patients with all documented barriers covered</span><p>${num(b.patientsReached)} reached · ${money(b.budgetUsed)} allocated</p></div><div class="comparison-card graph-aware"><span class="mini-label">GRAPH-AWARE BUNDLED SUPPORT</span><strong>${num(a.allBarriersAddressed)}</strong><span>patients with all documented barriers covered</span><p>${num(a.patientsReached)} reached · ${money(a.budgetUsed)} allocated</p>${r.difference?.allBarriersAddressed?`<div class="impact-delta">${Number(r.difference.allBarriersAddressed)>0?'+':''}${num(r.difference.allBarriersAddressed)} complete support bundles</div>`:'<div class="impact-delta neutral">Equal complete coverage at these settings</div>'}</div></div>${r.tradeoffs?`<div class="scenario-tradeoff">${icon('info')}<div><b>More coverage can mean a different priority mix.</b><span>Average synthetic priority: ${Number(r.tradeoffs.optimizedAveragePriority||0).toFixed(1)} graph-aware vs ${Number(r.tradeoffs.baselineAveragePriority||0).toFixed(1)} baseline. ${num(r.tradeoffs.highPriorityWithoutSupport)} patients at priority ${num(r.tradeoffs.highPriorityThreshold)}+ remain without support in the graph-aware scenario.</span></div></div>`:''}<div class="scenario-summary"><span>${icon('people')}<b>${num(a.totalActions)}</b> support actions</span><span>${icon('nodes')}<b>${num(a.duplicateOutreachAvoided)}</b> bundled contacts</span><span>${icon('coin')}<b>${money(a.budgetRemaining)}</b> unallocated</span></div><section class="impact-graph-stage" aria-label="Scenario evidence graph"><div class="impact-graph-top"><div><span class="mini-label">THE GRAPH BEHIND THE PLAN</span><h2>${num(r[s.comparison].patientsReached)} patients. Connected support.</h2></div><div class="scenario-switch" role="group" aria-label="Scenario graph strategy"><button data-action="impact-strategy" data-strategy="baseline" class="${s.comparison==='baseline'?'active':''}">Baseline</button><button data-action="impact-strategy" data-strategy="optimized" class="${s.comparison==='optimized'?'active':''}">Graph-aware</button><button data-action="graph-fit" aria-label="Fit scenario graph">${icon('target')}</button></div></div><div id="impact-canvas" aria-label="Graph of planned patients and their documented evidence" tabindex="0"></div><div class="impact-graph-note">Highlighted paths support this simulated allocation. Select a patient to inspect the sources.</div></section><section class="card impact-evidence" id="impact-evidence">${impactEvidence(selected)}</section>`:`<section class="impact-intro"><span class="impact-orbit">${icon('nodes')}</span><div class="eyebrow">Beyond a ranked patient list</div><h2>A ride alone may not be enough.</h2><p>A patient can face transportation and medication costs at the same time. Compare a priority-first list with a graph-aware plan that considers connected barriers together.</p><div class="impact-story"><span>${icon('people')}One patient</span><b>→</b><span>${icon('car')}${icon('coin')}Connected needs</span><b>→</b><span>${icon('queue')}Coordinated support</span></div><button class="btn btn-primary" data-action="simulate" ${s.busy||!state.connected?'disabled':''}>Compare with ${money(s.budget)} ${icon('arrow')}</button></section>`}</div></div>
- ${r?`<section class="card simulation-assumptions"><div><div class="eyebrow">${icon('shield')}An honest counterfactual</div><h2>Support coverage is not a clinical outcome.</h2><p>This scenario assumes the selected supports become available. It does not predict completed tests, program eligibility, barrier resolution, or improved health.</p></div><details><summary>Inspect assumptions & reproducibility</summary><p>Deterministic greedy planning is a heuristic, not a guaranteed optimal allocation. Counts come from current source-linked assertions. “Bundled contacts” is support actions minus patients reached under a one-contact-per-patient assumption.</p><p>${num(r.population?.eligible)} eligible patients · ${num(r.population?.withSelectedBarriers)} with selected barriers · fingerprint <code>${e(r.fingerprint)}</code></p><pre class="json-detail">${e(JSON.stringify(r.assumptions,null,2))}</pre><button class="btn btn-sm" data-action="impact-export">${icon('download')}Export complete scenario</button></details></section>`:''}`;
-}
-function impactEvidence(selected){
- const s=state.impact,allocations=s.result?.[s.comparison]?.allocations||[];
- return `<div class="section-header"><div><h2>${selected?e(selected.name):'Inspect the planned support'}</h2><p class="subcopy">${selected?`${e(selected.patientId)} · ${money(selected.cost)} illustrative allocation`:'Every allocation retains the exact source behind each addressed barrier.'}</p></div><span class="number-badge">${s.comparison==='optimized'?'Graph-aware':'Baseline'}</span></div><div class="allocation-picker">${allocations.length?allocations.map(a=>`<button class="allocation-chip ${s.selected===a.patientId?'active':''}" data-action="impact-patient" data-id="${e(a.patientId)}">${e(a.patientId)}<span>${a.allAddressed?'Complete support':`${a.remainingBarriers.length} remaining`}</span></button>`).join(''):'<p class="subtitle">No supports fit these resource settings. Increase the budget or enable a support.</p>'}</div>${selected?`<div class="allocation-details"><div class="allocation-coverage"><span class="evidence-ok">${icon(selected.allAddressed?'check':'info')}${selected.allAddressed?'All currently documented barriers covered in this scenario':'Some documented barriers remain uncovered'}</span><div>${selected.addressedBarriers.map(type=>barrierPill({type,status:'active'})).join('')}</div>${selected.remainingBarriers.length?`<p>Remaining: ${selected.remainingBarriers.map(barrierLabel).map(e).join(', ')}</p>`:''}</div><div class="allocation-sources">${(selected.evidence||[]).map(b=>`<blockquote><p>“${e(b.quote)}”</p><footer>${e(barrierLabel(b.type))} · ${e(b.documentId)} · ${date(b.date)}</footer></blockquote>`).join('')}<button class="text-button" data-action="patient" data-id="${e(selected.patientId)}">Open full source & care task ${icon('arrow')}</button></div></div>`:''}`;
-}
-async function runSimulation(){
- const s=state.impact,request=++s.request;s.busy=true;s.error='';render();
- try{const body={budget:s.budget,outreachCapacity:s.outreachCapacity,barriers:s.barriers};if(s.scope==='cohort'){if(!state.result||state.stale)throw new Error('Run a current cohort query before simulating its patients.');body.patientIds=state.result.patients.map(p=>p.id);}const result=await api('/api/simulate',{method:'POST',body:JSON.stringify(body)});if(request!==s.request)return;s.result=result;s.dirty=false;s.selected=result[s.comparison]?.allocations?.[0]?.patientId||null;await loadImpactGraph(request);}
- catch(error){if(request===s.request)s.error=error.message;}
- finally{if(request===s.request){s.busy=false;if(state.view==='impact')render();}}
-}
-async function loadImpactGraph(request=state.impact.request){
- const s=state.impact,ids=(s.result?.[s.comparison]?.allocations||[]).map(a=>a.patientId);if(!ids.length){s.graph={nodes:[],edges:[]};return;}
- const graph=await api('/api/graph?'+new URLSearchParams({mode:'cohort',patientIds:ids.join(','),limit:'800'}));if(request===s.request)s.graph=graph;
-}
-function mountImpactGraph(){
- const s=state.impact,container=$('#impact-canvas');if(!container||!s.graph)return;
- if(!s.graph.nodes.length){container.innerHTML='<div class="impact-graph-empty">No allocations at these settings.</div>';return;}
- graphController=createGraph(container,s.graph,{mode:'cohort',onSelect:n=>{if(n?.type==='Patient'){s.selected=n.id;$('#impact-evidence').innerHTML=impactEvidence((s.result?.[s.comparison]?.allocations||[]).find(a=>a.patientId===n.id));bindActions($('#impact-evidence'));}}});
- const allocations=s.result?.[s.comparison]?.allocations||[];graphController?.highlight({nodes:allocations.flatMap(a=>a.graph?.nodes||[]),edges:allocations.flatMap(a=>a.graph?.edges||[])});
-}
-function proofView(){
- const s=state.proof,r=s.result,cases=r?.cases||[],custom=r?.custom;
- return `<div class="page-heading"><div><div class="eyebrow">${icon('shield')}Make the claim earn its proof</div><h1>Try to break the answer.</h1><p class="subtitle">Challenge patient attribution, negation, chronology, and exact cohort counts in front of the room.</p></div><button class="btn" data-action="proof-export" ${!r?'disabled':''}>${icon('download')}Export proof packet</button></div><div class="proof-layout"><section class="card proof-challenge"><div class="proof-title"><span class="proof-shield">${icon('shield')}</span><div><h2>The adversarial evidence challenge</h2><p>Fixed expectations. Live execution. Visible failures.</p></div></div><div class="proof-principles"><span>${icon('close')}A mention is not a barrier</span><span>${icon('history')}New evidence changes state</span><span>${icon('people')}Family is not the patient</span><span>${icon('code')}Counts come from queries</span></div><button class="btn btn-primary" data-action="run-proof" ${s.busy||!state.connected?'disabled':''}>${icon(s.busy?'refresh':'lab',s.busy?'busy-icon':'')}${s.busy?'Executing challenge…':'Run live proof challenge'}${icon('arrow')}</button>${!state.connected?'<p class="inline-note">Backend required for live proof and database checks.</p>':''}${s.error?`<div class="query-message" role="alert">${e(s.error)}</div>`:''}${r?`<div class="proof-score ${r.summary?.passed===r.summary?.total?'':'has-failures'}" role="status"><strong>${num(r.summary?.passed)}<span> / ${num(r.summary?.total)}</span></strong><div><b>${r.summary?.passed===r.summary?.total?'All included checks passed':'Some checks failed'}</b><p>Only this synthetic challenge set. Inspect every expected and actual assertion below.</p></div></div><div class="proof-cases">${cases.map(c=>`<details class="proof-case"><summary><span class="proof-check ${c.passed?'pass':'fail'}">${icon(c.passed?'check':'close')}</span><span>${e(c.title||c.id)}</span><b>${c.passed?'PASS':'FAIL'}</b></summary><blockquote>“${e(c.text)}”</blockquote><div class="proof-assertions"><div><small>EXPECTED</small><pre>${e(JSON.stringify(c.expected,null,2))}</pre></div><div><small>ACTUAL</small><pre>${e(JSON.stringify(c.actual,null,2))}</pre></div></div>${c.explanation?`<p>${e(c.explanation)}</p>`:''}</details>`).join('')}</div>`:''}</section><div><section class="card proof-custom"><div class="section-title"><h2>The judge’s own sentence</h2><span class="number-badge">LIVE</span></div><p class="subtitle">Change the wording. This preview runs the actual extractor; it does not alter patient records.</p><label class="field-label" for="proof-text">Fictional source text</label><textarea id="proof-text" class="text-field" rows="6" ${s.busy?'readonly':''}>${e(s.text)}</textarea><button class="btn btn-soft" data-action="run-proof-custom" ${s.busy||!state.connected?'disabled':''}>${icon('sparkle')}Inspect this evidence ${icon('arrow')}</button>${custom?`<div class="proof-custom-result"><span class="mini-label">ACTUAL EXTRACTION · NO EXPECTED LABEL PROVIDED</span>${custom.assertions?.length?custom.assertions.map(a=>`<div class="extracted-assertion">${barrierPill(a)}<strong class="assertion-status">${e(a.status)}</strong><blockquote>“${e(a.quote)}”</blockquote></div>`).join(''):'<p>No patient-specific barrier assertion was accepted.</p>'}<p class="inline-note">An empty result means the included rules accepted no assertion; it does not establish that no real barrier exists.</p></div>`:''}</section>${r?.repeatability?`<section class="card proof-repeat"><span class="eyebrow">${icon('history')}Reproducibility, executed twice</span><h2>${r.repeatability.passed?'Same query. Same cohort.':'The cohort changed between checks.'}</h2><div class="proof-count">${num(r.repeatability.count)}<span>patients</span></div><div class="fingerprint-pair"><span>Execution 1 <code>${e(r.repeatability.firstFingerprint)}</code></span><span>Execution 2 <code>${e(r.repeatability.secondFingerprint)}</code></span></div><p class="inline-note">The same structured plan is run against the current database. Both fingerprints and complete ordered patient IDs must match.</p></section>`:''}${r?.evidenceCoverage?`<section class="card proof-repeat"><span class="eyebrow">${icon('document')}Verified against original source records</span><h2>${num(r.evidenceCoverage.verified)} / ${num(r.evidenceCoverage.total)} evidence excerpts verified</h2><div class="proof-source-checks"><span>${icon(r.evidenceCoverage.passed?'check':'info')}Patient ownership checked</span><span>${icon(r.evidenceCoverage.passed?'check':'info')}Source date checked</span><span>${icon(r.evidenceCoverage.passed?'check':'info')}Exact quotation checked in original document</span></div><p class="inline-note">${r.evidenceCoverage.passed?'Every checked excerpt matches its authoritative source record.':'Some excerpts could not be verified. Inspect the issues before using this result.'} This verifies provenance, not clinical truth or causation.</p><details class="source-details"><summary>Inspect source verification results</summary><pre class="json-detail">${e(JSON.stringify(r.evidenceCoverage,null,2))}</pre></details></section>`:''}<div class="proof-limits"><b>Evidence you can test, with limits you can inspect.</b><p>${e((r?.limitations||['This is a synthetic prototype evaluation, not clinical validation. The local extractor uses bounded rules and can miss unfamiliar phrasing.']).join(' '))}</p></div></div></div>`;
-}
-async function runProof(custom=false){const s=state.proof;if(s.busy)return;s.busy=true;s.error='';render();try{s.result=await api('/api/proof',{method:'POST',body:JSON.stringify(custom?{text:s.text}:{})});}catch(error){s.error=error.message;}finally{s.busy=false;if(state.view==='proof')render();}}
-function graphView(){
- const g=state.graphData;
- return `<div class="page-heading graph-heading"><div><div class="eyebrow">${icon('nodes')}The care behind the data</div><h1>A thousand patients.<br><span>A clearer path to care.</span></h1><p class="subtitle">Ask why care is being missed. Follow the evidence. Prepare the next step.</p></div><div class="graph-overview"><div><strong>${num(metrics.nodes||g?.totalNodes||0)}</strong><span>connected facts</span></div><div><strong>${num(metrics.docs||patients.reduce((s,p)=>s+(p.documents?.length||0),0))}</strong><span>source documents</span></div><div><strong>${num(patients.length)}</strong><span>fictional lives</span></div></div></div>
- <div class="graph-layout"><section class="graph-stage" aria-label="Interactive care graph"><div class="graph-toolbar"><div class="graph-modes" role="group" aria-label="Graph scope">${[['population','Population'],['cohort','Query cohort'],['patient','Patient story'],['ontology','Schema']].map(([mode,label])=>`<button data-action="graph-mode" data-mode="${mode}" class="${state.graphMode===mode?'active':''}" ${mode==='cohort'&&!state.result?'disabled':''}>${label}</button>`).join('')}</div><button class="graph-button" data-action="graph-fit" title="Fit graph" aria-label="Fit graph">${icon('target')}</button></div><div class="graph-context"><span class="graph-live-dot"></span><b>${state.graphMode==='expanded'?e(state.graphExpandedLabel||'Connected neighborhood'):state.graphMode==='patient'?e(patients.find(p=>p.id===state.graphPatient)?.name||state.graphPatient):state.graphMode==='cohort'?`${num(state.result?.count)} matching patients`:state.graphMode==='ontology'?'The care evidence ontology':'Connected patient population'}</b><span id="graph-scope">${state.graphLoading?'Loading…':g?`${num(g.nodes.length)} nodes · ${num(g.edges.length)} links`:''}</span></div><div id="graph-canvas" tabindex="0" aria-label="Graph visualization. Drag to pan, scroll to zoom. An accessible node list is below."></div>${state.graphError?`<div class="graph-error" role="alert">${e(state.graphError)}</div>`:''}<div class="graph-floating"><label class="graph-search">${icon('search')}<input id="graph-search" type="search" placeholder="Find a node…" aria-label="Search graph nodes"/></label><div class="graph-zoom"><button data-action="graph-zoom-in" aria-label="Zoom in">+</button><button data-action="graph-zoom-out" aria-label="Zoom out">−</button></div></div><div class="graph-legend">${Object.entries(graphColors).filter(([type])=>type!=='Task').map(([type,color])=>`<label><input type="checkbox" class="graph-type" value="${type}" checked/><i style="background:${color}"></i>${type==='CareGap'?'Care gap':type}</label>`).join('')}</div><div class="graph-bottom"><span>${g?.truncated?`Showing a connected sample of ${num(g.totalNodes)} total nodes. Exact counts use the full graph.`:'Every connection links to a patient fact or source.'}</span><span>Drag · zoom · inspect</span></div></section>
- <aside class="agent-panel ${state.result||state.busy?'has-investigation':''}"><div class="agent-header"><span class="agent-avatar">${icon('sparkle')}</span><div><h2>Your care investigator</h2><p>${state.api.model&&state.queryMode==='agent'?'OpenAI + deterministic graph tools':'Local baseline + deterministic graph tools'}</p></div><span class="status-dot ${state.connected?'online':''}"></span></div><div class="agent-engine-choice">${engineToggle()}</div><div class="agent-scroll"><div class="agent-intro"><span class="mini-label">ASK A QUESTION. FOLLOW THE PROOF.</span><h3>What is getting in the way?</h3><p>Find a cohort across all ${num(patients.length)} records, then inspect the source behind every connection.</p></div><div class="agent-examples"><button data-action="example" data-example="transport">${icon('car')}Missing A1c tests + no ride ${icon('arrow')}</button><button data-action="example" data-example="cost">${icon('coin')}Medication costs + missed refills ${icon('arrow')}</button><button data-action="example" data-example="followup">${icon('filter')}Of those, only people age 65+ ${icon('arrow')}</button></div><div id="agent-execution">${agentExecution()}</div></div><form id="query-form" class="agent-composer"><label class="sr-only" for="question">Ask the care graph</label><textarea id="question" rows="3" placeholder="Ask an unexpected question…">${e(state.question)}</textarea><div><span>⌘ / Ctrl K to ask</span><button class="btn btn-primary" type="submit" ${state.busy?'disabled':''}>${icon(state.busy?'refresh':'sparkle',state.busy?'busy-icon':'')}${state.busy?'Investigating':'Investigate'}${icon('arrow')}</button></div></form></aside></div>
- <div class="graph-detail-grid"><section class="card graph-inspector" id="graph-inspector">${inspectorView()}</section><section class="card graph-node-browser"><div class="section-header"><div><h2>Explore the connections</h2><p class="subcopy">Keyboard-accessible node directory</p></div><span class="number-badge">${g?.nodes.length||0}</span></div><div id="graph-node-list">${nodeList()}</div></section></div>`;
-}
-function agentExecution(){
- const events=state.events.length?`<div class="agent-events">${state.events.map((ev,i)=>`<button class="agent-event ${ev.rejected?'rejected':''}" data-action="event-highlight" data-index="${i}"><span>${icon(ev.rejected?'close':'check')}</span><div><strong>${e(String(ev.tool||'Tool').replaceAll('_',' '))}</strong><p>${e(ev.say||'')}</p></div>${ev.found!=null?`<b>${num(ev.found)}</b>`:''}</button>`).join('')}</div>`:'';
- const result=state.result&&!state.busy?`<div class="exact-answer ${state.stale?'stale-answer':''}"><span class="mini-label">${state.stale?'PREVIOUS RESULT':'VERIFIED STRUCTURED RESULT'}</span><div class="result-engine">${e(resultEngineName())} · ${state.lastEngine==='static-baseline'?'in-memory count':'SQL count'}</div><div class="exact-count">${num(state.result.count)}<span>patients</span></div><p>${e(state.summary||'Exact matches from the full patient graph.')}</p><div class="answer-facts"><span>${icon('shield')}Source linked</span><span>${icon('history')}${num(state.result.excludedResolved)} resolved excluded</span></div><button class="btn btn-soft" data-action="view" data-view="workbench">Review cohort & prepare action ${icon('arrow')}</button></div>`:'';
- return `${state.queryError?`<div class="query-message" role="alert">${e(state.queryError)}</div>`:''}${result}${state.busy?`<div class="live-investigation"><span class="mini-label">ACTUAL TOOL EXECUTION · LIVE</span>${events||'<p>Waiting for the investigator’s first tool call…</p>'}</div>`:events?`<details class="agent-proof"><summary>${icon('shield')}Inspect ${state.events.length} actual tool steps<span>Show proof</span></summary>${events}</details>`:''}${state.result&&!state.busy?`<div class="agent-followups"><span class="mini-label">KEEP INVESTIGATING</span><div><button class="chip" data-action="example" data-example="followup">Age 65+ ${icon('arrow')}</button><button class="chip" data-action="example" data-example="resolved">Resolved barriers ${icon('arrow')}</button><button class="chip" data-action="example" data-example="cost">Medication costs ${icon('arrow')}</button></div></div>${state.answer?`<details class="agent-narrative"><summary>${e(resultEngineName())} summary</summary><p>${e(state.answer)}</p></details>`:''}`:''}`;
-}
-function nodeList(search=''){
- const list=(state.graphData?.nodes||[]).filter(n=>`${n.label} ${n.id} ${n.type}`.toLowerCase().includes(search.toLowerCase()));
- return list.length?list.slice(0,60).map(n=>`<button class="node-row" data-action="node-select" data-id="${e(n.id)}"><i style="background:${graphColors[n.type]||'#aaa'}"></i><span><strong>${e(n.label||n.id)}</strong><small>${e(n.id)}</small></span><b>${e(n.type)}</b>${icon('chevron')}</button>`).join('')+(list.length>60?`<p class="node-overflow">Showing 60 of ${num(list.length)} nodes. Search to narrow.</p>`:''):'<p class="node-overflow">No nodes match. Try a patient name or ID.</p>';
-}
-function inspectorView(){
- const n=state.graphSelected;
- if(!n)return `<div class="inspector-empty"><div class="inspector-orbit">${icon('nodes')}</div><div class="mini-label">FROM CONNECTION TO CONTEXT</div><h2>Every node has a story.</h2><p>Select a patient, document, barrier, or connection to inspect the facts behind it.</p><button class="btn btn-soft" data-action="graph-maya">Explore Maya’s care story ${icon('arrow')}</button></div>`;
- const id=n.type==='Patient'?n.id:n.patientId||String(n.id).match(/^P\d{4}/)?.[0];
- const p=patients.find(p=>p.id===id);
- return `<div class="inspector-title"><span class="node-type" style="--node-color:${graphColors[n.type]||'#80a6cc'}">${e(n.type)}</span><small>${e(n.id)}</small></div><h2>${e(n.label||n.type)}</h2>${p?`<p class="subtitle">${e(p.name)} · ${e(p.id)} · age ${e(p.age)}</p>`:''}${n.quote?`<blockquote class="drawer-quote">“${e(n.quote)}”</blockquote>`:''}${n.text?`<div class="source-document">${e(n.text)}</div>`:''}${n.type==='Patient'&&p?`<div class="inspector-facts"><span><b>${p.a1c}%</b>Latest A1c</span><span><b>${p.daysOverdue}</b>Days overdue</span><span><b>${p.barriers.filter(b=>b.status==='active').length}</b>Active barriers</span></div><div class="inspector-barriers">${p.barriers.map(barrierPill).join('')}</div>`:''}<dl class="node-properties">${Object.entries(n).filter(([key,value])=>!['id','label','text','quote','color','size','patientId'].includes(key)&&['string','number','boolean'].includes(typeof value)).slice(0,8).map(([key,value])=>`<div><dt>${e(key)}</dt><dd>${e(value)}</dd></div>`).join('')}</dl>${id?`<div class="inspector-actions"><button class="btn btn-primary" data-action="patient" data-id="${e(id)}">Inspect evidence & action ${icon('arrow')}</button>${state.graphMode!=='patient'?`<button class="btn" data-action="graph-patient" data-id="${e(id)}">Expand patient graph</button>`:''}</div>`:''}${state.connected&&!n.schemaNode&&!n.source?`<div class="inspector-actions"><button class="btn btn-soft" data-action="graph-expand" data-id="${e(n.id)}">${icon('nodes')}Expand connected evidence ${icon('arrow')}</button></div>`:''}${n.type==='Barrier'?`<button class="btn btn-soft" data-action="barrier-query" data-barrier="${e(n.id.split(':').at(-1))}">Find patients with this barrier ${icon('arrow')}</button>`:''}`;
-}
-function mountGraph(){
- if(!state.graphData){if(!state.graphLoading&&!state.graphError)loadGraph();return;}
- graphController=createGraph($('#graph-canvas'),state.graphData,{mode:state.graphMode,onSelect:data=>{state.graphSelected=data;$('#graph-inspector').innerHTML=inspectorView();bindActions($('#graph-inspector'));}});
- if(state.graphSelected)graphController?.select(state.graphSelected.id);
-}
-async function loadGraph(){
- const request=++graphRequest;state.graphLoading=true;state.graphError='';
- try{
+let graphController,
+  graphRequest = 0,
+  toastTimer,
+  returnFocus;
+const pending = new Set();
+async function api(path, body, method) {
+  const response = await fetch(path, {
+    method: method || (body === undefined ? "GET" : "POST"),
+    headers: body === undefined ? {} : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
   let data;
-  if(state.connected){const params=new URLSearchParams({mode:state.graphMode,limit:state.graphMode==='patient'?'200':'300'});if(state.graphMode==='patient')params.set('patientId',state.graphPatient);if(state.graphMode==='cohort')params.set('patientIds',(state.result?.patients||[]).map(p=>p.id).join(','));data=await api('/api/graph?'+params);}
-  else if(state.graphMode==='ontology'){
-   const relationships=[['Patient','Condition','HAS_CONDITION'],['Patient','CareGap','HAS_GAP'],['Patient','Document','HAS_DOCUMENT'],['Document','Barrier','EVIDENCES'],['Patient','Barrier','EXPERIENCES'],['Barrier','Intervention','ADDRESSED_BY']];
-   data={nodes:engine.ontology.nodeTypes.map(type=>({id:`ontology:${type}`,type,label:type,schemaNode:true})),edges:relationships.map(([from,to,type])=>({id:type,from:`ontology:${from}`,to:`ontology:${to}`,type})),totalNodes:engine.ontology.nodeTypes.length,totalEdges:relationships.length,truncated:false};
-  }else{const ids=state.graphMode==='patient'?[state.graphPatient]:(state.graphMode==='cohort'?state.result?.patients||[]:patients).slice(0,30).map(p=>p.id);data=engine.buildGraph(ids);data.truncated=state.graphMode!=='patient';data.totalNodes=data.truncated?metrics.nodes:data.nodes.length;}
-  if(request!==graphRequest)return;state.graphData=data;state.graphLoading=false;
- }catch(error){if(request!==graphRequest)return;state.graphError=error.message;state.graphLoading=false;}
- if(state.view==='graph')render();
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("The server returned an unreadable response.");
+  }
+  if (!response.ok)
+    throw new Error(data.error || `Request failed (${response.status}).`);
+  return data;
 }
-async function analyze(question){
- if(state.busy)return;
- if(!question.trim()){toast('Enter a question about the synthetic population.');return;}
- const id=++state.queryId;
- state.question=question.trim(); state.busy=true;state.queryError='';state.events=[];render();
- try {
-  let parsed;
-  if(state.connected&&state.queryMode==='baseline'){
-   parsed=await api('/api/query',{method:'POST',body:JSON.stringify({question:state.question,previousPlan:state.plan})});
-   state.events=parsed.events||parsed.result?.events||[];
-  }else if(state.connected){
-   const response=await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:state.question,previousPlan:state.plan,stream:true}),signal:AbortSignal.timeout(120000)});
-   if(!response.ok){let error;try{error=await response.json();}catch{}throw new Error(error?.error||`Agent request failed (${response.status}).`);}
-   if(response.headers.get('content-type')?.includes('text/event-stream')){
-    const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='';
-    const frame=block=>{const lines=block.split('\n');const name=lines.find(s=>s.startsWith('event:'))?.slice(6).trim();const raw=lines.filter(s=>s.startsWith('data:')).map(s=>s.slice(5).trim()).join('\n');if(!raw)return;let value;try{value=JSON.parse(raw);}catch{return;}if(name==='tool'||value.type==='tool'){state.events.push(value);graphController?.highlight(value);if($('#agent-execution')){$('#agent-execution').innerHTML=agentExecution();bindActions($('#agent-execution'));}}if(name==='result'||value.type==='result')parsed=value;if(name==='error')throw new Error(value.error||value.message||'Agent failed.');};
-    while(true){const {value,done}=await reader.read();buffer+=decoder.decode(value||new Uint8Array(),{stream:!done}).replaceAll('\r\n','\n');let boundary;while((boundary=buffer.indexOf('\n\n'))>=0){frame(buffer.slice(0,boundary));buffer=buffer.slice(boundary+2);}if(done){if(buffer.trim())frame(buffer);break;}}
-    if(!parsed)throw new Error('The agent stream ended before a result was returned.');
-   }else parsed=await response.json();
-  }else{parsed=parseQuestion(state.question,state.plan);if(parsed.ok)parsed={...parsed,result:runQuery(parsed.plan),engine:'static-baseline'};}
-  if(id!==state.queryId)return;
-  if(!parsed?.ok){state.queryError=parsed?.error||'This question is outside the supported demo queries.';if(parsed?.suggestions?.length)state.queryError+=' Try: '+parsed.suggestions.join(' · ');state.stale=Boolean(state.result);}
-  else{state.plan=parsed.plan;state.result=parsed.result;state.summary=parsed.summary||parsed.result?.summary||'Exact matches from the synthetic care graph.';state.answer=parsed.answer||'';state.events=parsed.events||parsed.result?.events||state.events;state.runId=parsed.runId;state.lastEngine=parsed.engine||'deterministic';state.stale=false;state.page=0;state.lastRun=new Date().toISOString();state.lastQuestion=state.question;state.graphMode='cohort';state.graphSelected=null;state.graphData=null;await loadGraph();if(state.connected){const data=await api('/api/runs');state.runs=data.runs||[];}}
- } catch(error){state.queryError=`Analysis could not complete: ${error.message}.`;state.stale=Boolean(state.result);}
- finally {if(id===state.queryId){state.busy=false;render();}}
+function toast(message) {
+  $("#toast").textContent = message;
+  $("#toast").classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 5500);
+}
+async function operation(key, fn) {
+  if (pending.has(key)) return;
+  pending.add(key);
+  try {
+    await fn();
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    pending.delete(key);
+  }
+}
+async function refresh() {
+  const data = await api("/api/bootstrap");
+  state.patients = data.patients;
+  state.metrics = data.metrics;
+  state.tasks = data.tasks || [];
+  state.runs = data.runs || [];
+  state.connected = true;
+  state.status = { ...state.status, ...data };
+}
+async function start() {
+  try {
+    state.status = await api("/api/status");
+    let seed = await api("/api/seed"),
+      attempts = 0;
+    while (!seed.complete) {
+      if (++attempts > 110)
+        throw new Error("Setup did not finish. Refresh to resume.");
+      $("#app").innerHTML =
+        `<div class="boot"><span>✳</span><h1>Preparing the hospital demo</h1><p>${num(seed.count)} of ${num(seed.total || 1000)} synthetic discharges loaded.</p></div>`;
+      seed = await api("/api/seed", { offset: seed.nextOffset ?? seed.count });
+    }
+    await refresh();
+  } catch (error) {
+    state.error = error.message;
+  }
+  render();
+  if (state.connected) {
+    loadGraph();
+    api("/api/ml/metrics")
+      .then((value) => {
+        state.evaluation = value;
+        if (state.view === "proof") render();
+      })
+      .catch(() => {});
+  }
+}
+const NAV = [
+  ["home", "⌘", "Hospital view"],
+  ["cohort", "▦", "Patients & actions"],
+  ["notes", "▤", "Clinical note lab"],
+  ["proof", "✓", "Proof & accuracy"],
+  ["tasks", "☷", "Care team tasks"],
+  ["impact", "◎", "Resource planner"],
+  ["history", "◷", "Saved investigations"],
+];
+function shell(content) {
+  return `<aside class="sidebar"><a href="#" data-cmd="nav" data-view="home" class="brand"><span>✚</span> careweave</a><div class="brand-sub">THE FIRST 30 DAYS HOME</div><div class="nav-label">HOSPITAL CARE TRANSITIONS</div><nav aria-label="Main navigation">${NAV.map(([id, symbol, name]) => `<button class="nav-item ${state.view === id ? "active" : ""}" data-cmd="nav" data-view="${id}" aria-label="${name}" title="${name}" aria-current="${state.view === id ? "page" : "false"}"><span aria-hidden="true">${symbol}</span><span>${name}</span>${id === "tasks" && state.tasks.filter((t) => t.status === "pending").length ? `<b>${state.tasks.filter((t) => t.status === "pending").length}</b>` : ""}</button>`).join("")}</nav><div class="sidebar-bottom"><div class="connection"><i class="${state.connected ? "live" : ""}"></i><div>${state.connected ? "Hospital demo connected" : "Connection unavailable"}<small>${state.status.model ? "OpenAI configured" : "Local rules + graph tools"}</small></div></div><p>The answer was already<br>in our own notes.</p></div></aside><div class="workspace"><header class="topbar"><span><b>Northstar Hospital System</b><small>Care transitions workspace</small></span><div>${pill("100% synthetic data", "green")}<span class="snapshot">${date(AS_OF)} snapshot</span></div></header><main id="main-content">${!state.connected ? `<div class="alert">${esc(state.error || "The hospital database is unavailable.")} ${btn("Reconnect", "reload")}</div>` : ""}${content}<footer>Fictional patients. Hospital-owned sources. Human review required.<span>No calls, messages, medication changes, or bookings are sent.</span></footer></main></div>`;
+}
+function sourceLayers() {
+  return `<div class="source-layers"><section class="source-layer structured"><div class="layer-heading"><span>▦</span><div><h2>Hospital data store</h2><p>What happened during and after the stay</p></div></div><div class="source-chips">${TABLES.map((t) => `<span>${t}</span>`).join("")}</div></section><section class="source-layer clinical"><div class="layer-heading"><span>▤</span><div><h2>Clinical notes</h2><p>What patients told our clinicians and staff</p></div></div><div class="source-chips">${NOTE_TYPES.map((t) => `<span>${t}</span>`).join("")}</div></section></div>`;
+}
+const nodeLabel = (type) =>
+  ({
+    FollowUpGap: "Follow-up gap",
+    ClinicalNote: "Clinical note",
+    LabResult: "Lab result",
+  })[type] || type;
+const rulesNotice = () =>
+  '<div class="rule-note"><b>Demo rules, made visible.</b> Follow-up gaps and “likely to return” are simplified hackathon rules, not a validated readmission model. A flagged patient needs staff review.</div>';
+function homeView() {
+  return `${heading("WE ARE A HOSPITAL SYSTEM", "We discharged them.<br><span>Let’s help them get back on track.</span>", "We wrote down why some patients will struggle at home. Connect those notes to missed visits and medication pickup, then prepare the right follow-up.", `<div class="hero-stats"><div><strong>${num(state.patients.length)}</strong><span>adult discharges<br>in the last 90 days</span></div><div><strong>${num(state.patients.filter((p) => p.admission?.diabetesRelated).length)}</strong><span>diabetes-related<br>admissions</span></div></div>`)}<div class="behaviors"><span><b>01</b> Attend follow-up within 14 days</span><span><b>02</b> Start discharge medications</span><span><b>03</b> Check glucose at home</span><span><b>04</b> Know when to call the clinic</span></div>${sourceLayers()}<div class="investigation-grid"><section class="graph-card ${state.graphExpanded ? "expanded" : ""}"><div class="graph-top"><div class="eyebrow">FOLLOW THE CONNECTED FACTS</div><h2>${state.graphMode === "patient" ? "One patient. The full discharge story." : state.graphMode === "ontology" ? "How the hospital’s facts connect" : "The patients behind the answer"}</h2><div class="segmented">${[
+    ["patient", "Patient story"],
+    ["discharges", "Discharges"],
+    ["ontology", "Schema"],
+    ["cohort", "This answer"],
+  ]
+    .map(
+      ([mode, name]) =>
+        `<button data-cmd="graph-mode" data-mode="${mode}" class="${state.graphMode === mode ? "active" : ""}" ${mode === "cohort" && !state.result ? "disabled" : ""}>${name}</button>`,
+    )
+    .join(
+      "",
+    )}</div></div><div class="graph-meta"><span>${state.graphMode === "patient" ? esc(state.patients.find((p) => p.id === state.patientId)?.name || state.patientId) : "Hospital knowledge graph"}</span><span>${state.graph ? `${num(state.graph.nodes.length)} facts · ${num(state.graph.edges.length)} connections` : "Loading…"}</span></div><div id="graph-canvas" role="img" aria-label="Hospital evidence graph. Inspect individual facts in the directory below."></div><div class="graph-controls">${btn("−", "zoom-out", "", "icon-btn")}${btn("+", "zoom-in", "", "icon-btn")}${btn("Fit graph", "fit", "", "small")}${btn(state.graphExpanded ? "Compact graph" : "Focus graph", "graph-focus", "", "small")}</div><div class="graph-legend">${Object.entries(
+    graphColors,
+  )
+    .map(
+      ([t, color]) =>
+        `<span><i style="background:${color}"></i>${nodeLabel(t)}</span>`,
+    )
+    .join(
+      "",
+    )}</div><div class="graph-foot">${state.graph?.truncated ? "A connected sample is displayed. Queries count all patient discharges." : "Every connection comes from a stored fact or a stated demo rule."}</div></section><section class="card investigator"><div class="eyebrow">THE CARE TRANSITIONS TEAM’S QUESTION</div><h2>Who needs a different kind of help?</h2><p>Search finds a sentence. The graph connects it to the discharge, visit, medication, and next action.</p><form id="query-form"><label for="question">Ask about patients after discharge</label><textarea id="question" rows="6" ${state.busy ? "readonly" : ""}>${esc(state.question)}</textarea><div class="query-buttons">${btn("1. Search notes", "search", 'type="button" ' + (state.busy || !state.connected ? "disabled" : ""), "secondary")}<button class="btn primary" type="submit" ${state.busy || !state.connected ? "disabled" : ""}>${state.busy ? "Investigating…" : "2. Connect the facts →"}</button></div></form><div class="question-examples">${btn("Open follow-up gaps", "question", 'data-question="main" ' + (state.busy ? "disabled" : ""))}${btn("Cost + insulin not picked up", "question", 'data-question="cost" ' + (state.busy ? "disabled" : ""))}${btn("Who is likely to return?", "question", 'data-question="return" ' + (state.busy ? "disabled" : ""))}</div><div class="engine-label">${state.status.model ? "OpenAI tool agent" : "Local deterministic investigator"} · database-computed counts</div>${state.error && state.connected ? `<div class="alert">${esc(state.error)}</div>` : ""}${state.result ? `<div class="answer-preview"><strong>${num(state.result.count)}</strong><span>matching patients</span><p>${esc(state.answer)}</p>${btn("Review patients & actions →", "nav", 'data-view="cohort"', "primary")}</div>` : ""}</section></div>${state.baseline ? baselineView() : ""}${state.events.length ? traceView() : ""}${directoryView()}<div class="judges-line">“The answer was already in our own notes.<br><strong>The graph is what lets us ask for it.</strong>”</div>${rulesNotice()}`;
+}
+function baselineView() {
+  return `<section class="card padded"><div class="section-heading"><div><div class="eyebrow">1 / NOTE SEARCH</div><h2>A sentence is useful. It isn’t the whole answer.</h2></div>${pill("Passages only · no patient count", "purple")}</div><p>This search returns clinical note passages. It does not join attendance, discharge dates, and pharmacy pickup to count the patients who meet the question.</p><div class="passage-grid">${
+    (state.baseline.passages || state.baseline.results || [])
+      .slice(0, 4)
+      .map(
+        (p) =>
+          `<blockquote><small>${esc(p.note_type || p.type)} · ${esc(p.patientId)}</small><p>“${esc(p.quote || p.text)}”</p>${btn("Open patient", "patient", `data-id="${esc(p.patientId)}"`, "text-btn")}</blockquote>`,
+      )
+      .join("") || "<p>No matching passages.</p>"
+  }</div></section>`;
+}
+function traceView() {
+  return `<section class="card padded"><div class="eyebrow">2 / ACTUAL INVESTIGATION</div><h2>Watch the reason come into focus.</h2><div class="route">${["Patient", "Admission", "FollowUpGap", "Barrier", "Action"].map((t, i) => `<span>${nodeLabel(t)}</span>${i < 4 ? "<b>→</b>" : ""}`).join("")}</div><p class="small-text">An investigation route across connected facts. Individual edges follow the allowed relationships.</p><ol class="trace-list">${state.events
+    .map(
+      (ev) =>
+        `<li><span class="step">${ev.step}</span><div><b>${esc(ev.say || ev.tool)}</b><small>${esc(ev.tool)} · ${num(ev.found)} found</small>${btn("Inspect this step on the graph", "trace-step", `data-step="${ev.step}"`, "text-btn")}${(
+          ev.evidence || []
+        )
+          .slice(0, 1)
+          .map(
+            (v) => `<blockquote>“${esc(v.quote || v.text || "")}”</blockquote>`,
+          )
+          .join("")}</div></li>`,
+    )
+    .join("")}</ol></section>`;
+}
+function directoryView() {
+  return state.graph
+    ? `<details class="card directory"><summary>Inspect graph facts <span>${num(state.graph.nodes.length)} nodes</span></summary><div class="node-list">${state.graph.nodes.map((n) => `<button data-cmd="node" data-id="${esc(n.id)}"><i style="background:${graphColors[n.type] || "#aaa"}"></i><span><b>${esc(n.label || n.name || n.id)}</b><small>${nodeLabel(n.type)} · ${esc(n.id)}</small></span></button>`).join("")}</div></details>`
+    : "";
+}
+function standardPatients() {
+  const plan = {
+    ...state.plan,
+    barriers: [],
+    barrierPresence: "absent",
+    gapOnly: true,
+  };
+  return state.patients.filter((p) => matchesPlan(p, plan));
+}
+function groupCard(type) {
+  const standard = type === "standard",
+    list = standard
+      ? standardPatients()
+      : (state.result?.patients || []).filter((p) =>
+          p.barriers.some((b) => b.type === type),
+        );
+  return `<button class="group-card ${state.filter === type ? "selected" : ""}" data-cmd="group" data-type="${type}"><div><b>${label(type)}</b><strong>${num(state.result?.groups?.find((group) => group.type === type)?.count ?? list.length)}</strong></div><p>${esc(nextAction(type))}</p><small>${esc(owner(type))}</small>${standard ? "<em>Separate group: open follow-up gap, no documented barrier. The call checks for needs not yet recorded.</em>" : ""}</button>`;
+}
+const extractionMetrics = () =>
+  state.evaluation?.extraction || state.evaluation?.rules || state.evaluation;
+function cohortView() {
+  const all =
+      state.filter === "standard"
+        ? standardPatients()
+        : state.result?.patients || [],
+    selected = ["all", "standard"].includes(state.filter)
+      ? all
+      : all.filter((p) => p.barriers.some((b) => b.type === state.filter)),
+    sorted = [...selected].sort(
+      (a, b) => (b.id === "P0412") - (a.id === "P0412"),
+    ),
+    page = sorted.slice(state.page * 10, state.page * 10 + 10),
+    pages = Math.max(1, Math.ceil(sorted.length / 10));
+  return `${heading("3 / PATIENTS, REASONS, NEXT STEPS", state.plan && !state.plan.gapOnly ? "Patients matching<br><span>your hospital question.</span>" : "Open follow-up gap<br><span>with a barrier we can act on.</span>", "Each group has a hospital action, a responsible role, and a source you can inspect.", btn("Export answer", "export-answer", state.result ? "" : "disabled"))}${state.stale ? '<div class="alert">This answer is historical or outdated. Run the question again before preparing actions.</div>' : ""}${!state.result ? `<div class="card padded"><p>Run the hospital question to build the exact cohort.</p>${btn("Find patients needing help →", "run-main", "", "primary")}</div>` : `<div class="result-metrics"><div><strong>${num(state.result.count)}</strong><span>patients in the exact answer</span></div><div><strong>${num(state.result.within30Count ?? state.result.patients.filter((p) => p.daysSinceDischarge < 30).length)}</strong><span>patients we can still reach before day 30</span></div><div><strong>${state.elapsed === null ? "Saved" : (state.elapsed / 1000).toFixed(2) + "s"}</strong><span>time to answer</span></div><div><strong>${pct(extractionMetrics()?.precision)} / ${pct(extractionMetrics()?.recall)}</strong><span>extraction precision / recall</span></div></div><div class="answer-explanation"><p>${esc(state.answer)}</p><details><summary>Inspect filters and exact query</summary><pre>${esc(JSON.stringify({ plan: state.plan, fingerprint: state.result.fingerprint, sql: state.result.sql }, null, 2))}</pre></details></div>`}<div class="groups">${Object.keys(BARRIERS).map(groupCard).join("")}${groupCard("standard")}</div>${state.result && state.result.count > state.result.patients.length ? `<div class="rule-note">Showing the first ${num(state.result.patients.length)} patients requested. The total and group counts cover every match.</div>` : ""}<div class="section-heading"><h2>${state.filter === "all" ? "Patients in this answer" : label(state.filter)}</h2><div>${btn("Show all groups", "group", 'data-type="all"', "small")}${pill(`${num(selected.length)} patients`, "green")}</div></div><div class="table-wrap"><table><thead><tr><th>Patient</th><th>Discharged</th><th>Follow-up facts</th><th>Documented barrier</th><th>Next step</th></tr></thead><tbody>${page.map((p) => `<tr><td><b>${esc(p.name)}</b><small>${p.id} · ${p.age} years</small></td><td>${date(p.admission.dischargeDate)}<small>Day ${p.daysSinceDischarge} at home</small></td><td>${esc(reasons(p) || (p.daysSinceDischarge < 14 ? "Gap assessment starts on day 14" : "No open follow-up gap"))}</td><td>${p.barriers.length ? p.barriers.map((b) => pill(label(b.type), b.type)).join(" ") : pill("No documented barrier")}</td><td>${btn("Review evidence →", "patient", `data-id="${p.id}"`, "text-btn")}</td></tr>`).join("") || '<tr><td colspan="5">No patients meet these filters.</td></tr>'}</tbody></table></div><div class="pagination">${btn("Previous", "page", 'data-delta="-1" ' + (!state.page ? "disabled" : ""), "small")}<span>Page ${state.page + 1} of ${pages}</span>${btn("Next", "page", `data-delta="1" ${state.page + 1 >= pages ? "disabled" : ""}`, "small")}</div>${rulesNotice()}`;
+}
+function noteView() {
+  const n = state.note;
+  return `${heading("A NEW PIECE OF THE DISCHARGE STORY", "When the notes change,<br><span>the next step should change too.</span>", "Preview a fictional clinical note, then add it. The graph and affected tasks are rechecked.")}<div class="two-columns"><section class="card padded"><label for="note-patient">Patient</label><select id="note-patient" ${state.busy ? "disabled" : ""}>${state.patients
+    .filter((p) => p.admission.diabetesRelated)
+    .map(
+      (p) =>
+        `<option value="${p.id}" ${n.patientId === p.id ? "selected" : ""}>${esc(p.name)} · ${p.id} · discharged ${p.admission.dischargeDate}</option>`,
+    )
+    .join(
+      "",
+    )}</select><label for="note-type">Clinical note type</label><select id="note-type" ${state.busy ? "disabled" : ""}>${NOTE_TYPES.map((t) => `<option ${t === n.type ? "selected" : ""}>${t}</option>`).join("")}</select><label for="note-date">Note date</label><input id="note-date" type="date" max="${AS_OF}" value="${n.date}" ${state.busy ? "readonly" : ""}><label for="note-text">Fictional clinical note</label><textarea id="note-text" rows="7" ${state.busy ? "readonly" : ""}>${esc(n.text)}</textarea><div class="button-row">${btn("Preview extraction", "note-preview", state.busy ? "disabled" : "", "secondary")}${btn("Add note & update graph", "note-commit", state.busy || !n.preview ? "disabled" : "", "primary")}</div><p class="small-text">Only synthetic text belongs here. Adding a note persists it; previewing does not.</p></section><section class="card padded"><div class="eyebrow">WHAT THE SENTENCE SUPPORTS</div><h2>What this note says</h2>${n.preview ? `${(n.preview.assertions || []).map((a) => `<blockquote>${pill(label(a.type), a.type)}${pill(a.status || "active")}<p>“${esc(a.quote)}”</p><small>${esc(a.note_type || n.type)} · confidence ${pct(a.confidence)}</small></blockquote>`).join("") || empty("No barrier statement identified.", "A denial, resolved need, or someone else’s situation must not create a current patient barrier.")}<details><summary>Inspect extraction output</summary><pre>${esc(JSON.stringify(n.preview, null, 2))}</pre></details>` : "<p>The accepted sentence, note type, and confidence appear here. The extractor does not receive the hidden evaluation answers.</p>"}</section></div>`;
+}
+function proofView() {
+  const p = state.proof,
+    m = extractionMetrics();
+  return `${heading("LET THE EVIDENCE EARN YOUR TRUST", "Try to break the answer.", "Run one question three times, verify source sentences, and challenge the clinical language.", btn("Export proof", "export-proof", !p ? "disabled" : ""))}<div class="result-metrics"><div><strong>${pct(m?.precision)}</strong><span>extraction precision</span></div><div><strong>${pct(m?.recall)}</strong><span>extraction recall</span></div><div><strong>${num(m?.total || m?.cases || m?.documents)}</strong><span>labeled evaluation notes</span></div><div><strong>3</strong><span>consecutive database executions</span></div></div><div class="two-columns"><section class="card padded"><h2>Fixed expectations. Live execution.</h2><p>Includes a denial, a resolved need, a relative’s situation, meals held for a procedure, and a historical need.</p>${btn(state.busy ? "Running…" : "Run hospital acceptance checks", "run-proof", state.busy ? "disabled" : "", "primary")}${p ? `<div class="proof-score"><strong>${p.summary?.passed} / ${p.summary?.total}</strong><span>included checks passed</span></div>${(p.cases || []).map((c) => `<details class="proof-case"><summary><span class="${c.passed ? "pass" : "fail"}">${c.passed ? "✓" : "×"}</span>${esc(c.title || c.id)}</summary><blockquote>${esc(c.text)}</blockquote><pre>${esc(JSON.stringify({ expected: c.expected, actual: c.actual }, null, 2))}</pre></details>`).join("")}<div class="proof-result"><h3>${p.repeatability?.passed ? "Same question. Same exact count." : "Review the repeatability result."}</h3><div class="repeat-counts">${(p.repeatability?.counts || []).map((count, index) => `<span><small>Run ${index + 1}</small><b>${num(count)}</b> patients</span>`).join("")}</div><details><summary>Inspect repeatability details</summary><pre>${esc(JSON.stringify(p.repeatability, null, 2))}</pre></details></div>${p.evidenceCoverage ? `<h3>${p.evidenceCoverage.verified} / ${p.evidenceCoverage.total} sources verified</h3>` : ""}` : ""}</section><div><section class="card padded"><h2>The judge’s own sentence</h2><label for="proof-text">Fictional clinical text</label><textarea id="proof-text" rows="5" ${state.busy ? "readonly" : ""}>${esc(state.proofText)}</textarea>${btn("Inspect this sentence", "custom-proof", state.busy ? "disabled" : "", "secondary")}${p?.custom ? `<pre>${esc(JSON.stringify(p.custom, null, 2))}</pre>` : ""}</section><section class="card padded space-top"><h2>What the numbers mean</h2>${
+    m?.perBarrier
+      ? `<div class="table-wrap"><table><thead><tr><th>Barrier</th><th>Precision</th><th>Recall</th></tr></thead><tbody>${Object.entries(
+          m.perBarrier,
+        )
+          .map(
+            ([type, scores]) =>
+              `<tr><td>${label(type)}</td><td>${pct(scores.precision)}</td><td>${pct(scores.recall)}</td></tr>`,
+          )
+          .join("")}</tbody></table></div>`
+      : ""
+  }<p>Precision asks whether accepted barriers match the hidden answers. Recall asks how many seeded barriers were found.</p><p>This new synthetic hospital evaluation is authored for the prototype. It is not independent clinical validation.</p><details><summary>Full evaluation and errors</summary><pre>${esc(JSON.stringify(state.evaluation, null, 2))}</pre></details><p class="small-text">A source match verifies provenance. It does not prove clinical truth or improved health.</p></section></div></div>`;
+}
+function taskView() {
+  return `${heading("HELP THAT A HUMAN CAN REVIEW", "The care transitions team’s<br><span>next steps.</span>", "Drafts name the action, responsible role, and evidence. Approval saves a demo review; nothing is sent.", btn("Export tasks", "export-tasks"))}<div class="segmented wrap">${[
+    ["pending", "Needs approval"],
+    ["needs_review", "Evidence changed"],
+    ["approved", "Approved"],
+    ["completed", "Completed"],
+    ["cancelled", "Cancelled"],
+  ]
+    .map(
+      ([s, l]) =>
+        `<button data-cmd="task-filter" data-status="${s}" class="${state.taskFilter === s ? "active" : ""}">${l} (${state.tasks.filter((t) => t.status === s).length})</button>`,
+    )
+    .join("")}</div><div class="task-grid">${
+    state.tasks
+      .filter((t) => t.status === state.taskFilter)
+      .map(
+        (t) =>
+          `<article class="card padded"><small>${esc(t.patientId)} · ${esc(owner(t.barrier))}</small><h2>${esc(t.title)}</h2>${pill(t.status.replaceAll("_", " "))}${t.reason ? `<div class="alert">${esc(t.reason)}</div>` : ""}<p class="task-body">${esc(t.body)}</p><small>Source ${esc(t.evidence?.documentId || "Hospital follow-up facts")} · version ${t.version}</small><div class="button-row">${btn("Evidence & edit", "patient", `data-id="${t.patientId}" data-barrier="${t.barrier}"`, "secondary")}${t.status === "pending" ? btn("Approve demo task", "task-update", `data-id="${t.id}" data-status="approved"`, "primary") : t.status === "needs_review" ? btn("Recheck evidence", "task-update", `data-id="${t.id}" data-status="pending"`, "primary") : t.status === "approved" ? btn("Mark completed", "task-update", `data-id="${t.id}" data-status="completed"`, "primary") : ""}${["pending", "approved", "needs_review"].includes(t.status) ? btn("Cancel", "task-update", `data-id="${t.id}" data-status="cancelled"`, "text-btn") : ""}</div></article>`,
+      )
+      .join("") ||
+    empty(
+      "Ready for the next useful step.",
+      "Inspect a patient’s evidence and prepare a task for the responsible hospital team.",
+    )
+  }</div>`;
+}
+function historyView() {
+  return `${heading("AN ANSWER YOU CAN COME BACK TO", "Saved investigations.", "Replay the original count and source trail. Rerun a saved answer before acting on current evidence.")}<div class="card history-list">${state.runs.map((r) => `<button data-cmd="replay" data-id="${r.id}"><span><b>${esc(r.question)}</b><small>${date(r.createdAt)} · ${esc(r.engine)}</small></span><strong>${num(r.count)} patients →</strong></button>`).join("") || empty("No saved investigations yet.", "Ask the hospital question to save an actual execution.")}</div>`;
+}
+function impactView() {
+  const r = state.simulation,
+    s = r?.[state.strategy];
+  return `${heading("MAKE LIMITED SUPPORT GO FURTHER", "What can our team support<br><span>with the resources available?</span>", "Compare two transparent planning strategies against current evidence. Hypothetical allocations do not change patient records or predict outcomes.")}<div class="impact-layout"><section class="card padded"><h2>Available resources</h2><label for="budget">Illustrative support budget: $${num(state.budget)}</label><input id="budget" type="range" min="0" max="5000" step="50" value="${state.budget}"><label for="capacity">Patients our team can contact: ${state.capacity}</label><input id="capacity" type="range" min="1" max="100" value="${state.capacity}">${btn("Compare strategies", "simulate", state.busy ? "disabled" : "", "primary")}<p class="small-text">Illustrative costs. The comparison does not predict completed visits, medication use, or a return to hospital.</p></section><section>${r ? `<div class="comparison"><div class="card padded"><small>PRIORITY-FIRST</small><strong>${r.baseline.allBarriersAddressed}</strong><span>patients with all documented needs supported</span><p>$${r.baseline.budgetUsed} allocated</p></div><div class="card padded featured"><small>BUNDLE-AWARE HEURISTIC</small><strong>${r.optimized.allBarriersAddressed}</strong><span>patients with all documented needs supported</span><p>$${r.optimized.budgetUsed} allocated</p></div></div><div class="rule-note">More complete support can mean a different priority mix. ${r.tradeoffs ? `Average demo priority: ${r.tradeoffs.optimizedAveragePriority} versus ${r.tradeoffs.baselineAveragePriority}.` : ""} This is not clinical prioritization.</div><div class="card padded"><div class="section-heading"><h2>Patients behind the plan</h2><div class="segmented"><button data-cmd="strategy" data-strategy="baseline">Priority-first</button><button data-cmd="strategy" data-strategy="optimized">Bundle-aware</button></div></div><div class="allocation-list">${(s?.allocations || []).map((a) => `<button data-cmd="patient" data-id="${a.patientId}"><b>${esc(a.name)} <small>${a.patientId}</small></b><span>${(a.addressedBarriers || []).map(label).join(" + ")}</span><strong>$${a.cost} →</strong></button>`).join("") || "<p>No support can be allocated.</p>"}</div><details><summary>Assumptions and reproducibility</summary><pre>${esc(JSON.stringify({ assumptions: r.assumptions, fingerprint: r.fingerprint }, null, 2))}</pre></details></div>` : empty("A patient may need more than a ride.", "Connect the documented needs before comparing options.")}</section></div>`;
 }
 
-function bindEvents(){
- $('#query-form')?.addEventListener('submit',event=>{event.preventDefault();analyze($('#question').value);});
- $('#question')?.addEventListener('input',event=>state.question=event.target.value);
- $('#question')?.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();analyze(event.currentTarget.value);}});
- $('#capacity')?.addEventListener('input',event=>{state.capacity=Number(event.target.value);const count=Math.min(state.capacity,(state.result?.patients||[]).filter(eligible).length);$('#capacity-label').textContent=`${state.capacity} patients`;$('#capacity-count').textContent=count;$('#batch-count').textContent=count;});
- $('#lab-text')?.addEventListener('input',event=>state.labText=event.target.value);
- document.querySelectorAll('[data-patient]').forEach(row=>{row.addEventListener('click',()=>openPatient(row.dataset.patient));row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openPatient(row.dataset.patient);}});});
- bindActions($('#app'));
- $('#graph-search')?.addEventListener('input',ev=>{$('#graph-node-list').innerHTML=nodeList(ev.target.value);bindActions($('#graph-node-list'));});
- $('#graph-search')?.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();const match=state.graphData?.nodes.find(n=>`${n.label} ${n.id}`.toLowerCase().includes(ev.target.value.toLowerCase()));if(match)graphController?.select(match.id);}});
- document.querySelectorAll('.graph-type').forEach(input=>input.addEventListener('change',()=>graphController?.filter(new Set([...document.querySelectorAll('.graph-type:checked')].map(n=>n.value)))));
- for(const key of ['patientId','date','type','text'])$(`#ingest-${key}`)?.addEventListener('input',ev=>{state.ingest[key]=ev.target.value;state.ingest.preview=null;state.ingest.committed=null;$('#commit-note')?.setAttribute('disabled','');});
- $('#proof-text')?.addEventListener('input',event=>{state.proof.text=event.target.value;if(state.proof.result?.custom){state.proof.result.custom=null;$('.proof-custom-result')?.remove();}});
- for(const [id,key] of [['impact-budget','budget'],['impact-capacity','outreachCapacity']]){
-  $('#'+id)?.addEventListener('input',event=>{state.impact[key]=Number(event.target.value);state.impact.dirty=true;$('#'+id+'-value').textContent=key==='budget'?money(state.impact[key]):`${state.impact[key]} patients`;$('#impact-state').textContent='Controls changed. Recalculate to refresh the comparison.';$('.impact-results')?.classList.add('scenario-dirty');});
-  $('#'+id)?.addEventListener('change',()=>{if(state.connected)runSimulation();});
- }
- document.querySelectorAll('.impact-support').forEach(input=>input.addEventListener('change',()=>{state.impact.barriers=[...document.querySelectorAll('.impact-support:checked')].map(n=>n.value);state.impact.dirty=true;if(state.connected)runSimulation();}));
- $('#impact-scope')?.addEventListener('change',event=>{state.impact.scope=event.target.value;state.impact.dirty=true;if(state.connected)runSimulation();});
+function render() {
+  graphController?.destroy();
+  graphController = null;
+  const views = {
+    home: homeView,
+    cohort: cohortView,
+    notes: noteView,
+    proof: proofView,
+    tasks: taskView,
+    history: historyView,
+    impact: impactView,
+  };
+  $("#app").innerHTML = shell((views[state.view] || homeView)());
+  bind();
+  if (state.view === "home" && state.graph) drawGraph();
 }
-function bindActions(root){root?.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>Promise.resolve(act(button.dataset.action,button.dataset)).catch(error=>toast(error.message))));}
-async function act(action,data={}){
- if(action==='simulate')await runSimulation();
- if(action==='impact-preset'){state.impact.budget=Number(data.budget);state.impact.dirty=true;await runSimulation();}
- if(action==='impact-export')download('careweave-resource-scenario.json',{synthetic:true,simulation:true,...state.impact.result});
- if(action==='impact-strategy'){if(state.impact.busy)return;++state.impact.request;state.impact.comparison=data.strategy;state.impact.selected=state.impact.result?.[data.strategy]?.allocations?.[0]?.patientId||null;state.impact.graph=null;await loadImpactGraph();if(state.view==='impact')render();}
- if(action==='impact-patient'){state.impact.selected=data.id;graphController?.select(data.id);const a=state.impact.result?.[state.impact.comparison]?.allocations?.find(x=>x.patientId===data.id);if(a){$('#impact-evidence').innerHTML=impactEvidence(a);bindActions($('#impact-evidence'));graphController?.highlight(a.graph||{});}}
- if(action==='run-proof')await runProof(false);
- if(action==='run-proof-custom')await runProof(true);
- if(action==='proof-export')download('careweave-live-proof.json',{synthetic:true,exportedAt:new Date().toISOString(),...state.proof.result});
- if(action==='engine-mode'){if(state.busy)return;state.queryMode=data.mode;render();toast(data.mode==='baseline'?'Local baseline selected. Run a question to use deterministic SQL queries.':'OpenAI agent selected. Run a question to use live model tool calls.');}
- if(action==='view'){state.view=data.view;render();window.scrollTo({top:0,behavior:'instant'});if(data.view==='lab'&&state.connected&&!state.mlMetrics){try{state.mlMetrics=await api('/api/ml/metrics');render();}catch(error){toast(error.message);}}if(data.view==='runs'&&state.connected){const response=await api('/api/runs');state.runs=response.runs||[];render();}}
- if(action==='example'){
-  const examples={transport:'Find diabetic patients who are overdue for an A1c test and have transportation barriers.',cost:'Find diabetic patients with cost barriers and medication refill gaps of at least 30 days.',food:'Find diabetic patients with overdue A1c tests and food insecurity.',resolved:'Show diabetic patients whose transportation barriers are resolved.',followup:'Of those patients, show only people age 65 and older.'};
-  analyze(examples[data.example]);
- }
- if(action==='patient')openPatient(data.id,data.barrier);
- if(action==='prev'){state.page=Math.max(0,state.page-1);render();}
- if(action==='next'){state.page++;render();}
- if(action==='csv')exportCsv();
- if(action==='audit')download('careweave-audit.json',audit(),'application/json');
- if(action==='queue-export')download('careweave-coordination-tasks.json',{demo:true,nothingSent:true,exportedAt:new Date().toISOString(),tasks:state.tasks},'application/json');
- if(action==='batch')await prepareBatch();
- if(action==='queue-filter'){state.queueFilter=data.filter;render();}
- if(action==='remove-task'){if(state.connected){const response=await api('/api/tasks/'+encodeURIComponent(data.id),{method:'DELETE'});state.tasks=state.tasks.map(t=>t.id===data.id?(response.task||response):t);}else{const task=state.tasks.find(t=>t.id===data.id);if(task)task.status='cancelled';}saveTasks();render();toast('Draft cancelled. Its history remains in the care queue.');}
- if(action==='approve')await approveTask(data.id);
- if(action==='complete'){const task=state.tasks.find(t=>t.id===data.id);if(state.connected){const response=await api('/api/tasks/'+encodeURIComponent(data.id),{method:'PATCH',body:JSON.stringify({status:'completed',version:task.version})});state.tasks=state.tasks.map(t=>t.id===data.id?(response.task||response):t);}else{task.status='completed';saveTasks();}render();toast('Demo task marked complete. No outreach was sent.');}
- if(action==='revalidate'){const task=state.tasks.find(t=>t.id===data.id);const response=await api('/api/tasks/'+encodeURIComponent(data.id),{method:'PATCH',body:JSON.stringify({status:'pending',version:task.version})});state.tasks=state.tasks.map(t=>t.id===data.id?(response.task||response):t);render();toast('Evidence revalidated. Review the refreshed task before approving.');}
- if(action==='copy-task'){
-  const task=state.tasks.find(t=>t.id===data.id);
-  navigator.clipboard.writeText(`${task.title}\n\n${task.body}\n\nDEMO — synthetic patient. Nothing has been sent.`).then(()=>toast('Approved demo draft copied.')).catch(()=>toast('Clipboard access is unavailable. Use Export tasks to save the draft.'));
- }
- if(action==='check-sentence'){state.labText=$('#lab-text').value;state.labResult=extractBarriers({id:'LAB-INPUT',type:'Fictional user test',date:'2026-10-10',text:state.labText});if(state.connected)state.mlPrediction=await api('/api/ml/predict',{method:'POST',body:JSON.stringify({text:state.labText})});render();}
- if(action==='repeat'){
-  const plan=state.plan||parseQuestion('Find diabetic patients with transportation barriers and overdue A1c tests.').plan;
-  const first=state.connected?(await api('/api/query',{method:'POST',body:JSON.stringify({plan,question:state.lastQuestion||state.question})})).result:runQuery(plan),second=state.connected?(await api('/api/query',{method:'POST',body:JSON.stringify({plan,question:state.lastQuestion||state.question})})).result:runQuery(plan);
-  state.repeat={ok:first.fingerprint===second.fingerprint&&JSON.stringify(first.patients.map(p=>p.id))===JSON.stringify(second.patients.map(p=>p.id)),firstFingerprint:first.fingerprint,secondFingerprint:second.fingerprint,patientCount:first.count,orderedIdsIdentical:JSON.stringify(first.patients.map(p=>p.id))===JSON.stringify(second.patients.map(p=>p.id))};render();
- }
- if(action==='lab-export')download('careweave-extraction-evaluation.json',evaluateExtraction(),'application/json');
- if(action==='graph-mode'){state.graphMode=data.mode;state.graphSelected=null;state.graphData=null;await loadGraph();}
- if(action==='graph-fit')graphController?.fit();
- if(action==='graph-zoom-in')graphController?.zoom(1.25);
- if(action==='graph-zoom-out')graphController?.zoom(.8);
- if(action==='node-select')graphController?.select(data.id);
- if(action==='event-highlight')graphController?.highlight(state.events[Number(data.index)]||{});
- if(action==='graph-maya'||action==='graph-patient'){state.graphPatient=data.id||'P0412';state.graphMode='patient';state.graphSelected=null;state.graphData=null;await loadGraph();graphController?.select(state.graphPatient);}
- if(action==='graph-expand'){const expanded=await api('/api/graph/expand/'+encodeURIComponent(data.id));state.graphExpandedLabel=`Connections around ${state.graphSelected?.label||data.id}`;state.graphMode='expanded';state.graphData=expanded;state.graphSelected=expanded.nodes.find(n=>n.id===data.id)||null;state.graphError='';render();graphController?.fit();toast(`${num(expanded.nodes.length)} connected nodes and ${num(expanded.edges.length)} evidence links loaded.`);}
- if(action==='barrier-query')await analyze(`Find diabetic patients with overdue A1c tests and ${barrierLabel(data.barrier)} barriers.`);
- if(action==='preview-note')await previewNote();
- if(action==='commit-note')await commitNote();
- if(action==='ingest-example'){if(state.ingest.busy)return;state.ingest.text=data.example==='resolve'?'Patient: My daughter now drives me to appointments. Transportation is no longer a problem.':data.example==='active'?"Patient: I missed my A1c lab appointment because I have no ride to the clinic.":'Patient: My brother has no ride, but I can drive myself to appointments.';state.ingest.preview=null;state.ingest.committed=null;render();}
- if(action==='replay-run'){const replay=await api('/api/runs/'+encodeURIComponent(data.id));const run=replay.run||replay;state.question=run.question||state.question;state.lastQuestion=state.question;state.plan=run.plan||run.result?.plan;state.result=run.result;state.lastEngine=run.engine||'deterministic';state.answer=run.answer||'';state.events=run.events||run.result?.events||[];state.runId=run.id||run.runId||data.id;state.stale=true;state.queryError='Historical replay: re-run the question before preparing cohort actions.';state.summary='Saved execution replay. Cohort membership is historical; the displayed graph uses current evidence.';state.view='graph';state.graphMode='cohort';state.graphData=null;state.graphSelected=null;await loadGraph();}
+function bind() {
+  $("#query-form")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    state.question = $("#question").value;
+    runQuestion();
+  });
+  $("#question")?.addEventListener(
+    "input",
+    (event) => (state.question = event.target.value),
+  );
+  $("#proof-text")?.addEventListener(
+    "input",
+    (event) => (state.proofText = event.target.value),
+  );
+  for (const [id, key] of [
+    ["note-date", "date"],
+    ["note-type", "type"],
+    ["note-patient", "patientId"],
+  ])
+    $("#" + id)?.addEventListener("change", (event) => {
+      state.note[key] = event.target.value;
+      state.note.preview = null;
+      render();
+    });
+  $("#note-text")?.addEventListener("input", (event) => {
+    state.note.text = event.target.value;
+    state.note.preview = null;
+    $('[data-cmd="note-commit"]').disabled = true;
+  });
+  for (const [id, key] of [
+    ["budget", "budget"],
+    ["capacity", "capacity"],
+  ])
+    $("#" + id)?.addEventListener("change", (event) => {
+      state[key] = +event.target.value;
+      state.simulation = null;
+      render();
+    });
 }
-
-function taskFor(patient,barrier){return state.tasks.find(t=>t.patientId===patient.id&&t.barrier===barrier.type&&!['cancelled','completed'].includes(t.status));}
-async function addTask(patient,barrier,title,body){
- if(!patient.gapOpen||barrier.status!=='active')return null;
- if(taskFor(patient,barrier))return null;
- const response=state.connected?await api('/api/tasks',{method:'POST',body:JSON.stringify({patientId:patient.id,barrier:barrier.type,title,body})}):null;
- const task=response?(response.task||response):{id:`TASK-${Date.now()}-${patient.id}-${barrier.type}`,patientId:patient.id,barrier:barrier.type,title,body,status:'pending',createdAt:new Date().toISOString(),evidence:{documentId:barrier.documentId,quote:barrier.quote,date:barrier.date,status:barrier.status},demo:true};
- state.tasks.unshift(task);return task;
+async function loadGraph() {
+  const request = ++graphRequest;
+  try {
+    let query = `mode=${state.graphMode}&limit=50`;
+    if (state.graphMode === "patient") query += `&patientId=${state.patientId}`;
+    if (state.graphMode === "cohort")
+      query += `&patientIds=${(state.result?.patients || []).map((p) => p.id).join(",")}`;
+    const graph = await api("/api/graph?" + query);
+    if (request !== graphRequest) return;
+    state.graph = graph;
+    if (state.view === "home") render();
+  } catch (error) {
+    if (request === graphRequest) toast(error.message);
+  }
 }
-async function prepareBatch(){
- if(state.stale){toast('Re-run this cohort against current evidence before preparing outreach.');return;}
- const ranked=(state.result?.patients||[]).filter(eligible).sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||a.id.localeCompare(b.id));
- let count=0;
- for(const patient of ranked.slice(0,state.capacity)){
-  const b=patient.barriers.find(b=>b.status==='active'&&(!state.plan?.barriers?.length||state.plan.barriers.includes(b.type)))||patient.barriers.find(b=>b.status==='active');
-  const draft=makeDraft(patient,b.type);
-  if(await addTask(patient,b,draft.title,draft.body))count++;
- }
- saveTasks();state.view='queue';state.queueFilter='pending';render();toast(count?`${count} outreach drafts prepared for human review. Nothing sent.`:'These patients already have a draft in the care queue.');
+function drawGraph() {
+  graphController = createGraph($("#graph-canvas"), state.graph, {
+    mode: state.graphMode,
+    onSelect: (node) => {
+      state.selected = node;
+      if (node?.schemaNode || state.graphMode === "ontology") {
+        toast(`${nodeLabel(node.type)}: ${node.label || node.id}`);
+        return;
+      }
+      const patientId = node?.type === "Patient" ? node.id : node?.patientId;
+      if (patientId) operation("patient", () => openPatient(patientId));
+      else if (node) toast(`${nodeLabel(node.type)}: ${node.label || node.id}`);
+    },
+  });
 }
-async function approveTask(id){
- const task=state.tasks.find(t=>t.id===id);
- if(!task)return;
- const patient=patients.find(p=>p.id===task.patientId);
- const barrier=patient?.barriers.find(b=>b.type===task.barrier);
- if(!patient?.gapOpen||barrier?.status!=='active'){toast('This patient no longer has an eligible active gap and barrier. Approval blocked.');return;}
- if(state.connected){const response=await api('/api/tasks/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({status:'approved',version:task.version})});state.tasks=state.tasks.map(t=>t.id===id?(response.task||response):t);}else{task.status='approved';task.approvedAt=new Date().toISOString();task.approvedBy='Demo care coordinator';}saveTasks();render();toast('Draft approval recorded. No outreach was sent.');
+async function runQuestion(question = state.question) {
+  if (state.busy || !state.connected) return;
+  state.question = question;
+  state.busy = true;
+  state.error = "";
+  state.events = [];
+  state.result = null;
+  state.answer = "";
+  state.page = 0;
+  state.filter = "all";
+  state.stale = false;
+  state.graphMode = "ontology";
+  render();
+  const startTime = performance.now();
+  try {
+    await loadGraph();
+    const response = await fetch("/api/agent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question,
+        previousPlan: state.plan,
+        stream: true,
+      }),
+    });
+    if (!response.ok) {
+      const value = await response.json();
+      throw new Error(value.error || "The investigation could not start.");
+    }
+    const reader = response.body.getReader(),
+      decoder = new TextDecoder();
+    let buffer = "",
+      final;
+    while (true) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+      const frames = buffer.split(/\r?\n\r?\n/);
+      buffer = frames.pop();
+      for (const frame of frames) {
+        const kind = frame.match(/^event: (.+)$/m)?.[1],
+          raw = frame
+            .split(/\r?\n/)
+            .filter((line) => line.startsWith("data:"))
+            .map((line) => line.slice(5).trim())
+            .join("\n");
+        if (!raw) continue;
+        const data = JSON.parse(raw);
+        if (kind === "tool") {
+          state.events.push(data);
+          render();
+          graphController?.highlight(data);
+        } else if (kind === "result") final = data;
+        else if (kind === "error") throw new Error(data.error);
+      }
+      if (done) break;
+    }
+    if (!final?.ok)
+      throw new Error(
+        final?.error || final?.answer || "No supported answer was completed.",
+      );
+    state.result = final.result;
+    state.plan = final.plan;
+    state.answer = final.answer || final.summary;
+    state.events = final.events || state.events;
+    state.elapsed = performance.now() - startTime;
+    state.graphMode = "cohort";
+    state.runs = (await api("/api/runs")).runs;
+  } catch (error) {
+    state.error = error.message;
+    toast(error.message);
+  } finally {
+    state.busy = false;
+    render();
+    if (state.result) loadGraph();
+  }
 }
-
-async function openPatient(id,barrierType){
- if(state.connected){try{const response=await api('/api/patients/'+encodeURIComponent(id));const updated=response.patient||response;patients=patients.map(p=>p.id===id?updated:p);}catch(error){toast(error.message);return;}}
- const patient=patients.find(p=>p.id===id);if(!patient)return;
- drawerReturnFocus=document.activeElement;
- state.drawer=id;
- const b=barrierType?patient.barriers.find(item=>item.type===barrierType):chosenBarrier(patient);
- const doc=patient.documents.find(d=>d.id===b?.documentId);
- const active=b?.status==='active'?b:null;
- const actionable=Boolean(patient.gapOpen&&active&&b?.status==='active');
- const existing=actionable?taskFor(patient,active):null;
- const draft=actionable?(existing||makeDraft(patient,active.type)):null;
- let assertions=patient.documents.flatMap(d=>extractBarriers(d).map(a=>({...a,documentId:d.id,date:a.date||d.date}))).filter(a=>!b||a.type===b.type).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
- if(b&&!assertions.some(a=>a.documentId===b.documentId&&a.status===b.status&&a.quote===b.quote)){assertions.push(b);assertions.sort((a,b)=>String(a.date).localeCompare(String(b.date)));}
- $('#overlay-root').innerHTML=`<div class="drawer-backdrop" data-close="true"></div><section class="drawer" role="dialog" aria-modal="true" aria-label="Patient evidence and care coordination"><header class="drawer-header">${patientMarkup(patient)}<button class="icon-btn" id="close-drawer" aria-label="Close patient details">${icon('close')}</button></header><div class="drawer-content"><div class="drawer-meta">${barrierPill(b)}<span class="filter-tag">${patient.diabetes?'Diabetes':'No diabetes flag'}</span><span class="filter-tag">${e(displayGap(patient,false))}${patient.daysOverdue>0?' · '+num(patient.daysOverdue)+'d overdue':patient.gapOpen?' · '+patient.a1c+'%':''}</span><span class="filter-tag">Priority ${e(patient.priority)}</span></div><section class="card drawer-card"><span class="mini-label">${b?.status==='resolved'?'A barrier that changed':'The reason behind the gap'}</span><h3>Evidence you can trace back to the source.</h3>${b?`<blockquote class="drawer-quote">“${e(b.quote)}”</blockquote><div class="document-meta"><span>${e(b.source||doc?.type||'Patient note')} · ${date(b.date)}<br>Source ${e(b.documentId)}</span><span class="evidence-ok">${icon('shield')}${b.status==='resolved'?'Resolved assertion':'Source linked'}</span></div>`:'<p class="subtitle">No patient-specific barrier was extracted.</p>'}${doc?`<details class="source-details" open><summary>Read the complete source document</summary><div class="source-document">${highlightQuote(doc.text,b?.quote)}</div></details>`:''}<details class="source-details"><summary>All patient documents (${patient.documents.length})</summary>${patient.documents.map(d=>`<details class="source-details"><summary>${e(d.type)} · ${date(d.date)} · ${e(d.id)}</summary><div class="source-document">${e(d.text)}</div></details>`).join('')}</details></section><section class="card drawer-card"><h3>What changed over time</h3><p class="subtitle">Latest patient-specific assertion determines the current barrier status.</p><div class="timeline">${assertions.length?assertions.map(a=>`<div class="timeline-item ${a.status}"><strong>${a.status==='resolved'?'Barrier resolved':'Barrier active'}</strong><p>“${e(a.quote)}”</p><small>${date(a.date)} · ${e(a.documentId)}</small></div>`).join(''):'<p class="subtitle">No patient-specific barrier history was extracted.</p>'}</div></section><section class="card drawer-card"><h3>The connected evidence</h3><div class="graph-card">${graphMarkup(patient,b)}</div></section><section class="card drawer-card"><div class="drawer-action-banner">${icon(actionable?'queue':'shield')}<div><strong>${actionable?existing?.status==='approved'?'Demo task approved':'A practical next step':b?.status==='resolved'?'This barrier is resolved.':'No eligible outreach task.'}</strong><p>${actionable?'Prepare a care-coordination draft, then review and approve it in the care queue.':b?.status==='resolved'?'A resolved barrier does not trigger new assistance outreach. Review the current care gap separately.':'Careweave prepares tasks only for patients with an open A1c gap and a current active barrier.'}</p></div></div>${draft?`<label class="field-label" for="draft-title">Coordination task</label><input id="draft-title" class="text-field" value="${e(draft.title)}" ${existing?.status==='approved'?'readonly':''}/><label class="field-label" for="draft-body">Outreach draft · editable before approval</label><textarea id="draft-body" class="text-field" ${existing?.status==='approved'?'readonly':''}>${e(draft.body)}</textarea><div class="drawer-footer"><small>Synthetic patient. Demo workflow only.<br>No message will be sent.</small>${existing?.status==='approved'?'<span class="task-status approved">Approval recorded</span>':`<button class="btn btn-primary" id="save-draft">${icon('queue')}${existing?'Save draft changes':'Prepare draft'}${icon('arrow')}</button>`}</div>`:''}</section></div></section>`;
- document.body.style.overflow='hidden';
- $('#close-drawer').addEventListener('click',closeDrawer);$('.drawer-backdrop').addEventListener('click',closeDrawer);
- $('#save-draft')?.addEventListener('click',async()=>{try{
-  const title=$('#draft-title').value.trim(),body=$('#draft-body').value.trim();
-  if(!title||!body){toast('Keep a title and outreach body before saving.');return;}
-  if(existing){if(state.connected){const response=await api('/api/tasks/'+encodeURIComponent(existing.id),{method:'PATCH',body:JSON.stringify({title,body,version:existing.version})});state.tasks=state.tasks.map(t=>t.id===existing.id?(response.task||response):t);}else{existing.title=title;existing.body=body;existing.updatedAt=new Date().toISOString();}}
-  else await addTask(patient,active,title,body);
-  saveTasks();closeDrawer();render();toast(existing?'Draft changes saved. Review and approve in Care queue.':'Draft prepared. Review and approve in Care queue.');
- }catch(error){toast(error.message);}});
- $('#close-drawer').focus();
+async function searchNotes() {
+  if (state.busy) return;
+  state.busy = true;
+  render();
+  try {
+    state.baseline = await api("/api/search", { question: state.question });
+  } finally {
+    state.busy = false;
+    render();
+  }
 }
-function highlightQuote(text,quote){if(!quote||!String(text).includes(quote))return e(text);const index=text.indexOf(quote);return e(text.slice(0,index))+`<mark>${e(quote)}</mark>`+e(text.slice(index+quote.length));}
-function closeDrawer(){state.drawer=null;$('#overlay-root').innerHTML='';document.body.style.overflow='';if(drawerReturnFocus?.isConnected)drawerReturnFocus.focus();}
-document.addEventListener('keydown',event=>{
- if(event.key==='Escape'&&state.drawer)closeDrawer();
- if((event.ctrlKey||event.metaKey)&&event.key==='k'){event.preventDefault();state.view='graph';render();$('#question')?.focus();$('#question')?.select();}
- if(event.key==='Tab'&&state.drawer){const all=[...$('.drawer').querySelectorAll('button:not([disabled]),input:not([readonly]),textarea:not([readonly]),summary,[tabindex="0"]')];const first=all[0],last=all.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
+function download(filename, value) {
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(value, null, 2)], { type: "application/json" }),
+  );
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function sourceHtml(patient, barrier) {
+  if (barrier.sourceKind === "coded" || barrier.code) {
+    const row = patient.socialNeeds?.find(
+      (s) => s.type === barrier.type || s.code === barrier.code,
+    );
+    return `<article class="evidence-card structured"><div class="eyebrow">HOSPITAL DATA STORE · CODED SOCIAL NEEDS</div><h3>${esc(row?.code || barrier.code || BARRIERS[barrier.type]?.zCode)} · ${label(barrier.type)}</h3><p>${esc(row?.display || barrier.quote)}</p><small>Row ${esc(row?.id || barrier.documentId)} · ${date(row?.date || barrier.date)}</small></article>`;
+  }
+  const note = patient.notes.find(
+      (n) => n.id === barrier.documentId || n.id === barrier.noteId,
+    ),
+    text = note?.text || "",
+    quote = barrier.quote || "",
+    at = text.indexOf(quote);
+  return `<article class="evidence-card clinical"><div class="eyebrow">CLINICAL NOTES · ${label(barrier.type)}</div><h3>${esc(note?.note_type || barrier.note_type)}, ${note ? relative(note) : date(barrier.date)}</h3><small>${esc(note?.authorRole || "Clinical staff")} · ${esc(barrier.documentId)} · confidence ${pct(barrier.confidence)}</small><blockquote>“${esc(quote)}”</blockquote><details><summary>Read the complete clinical note</summary><p class="source-text">${at >= 0 && quote ? esc(text.slice(0, at)) + `<mark>${esc(quote)}</mark>` + esc(text.slice(at + quote.length)) : esc(text)}</p></details></article>`;
+}
+async function openPatient(id, selectedType) {
+  const patient = await api("/api/patients/" + encodeURIComponent(id));
+  returnFocus = document.activeElement;
+  state.drawer = patient;
+  const type = selectedType || patient.barriers[0]?.type || "standard",
+    existing = state.tasks.find(
+      (t) =>
+        t.patientId === id &&
+        t.barrier === type &&
+        ["pending", "approved", "needs_review"].includes(t.status),
+    );
+  let draft;
+  try {
+    draft = existing || makeDraft(patient, type);
+  } catch {
+    draft = null;
+  }
+  const actionable =
+    (patient.barriers.length > 0 || patient.followUpGap?.open) && !state.stale;
+  $("#overlay-root").innerHTML =
+    `<div class="backdrop" data-cmd="close"></div><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="patient-title"><header><div><div class="eyebrow">${patient.id} · ${patient.age} YEARS · FICTIONAL PATIENT</div><h2 id="patient-title">${esc(patient.name)}</h2></div>${btn("×", "close", 'aria-label="Close patient details"', "icon-btn")}</header><div class="drawer-body"><div class="button-row">${pill(`Day ${patient.daysSinceDischarge} after discharge`, "green")}${pill(patient.followUpGap?.open ? "Open follow-up gap" : "No open follow-up gap")}${patient.likelyToReturn ? pill("Likely to return · demo rule", "amber") : ""}</div><section class="clinical-facts"><div class="eyebrow">HOSPITAL DATA STORE</div><h3>What our hospital’s tables show</h3><dl><dt>Admission</dt><dd>${esc(patient.admission.principalDiagnosis)}<small>${date(patient.admission.admitDate)} → ${date(patient.admission.dischargeDate)} · ${esc(patient.admission.unit)}</small></dd><dt>Admission labs</dt><dd>${patient.labs.map((l) => `${esc(l.name)}: <b>${esc(l.value)}${esc(l.unit)}</b>`).join("<br>")}</dd><dt>Follow-up visit</dt><dd>${patient.appointments.length ? patient.appointments.map((a) => `${esc(a.clinic)} · ${date(a.date)}<br>${pill(a.status.replaceAll("_", " "), a.status === "completed" ? "green" : "amber")}`).join("<br>") : "Nothing scheduled"}</dd><dt>Discharge medication / our pharmacy</dt><dd>${patient.medications.map((m) => `${esc(m.name)} ${m.newStart ? "· new start" : ""}<br>${pill(m.pickedUp ? "Picked up " + date(m.pickupDate) : "Not picked up", m.pickedUp ? "green" : "amber")}`).join("<br>")}</dd><dt>Follow-up gap reason</dt><dd>${esc(reasons(patient) || "No open reason under the demo rule")}</dd><dt>Coded social needs</dt><dd>${patient.socialNeeds?.length ? patient.socialNeeds.map((s) => `${esc(s.code)} · ${label(s.type)}`).join("<br>") : "No coded social need. Read the clinical notes for context."}</dd><dt>Emergency department returns</dt><dd>${patient.emergencyVisits?.length ? patient.emergencyVisits.map((v) => `${date(v.date)} · ${esc(v.reason || v.diagnosis)}`).join("<br>") : "No return visit recorded in this snapshot"}</dd></dl></section><section><div class="eyebrow">THE PATIENT’S REPORTED REASON</div><h3>Evidence our own staff recorded</h3>${btn("Open patient graph", "patient-graph", `data-id="${patient.id}"`, "secondary")}${patient.barriers.map((b) => sourceHtml(patient, b)).join("") || '<div class="rule-note">No current barrier is documented. The standard discharge call asks what help is needed and reschedules the visit.</div>'}<details class="all-notes"><summary>All clinical notes (${patient.notes.length})</summary>${patient.notes.map((n) => `<article><b>${esc(n.note_type)} · ${relative(n)}</b><small>${esc(n.authorRole)} · ${n.id}</small><p>${esc(n.text)}</p></article>`).join("")}</details></section><section class="draft-section"><div class="eyebrow">TRANSITIONS-OF-CARE ACTION</div><h3>A useful next step, ready for review</h3><label for="task-barrier">Action to prepare</label><select id="task-barrier">${(patient.barriers.length ? patient.barriers.map((b) => b.type) : ["standard"]).map((t) => `<option value="${t}" ${t === type ? "selected" : ""}>${label(t)} · ${owner(t)}</option>`).join("")}</select><p>${esc(nextAction(type))}</p>${draft && actionable ? `<label for="task-title">Task title</label><input id="task-title" value="${esc(draft.title)}" ${existing?.status === "approved" ? "readonly" : ""}><label for="task-body">Discharge follow-up draft</label><textarea id="task-body" rows="9" ${existing?.status === "approved" ? "readonly" : ""}>${esc(draft.body)}</textarea><div class="button-row">${existing?.status === "approved" ? pill("Approval recorded", "green") : btn(existing ? "Save draft changes" : "Prepare demo task", "save-task", `data-type="${type}" ${existing ? `data-id="${existing.id}"` : ""}`, "primary")}</div>` : `<div class="rule-note">${state.stale ? "Rerun the saved question before preparing a task." : "This patient has no open follow-up gap under the demo rule."}</div>`}<p class="small-text">Human review required. No call, medication change, referral, or booking is performed.</p></section></div></section>`;
+  document.body.style.overflow = "hidden";
+  $("#task-barrier")?.addEventListener("change", (event) =>
+    operation("patient", () => openPatient(id, event.target.value)),
+  );
+  $('[aria-label="Close patient details"]').focus();
+}
+function closeDrawer() {
+  state.drawer = null;
+  $("#overlay-root").innerHTML = "";
+  document.body.style.overflow = "";
+  if (returnFocus?.isConnected) returnFocus.focus();
+}
+document.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-cmd]");
+  if (!target || target.disabled) return;
+  event.preventDefault();
+  const d = target.dataset;
+  operation(d.cmd, async () => {
+    if (d.cmd === "nav") {
+      state.view = d.view;
+      state.error = "";
+      render();
+      window.scrollTo({ top: 0 });
+      if (state.view === "home" && !state.graph) loadGraph();
+    } else if (d.cmd === "reload") location.reload();
+    else if (d.cmd === "question") {
+      if (state.busy) return;
+      state.question = QUESTIONS[d.question];
+      await runQuestion();
+    } else if (d.cmd === "run-main") {
+      state.view = "home";
+      await runQuestion(QUESTIONS.main);
+    } else if (d.cmd === "search") await searchNotes();
+    else if (d.cmd === "graph-mode") {
+      state.graphMode = d.mode;
+      await loadGraph();
+    } else if (d.cmd === "fit") graphController?.fit();
+    else if (d.cmd === "graph-focus") {
+      state.graphExpanded = !state.graphExpanded;
+      render();
+      $("#graph-canvas").scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    } else if (d.cmd === "trace-step") {
+      const event = state.events.find((e) => e.step === +d.step);
+      state.view = "home";
+      state.graphMode = "ontology";
+      await loadGraph();
+      graphController?.highlight(event);
+      $("#graph-canvas").scrollIntoView({
+        block: "center",
+        behavior: "smooth",
+      });
+    } else if (d.cmd === "zoom-in" || d.cmd === "zoom-out")
+      graphController?.zoom(d.cmd === "zoom-in" ? 1.25 : 0.8);
+    else if (d.cmd === "node") {
+      state.selected = state.graph.nodes.find((n) => n.id === d.id);
+      graphController?.select(d.id);
+    } else if (d.cmd === "group") {
+      state.filter = d.type;
+      state.page = 0;
+      render();
+    } else if (d.cmd === "page") {
+      state.page += +d.delta;
+      render();
+    } else if (d.cmd === "patient") await openPatient(d.id, d.barrier);
+    else if (d.cmd === "close") closeDrawer();
+    else if (d.cmd === "patient-graph") {
+      state.patientId = d.id;
+      state.graphMode = "patient";
+      state.view = "home";
+      closeDrawer();
+      await loadGraph();
+      window.scrollTo({ top: 0 });
+    } else if (d.cmd === "save-task") {
+      const body = {
+        title: $("#task-title").value,
+        body: $("#task-body").value,
+      };
+      if (d.id) {
+        const task = state.tasks.find((t) => t.id === d.id);
+        await api(
+          "/api/tasks/" + d.id,
+          { ...body, version: task.version },
+          "PATCH",
+        );
+      } else
+        await api("/api/tasks", {
+          ...body,
+          patientId: state.drawer.id,
+          barrier: d.type,
+        });
+      await refresh();
+      closeDrawer();
+      state.view = "tasks";
+      state.taskFilter = "pending";
+      render();
+      toast("Demo task saved for human review.");
+    } else if (d.cmd === "task-filter") {
+      state.taskFilter = d.status;
+      render();
+    } else if (d.cmd === "task-update") {
+      const task = state.tasks.find((t) => t.id === d.id);
+      await api(
+        "/api/tasks/" + d.id,
+        { status: d.status, version: task.version },
+        "PATCH",
+      );
+      await refresh();
+      render();
+      toast("Demo review state saved. Nothing was sent.");
+    } else if (d.cmd === "note-preview" || d.cmd === "note-commit") {
+      if (state.busy) return;
+      state.busy = true;
+      render();
+      try {
+        const n = state.note;
+        if (d.cmd === "note-preview")
+          n.preview = await api("/api/extract", {
+            text: n.text,
+            date: n.date,
+            type: n.type,
+            note_type: n.type,
+          });
+        else {
+          await api(`/api/patients/${n.patientId}/documents`, {
+            text: n.text,
+            date: n.date,
+            type: n.type,
+            note_type: n.type,
+            synthetic: true,
+          });
+          await refresh();
+          n.preview = null;
+          state.stale = !!state.result;
+          state.simulation = null;
+          state.proof = null;
+          state.graph = null;
+          toast(
+            "Clinical note saved. Barriers and affected tasks were rechecked.",
+          );
+        }
+      } finally {
+        state.busy = false;
+        render();
+      }
+    } else if (d.cmd === "run-proof" || d.cmd === "custom-proof") {
+      if (state.busy) return;
+      state.busy = true;
+      render();
+      try {
+        state.proof = await api(
+          "/api/proof",
+          d.cmd === "custom-proof" ? { text: state.proofText } : {},
+        );
+        state.evaluation = await api("/api/ml/metrics");
+      } finally {
+        state.busy = false;
+        render();
+      }
+    } else if (d.cmd === "simulate") {
+      if (state.busy) return;
+      state.busy = true;
+      render();
+      try {
+        state.simulation = await api("/api/simulate", {
+          budget: state.budget,
+          contactCapacity: state.capacity,
+          barriers: Object.keys(BARRIERS),
+        });
+      } finally {
+        state.busy = false;
+        render();
+      }
+    } else if (d.cmd === "strategy") {
+      state.strategy = d.strategy;
+      render();
+    } else if (d.cmd === "replay") {
+      const run = await api("/api/runs/" + d.id);
+      state.result = run.result;
+      state.plan = run.plan;
+      state.events = run.events || [];
+      state.question = run.question;
+      state.answer = run.answer || run.summary || "";
+      state.stale = true;
+      state.elapsed = null;
+      state.view = "cohort";
+      state.filter = "all";
+      state.page = 0;
+      render();
+    } else if (d.cmd === "export-answer")
+      download("hospital-answer.json", {
+        question: state.question,
+        plan: state.plan,
+        result: state.result,
+        events: state.events,
+        synthetic: true,
+        snapshot: AS_OF,
+      });
+    else if (d.cmd === "export-proof")
+      download("hospital-proof.json", state.proof);
+    else if (d.cmd === "export-tasks")
+      download("hospital-demo-tasks.json", {
+        synthetic: true,
+        tasks: state.tasks,
+      });
+  });
 });
-function audit(){return {application:'Careweave',version:'1.0.0-demo',syntheticData:true,generatedAt:new Date().toISOString(),question:state.lastQuestion,attemptedQuestion:state.question,interpretedPlan:state.plan,summary:state.summary,stale:state.stale,count:state.result?.count,fingerprint:state.result?.fingerprint,events:state.result?.events,cohort:(state.result?.patients||[]).map(p=>({id:p.id,name:p.name,age:p.age,gapOpen:p.gapOpen,daysOverdue:p.daysOverdue,priority:p.priority,barriers:p.barriers,documents:p.documents})),coordinationTasks:state.tasks};}
-function download(filename,data,type='application/json'){
- const text=typeof data==='string'?data:JSON.stringify(data,null,2);
- const url=URL.createObjectURL(new Blob([text],{type}));const link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`${filename} exported.`);
-}
-function exportCsv(){
- const safe=value=>{const s=String(value??'');return '"'+(/^[=+@-]/.test(s)?"'"+s:s).replaceAll('"','""')+'"';};
- const rows=[['Patient ID','Name (synthetic)','Age','Diabetes','A1c gap open','Days overdue','Refill gap days','Barrier','Barrier status','Source document','Source date','Exact source quote','Priority']];
- for(const p of state.result?.patients||[]){const b=chosenBarrier(p);rows.push([p.id,p.name,p.age,p.diabetes,p.gapOpen,p.daysOverdue,p.refillGap,b?.type,b?.status,b?.documentId,b?.date,b?.quote,p.priority]);}
- download('careweave-cohort.csv','\uFEFF'+rows.map(row=>row.map(safe).join(',')).join('\r\n'),'text/csv;charset=utf-8');
-}
-
-function queueView(){
- const tasks=state.tasks.filter(t=>t.status===state.queueFilter);
- return `<div class="page-heading"><div><div class="eyebrow">${icon('queue')}From evidence to a useful next step</div><h1>Make the next move.</h1><p class="subtitle">Editable coordination tasks, persisted in ${state.connected?e(state.api.storage||'the database'):'this browser'}. Every approval stays in human hands.</p></div><button class="btn" data-action="queue-export">${icon('download')}Export tasks</button></div><div class="queue-toolbar"><div class="segmented">${[['pending','Needs approval'],['needs_review','Evidence changed'],['approved','Approved'],['completed','Completed'],['cancelled','Cancelled']].map(([status,label])=>`<button data-action="queue-filter" data-filter="${status}" class="${state.queueFilter===status?'active':''}">${label} (${state.tasks.filter(t=>t.status===status).length})</button>`).join('')}</div><span class="mode-badge">${icon('lock')}Demo actions · nothing sent</span></div>${tasks.length?`<div class="queue-grid">${tasks.map(t=>{const p=patients.find(p=>p.id===t.patientId);return `<article class="card task-card"><div class="task-top">${p?patientMarkup(p,true):e(t.patientId)}<span class="task-status ${e(t.status)}">${t.status==='approved'?'Approved':t.status==='needs_review'?'Evidence changed':t.status==='completed'?'Completed · simulated':t.status==='cancelled'?'Cancelled':'Human review required'}</span></div>${barrierPill({type:t.barrier,status:'active'})}<h3>${e(t.title)}</h3>${t.status==='needs_review'?`<div class="query-message">${e(t.reason||t.reviewReason||'The patient evidence changed after this draft was prepared. Recheck the source before taking action.')}</div>`:''}<div class="task-body">${e(t.body)}</div><div class="task-source">${icon('document')}${e(t.evidence?.documentId||'Source-backed draft')} · version ${t.version||1}</div><div class="task-actions"><button class="text-button" data-action="patient" data-id="${e(t.patientId)}" data-barrier="${e(t.barrier)}">Evidence & edit ${icon('arrow')}</button><div>${t.status==='approved'?`<button class="btn btn-soft btn-sm" data-action="copy-task" data-id="${e(t.id)}">Copy draft</button><button class="btn btn-primary btn-sm" data-action="complete" data-id="${e(t.id)}">Mark complete</button>`:['completed','cancelled'].includes(t.status)?`<span class="mini-label">${e(t.status)} · demo only</span>`:t.status==='needs_review'?`<button class="btn btn-sm" data-action="remove-task" data-id="${e(t.id)}">Cancel</button><button class="btn btn-soft btn-sm" data-action="revalidate" data-id="${e(t.id)}">Revalidate</button>`:`<button class="btn btn-sm" data-action="remove-task" data-id="${e(t.id)}">Remove</button><button class="btn btn-primary btn-sm" data-action="approve" data-id="${e(t.id)}">${icon('check')}Approve</button>`}</div></div></article>`;}).join('')}</div>`:`<div class="card empty-state">${icon('queue')}<h3>${state.queueFilter==='needs_review'?'Evidence updates will appear here.':'Ready for the next good move.'}</h3><p>Inspect a patient’s source evidence or use the cohort capacity planner to prepare a draft for human approval.</p><button class="btn btn-primary" data-action="view" data-view="workbench">Open cohort workbench ${icon('arrow')}</button></div>`}`;
-}
-function ingestView(){
- const s=state.ingest;
- const assertions=s.preview?.assertions||s.preview?.rules||s.preview?.deterministic||s.preview?.ruleAssertions||[];
- const list=Array.isArray(assertions)?assertions:assertions.assertions||[];
- const ml=s.preview?.ml||s.preview?.prediction;
- return `<div class="page-heading"><div><div class="eyebrow">${icon('document')}The graph changes when the story does</div><h1>New context. A different answer.</h1><p class="subtitle">Add a synthetic note, inspect extraction, and watch the same cohort query change.</p></div><span class="mode-badge">${icon('shield')}Fictional input only</span></div><div class="ingest-grid"><section class="card ingest-editor"><div class="section-title"><h2>Add a piece of the story</h2><span class="number-badge">01</span></div><p class="subtitle">Try resolving Maya’s transportation barrier. Re-run the transportation + A1c query to verify the cohort changes.</p><label class="field-label" for="ingest-patientId">Fictional patient</label><select id="ingest-patientId" class="text-field" ${s.busy?'disabled':''}>${[...patients].sort((a,b)=>a.id==='P0412'?-1:b.id==='P0412'?1:a.id.localeCompare(b.id)).map(p=>`<option value="${e(p.id)}" ${p.id===s.patientId?'selected':''}>${e(p.name)} · ${p.id}</option>`).join('')}</select><div class="form-two"><div><label class="field-label" for="ingest-date">Source date</label><input id="ingest-date" class="text-field" ${s.busy?'disabled':''} type="date" max="2026-10-10" min="1900-01-01" value="${e(s.date)}"/></div><div><label class="field-label" for="ingest-type">Source type</label><select id="ingest-type" class="text-field" ${s.busy?'disabled':''}>${['Care coordinator call','Primary care note','Patient message'].map(type=>`<option ${type===s.type?'selected':''}>${type}</option>`).join('')}</select></div></div><label class="field-label" for="ingest-text">Synthetic source text</label><textarea id="ingest-text" class="text-field" rows="6" ${s.busy?'readonly':''}>${e(s.text)}</textarea><div class="query-chips"><button class="chip" data-action="ingest-example" data-example="resolve">Resolved barrier</button><button class="chip" data-action="ingest-example" data-example="active">Active barrier</button><button class="chip" data-action="ingest-example" data-example="family">Family-only mention</button></div>${s.error?`<div class="query-message" role="alert">${e(s.error)}</div>`:''}<button class="btn btn-primary" data-action="preview-note" ${s.busy||!state.connected?'disabled':''}>${icon(s.busy?'refresh':'lab')}${s.busy?'Processing…':'Preview extraction'}${icon('arrow')}</button>${!state.connected?'<p class="inline-note">Start the backend to persist notes and update the graph.</p>':''}</section><section class="card ingest-preview"><div class="section-title"><h2>Inspect before adding</h2><span class="number-badge">02</span></div>${s.preview?`<div class="extraction-heading"><span class="evidence-ok">${icon('shield')}Rules enforce context & source evidence</span></div>${list.length?list.map(b=>`<div class="extracted-assertion">${barrierPill(b)}<strong class="assertion-status">${e(b.status)}</strong><blockquote>“${e(b.quote||b.evidence||'')}”</blockquote></div>`).join(''):'<div class="lab-result"><p>No active or resolved patient barrier accepted by the rules. Negated, hypothetical, or family-only mentions do not become patient barriers.</p></div>'}${ml?`<div class="ml-preview"><span class="mini-label">LOCAL ML TOPIC SUGGESTIONS</span>${predictionView(ml)}<p class="inline-note">Classifier scores are uncalibrated suggestions. Rules determine context before an assertion enters the care graph.</p></div>`:''}${modelPreview(s.preview?.model)}<details class="source-details"><summary>Inspect full extraction response</summary><pre class="json-detail">${e(JSON.stringify(s.preview,null,2))}</pre></details><button id="commit-note" class="btn btn-primary" data-action="commit-note" ${s.busy||s.committed?'disabled':''}>${icon('nodes')}${s.committed?'Added to the care graph':'Add note & update graph'}</button>`:`<div class="empty-state">${icon('nodes')}<h3>Evidence comes first.</h3><p>Preview to see which assertions are accepted and compare local ML suggestions before changing the dataset.</p></div>`}${s.committed?`<div class="commit-result"><span class="evidence-ok">${icon('check')}Document saved. Graph recomputed.</span><h3>The patient story has changed.</h3><p>Source ${e(s.committed.document?.id||'document')} is now persisted. Affected tasks require renewed evidence review.</p><button class="btn btn-soft" data-action="example" data-example="transport">Re-run transportation query ${icon('arrow')}</button><button class="text-button" data-action="patient" data-id="${e(s.patientId)}">Inspect updated patient ${icon('arrow')}</button></div>`:''}</section></div>`;
-}
-async function previewNote(){if(state.ingest.busy)return;state.ingest.busy=true;state.ingest.error='';render();try{state.ingest.preview=await api('/api/extract',{method:'POST',body:JSON.stringify({text:state.ingest.text,patientId:state.ingest.patientId,date:state.ingest.date,type:state.ingest.type,useModel:state.api.model})});}catch(error){state.ingest.error=error.message;}finally{state.ingest.busy=false;render();}}
-async function commitNote(){if(!state.ingest.preview||state.ingest.busy)return;state.ingest.busy=true;state.ingest.error='';render();try{state.ingest.committed=await api('/api/patients/'+encodeURIComponent(state.ingest.patientId)+'/documents',{method:'POST',body:JSON.stringify({text:state.ingest.text,date:state.ingest.date,type:state.ingest.type,synthetic:true})});await refreshData();state.graphData=null;state.graphSelected=null;state.stale=Boolean(state.result);state.impact.dirty=true;state.proof.result=null;toast('Source saved. The graph and patient assertions have been updated.');}catch(error){state.ingest.error=error.message;}finally{state.ingest.busy=false;render();}}
-function modelPreview(model){if(!model)return '';return `<div class="ml-preview"><span class="mini-label">OPENAI SOURCE-VALIDATED PREVIEW</span>${model.ok?`<p class="subtitle">${(model.assertions||[]).length} model assertion(s) passed quote and context checks. Human review required.</p>${(model.assertions||[]).map(b=>`<div class="extracted-assertion">${barrierPill(b)}<strong class="assertion-status">${e(b.status)}</strong><blockquote>“${e(b.quote)}”</blockquote></div>`).join('')}<p class="inline-note">The persisted graph uses the deterministic rule assertions above. This model preview lets you compare interpretations before adding a note.</p>`:`<div class="query-message">OpenAI extraction did not complete: ${e(model.error||'No valid result returned.')} Rule-based extraction is shown above.</div>`}</div>`;}
-function predictionView(data){const predictions=data?.predictions||[];return predictions.map(p=>`<div class="prediction-row"><span>${e(p.type==='none'?'No barrier topic':barrierLabel(p.type||p.label||'unknown'))}</span><div><i style="width:${Math.max(0,Math.min(100,Number(p.score||0)*100))}%"></i></div><b>${pct(p.score)}</b></div>`).join('')||'<p class="subtitle">No classifier predictions returned.</p>';}
-function mlLab(){
- const m=state.mlMetrics;
- return `<section class="card ml-lab"><div class="section-header"><div><div class="eyebrow">${icon('chart')}Trained local classifier</div><h2>Topic prediction, with measurable limits.</h2></div><span class="mode-badge">${e(m?.model||'Local ML')}</span></div>${m?`<div class="ml-score-grid"><div><strong>${num(m.trainSize)}</strong><span>Training examples</span></div><div><strong>${num(m.testSize)}</strong><span>Held-out examples</span></div><div><strong>${pct(m.accuracy)}</strong><span>Held-out accuracy</span></div><div><strong>${pct(m.macroF1)}</strong><span>Macro F1</span></div></div><p class="inline-note">${e(m.limitation||'Synthetic held-out evaluation only. These scores do not establish performance on real records or clinical validity.')}</p><details class="source-details"><summary>Inspect model metrics and confusion matrix</summary><pre class="json-detail">${e(JSON.stringify(m,null,2))}</pre></details>`:`<p class="subtitle">${state.connected?'Model metrics will load from the backend.':'Start the backend to run the trained local classifier.'}</p>`}${state.mlPrediction?`<div class="ml-prediction"><h3>Classifier result for your sentence</h3>${predictionView(state.mlPrediction)}<p class="inline-note">Scores are uncalibrated suggestions. The deterministic extractor shown above handles negation, resolution, and patient attribution.</p></div>`:''}</section>`;
-}
-function runsView(){return `<div class="page-heading"><div><div class="eyebrow">${icon('history')}A record of how you got there</div><h1>Every answer leaves a trail.</h1><p class="subtitle">Replay persisted queries, exact cohorts, and actual tool events.</p></div></div><div class="card run-list">${state.runs.length?state.runs.map(run=>`<article class="run-row"><div class="run-icon">${icon('nodes')}</div><div><strong>${e(run.question||'Structured query')}</strong><p>${e(run.engine||'Deterministic query')} · ${e(run.createdAt||run.timestamp||'')} · ${e(run.fingerprint||run.result?.fingerprint||'')}</p></div><span class="run-count">${num(run.count??run.result?.count)}<small>patients</small></span><button class="btn btn-soft btn-sm" data-action="replay-run" data-id="${e(run.id||run.runId)}">Replay ${icon('arrow')}</button></article>`).join(''):`<div class="empty-state">${icon('history')}<h3>Ask the graph a question.</h3><p>Completed backend executions will appear here with their exact result and tool trace.</p><button class="btn btn-primary" data-action="view" data-view="graph">Explore care graph ${icon('arrow')}</button></div>`}</div>`;}
-async function boot(){
- let liveBackend=false;
- try{const status=await api('/api/status',{signal:AbortSignal.timeout(5000)});if(status.backend||status.storage){liveBackend=true;state.api=status;let seed=await api('/api/seed');while(!seed.complete){$('#app').innerHTML=`<div class="boot"><span class="boot-mark">✳</span><h2>Connecting the care graph</h2><p>Preparing the fictional population · ${num(seed.count)} / ${num(seed.total||1000)} patients</p><progress max="${seed.total||1000}" value="${seed.count||0}" aria-label="Dataset initialization progress"></progress><p class="subtitle">One-time database setup. Your workspace will open automatically.</p></div>`;seed=await api('/api/seed',{method:'POST',body:JSON.stringify({offset:seed.nextOffset??seed.count??0})});}await refreshData();state.connected=true;}}
- catch(error){state.api={model:false};state.connected=false;if(liveBackend)state.queryError=`Backend setup could not complete: ${error.message} Showing a static preview. Reload to retry.`;}
- state.graphLoading=true;render();await loadGraph();
-}
-boot();
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && state.drawer) closeDrawer();
+  if (event.key === "Tab" && state.drawer) {
+    const items = [
+        ...document.querySelectorAll(
+          ".drawer button:not([disabled]),.drawer select,.drawer input,.drawer textarea,.drawer summary",
+        ),
+      ],
+      first = items[0],
+      last = items.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+});
+start();

@@ -16,5 +16,3 @@ dist/server/
 dist/vendor/
 dist/.openai/
 
-# Existing nested clone; the application root is the working repository.
-/Hackathon 26/

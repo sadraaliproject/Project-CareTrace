@@ -1,0 +1,5461 @@
+{
+  "asOf": "2026-10-10",
+  "description": "Human-authored expected labels for the new hospital scenarios; never passed into the extractor or delivered as a static browser asset.",
+  "provenance": {
+    "source": "Official Synthea COVID-19 10K CSV sample",
+    "sourceUrl": "https://synthetichealth.github.io/synthea-sample-data/downloads/10k_synthea_covid19_csv.zip",
+    "downloadPage": "https://synthetichealth.github.io/downloads.html",
+    "archiveSha256": "559757dc849f4361a328f456d2c0a20c6df72419068321c753c6be787161e937",
+    "selectedAdults": 1000,
+    "availableAdults": 8740,
+    "asOf": "2026-10-10",
+    "importedFields": [
+      "synthetic identifier",
+      "name",
+      "birth date",
+      "sex",
+      "active problem code and description"
+    ],
+    "adaptation": "Synthetic source demographics and active problems are imported. Index admissions, dates, labs, prescriptions, pharmacy pickup, appointments, social needs, and clinical notes are deterministic hospital scenarios added for this demonstration. They are not native source stays.",
+    "scenarioVersion": "hospital-system-2026-10-10-v1",
+    "diabetesAdmissions": 150,
+    "noteCount": 600
+  },
+  "cases": [
+    {
+      "patientId": "P0001",
+      "noteId": "P0001-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0001",
+      "noteId": "P0001-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0001",
+      "noteId": "P0001-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0002",
+      "noteId": "P0002-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0002",
+      "noteId": "P0002-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0002",
+      "noteId": "P0002-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0002",
+      "noteId": "P0002-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0003",
+      "noteId": "P0003-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0003",
+      "noteId": "P0003-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0003",
+      "noteId": "P0003-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0003",
+      "noteId": "P0003-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0003",
+      "noteId": "P0003-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0004",
+      "noteId": "P0004-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0004",
+      "noteId": "P0004-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0004",
+      "noteId": "P0004-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0005",
+      "noteId": "P0005-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0005",
+      "noteId": "P0005-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0005",
+      "noteId": "P0005-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0005",
+      "noteId": "P0005-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0006",
+      "noteId": "P0006-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0006",
+      "noteId": "P0006-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0006",
+      "noteId": "P0006-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0006",
+      "noteId": "P0006-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0006",
+      "noteId": "P0006-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0007",
+      "noteId": "P0007-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0007",
+      "noteId": "P0007-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0007",
+      "noteId": "P0007-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0008",
+      "noteId": "P0008-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0008",
+      "noteId": "P0008-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0008",
+      "noteId": "P0008-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0008",
+      "noteId": "P0008-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0009",
+      "noteId": "P0009-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0009",
+      "noteId": "P0009-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0009",
+      "noteId": "P0009-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0009",
+      "noteId": "P0009-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0009",
+      "noteId": "P0009-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0010",
+      "noteId": "P0010-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0010",
+      "noteId": "P0010-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0010",
+      "noteId": "P0010-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0011",
+      "noteId": "P0011-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0011",
+      "noteId": "P0011-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0011",
+      "noteId": "P0011-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0011",
+      "noteId": "P0011-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0012",
+      "noteId": "P0012-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0012",
+      "noteId": "P0012-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0012",
+      "noteId": "P0012-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0012",
+      "noteId": "P0012-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0012",
+      "noteId": "P0012-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0013",
+      "noteId": "P0013-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0013",
+      "noteId": "P0013-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0013",
+      "noteId": "P0013-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0014",
+      "noteId": "P0014-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0014",
+      "noteId": "P0014-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0014",
+      "noteId": "P0014-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0014",
+      "noteId": "P0014-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0015",
+      "noteId": "P0015-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0015",
+      "noteId": "P0015-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0015",
+      "noteId": "P0015-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0015",
+      "noteId": "P0015-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0015",
+      "noteId": "P0015-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0016",
+      "noteId": "P0016-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0016",
+      "noteId": "P0016-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0016",
+      "noteId": "P0016-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0017",
+      "noteId": "P0017-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0017",
+      "noteId": "P0017-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0017",
+      "noteId": "P0017-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0017",
+      "noteId": "P0017-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0018",
+      "noteId": "P0018-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0018",
+      "noteId": "P0018-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0018",
+      "noteId": "P0018-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0018",
+      "noteId": "P0018-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0018",
+      "noteId": "P0018-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0019",
+      "noteId": "P0019-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0019",
+      "noteId": "P0019-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0019",
+      "noteId": "P0019-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0020",
+      "noteId": "P0020-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0020",
+      "noteId": "P0020-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0020",
+      "noteId": "P0020-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0020",
+      "noteId": "P0020-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0021",
+      "noteId": "P0021-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0021",
+      "noteId": "P0021-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0021",
+      "noteId": "P0021-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0021",
+      "noteId": "P0021-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0021",
+      "noteId": "P0021-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0022",
+      "noteId": "P0022-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0022",
+      "noteId": "P0022-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0022",
+      "noteId": "P0022-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0023",
+      "noteId": "P0023-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0023",
+      "noteId": "P0023-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0023",
+      "noteId": "P0023-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0023",
+      "noteId": "P0023-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0024",
+      "noteId": "P0024-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0024",
+      "noteId": "P0024-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0024",
+      "noteId": "P0024-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0024",
+      "noteId": "P0024-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0024",
+      "noteId": "P0024-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0025",
+      "noteId": "P0025-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0025",
+      "noteId": "P0025-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0025",
+      "noteId": "P0025-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0026",
+      "noteId": "P0026-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0026",
+      "noteId": "P0026-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0026",
+      "noteId": "P0026-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0026",
+      "noteId": "P0026-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0027",
+      "noteId": "P0027-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0027",
+      "noteId": "P0027-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0027",
+      "noteId": "P0027-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0027",
+      "noteId": "P0027-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0027",
+      "noteId": "P0027-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0028",
+      "noteId": "P0028-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0028",
+      "noteId": "P0028-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0028",
+      "noteId": "P0028-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0029",
+      "noteId": "P0029-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0029",
+      "noteId": "P0029-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0029",
+      "noteId": "P0029-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0029",
+      "noteId": "P0029-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0030",
+      "noteId": "P0030-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0030",
+      "noteId": "P0030-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0030",
+      "noteId": "P0030-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0030",
+      "noteId": "P0030-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0030",
+      "noteId": "P0030-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0031",
+      "noteId": "P0031-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0031",
+      "noteId": "P0031-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0031",
+      "noteId": "P0031-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0032",
+      "noteId": "P0032-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0032",
+      "noteId": "P0032-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0032",
+      "noteId": "P0032-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0032",
+      "noteId": "P0032-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0033",
+      "noteId": "P0033-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0033",
+      "noteId": "P0033-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0033",
+      "noteId": "P0033-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0033",
+      "noteId": "P0033-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0033",
+      "noteId": "P0033-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0034",
+      "noteId": "P0034-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0034",
+      "noteId": "P0034-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0034",
+      "noteId": "P0034-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0035",
+      "noteId": "P0035-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0035",
+      "noteId": "P0035-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0035",
+      "noteId": "P0035-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0035",
+      "noteId": "P0035-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0036",
+      "noteId": "P0036-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0036",
+      "noteId": "P0036-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0036",
+      "noteId": "P0036-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0036",
+      "noteId": "P0036-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0036",
+      "noteId": "P0036-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0037",
+      "noteId": "P0037-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0037",
+      "noteId": "P0037-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0037",
+      "noteId": "P0037-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0038",
+      "noteId": "P0038-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0038",
+      "noteId": "P0038-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0038",
+      "noteId": "P0038-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0038",
+      "noteId": "P0038-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0039",
+      "noteId": "P0039-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0039",
+      "noteId": "P0039-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0039",
+      "noteId": "P0039-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0039",
+      "noteId": "P0039-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0039",
+      "noteId": "P0039-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0040",
+      "noteId": "P0040-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0040",
+      "noteId": "P0040-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0040",
+      "noteId": "P0040-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0041",
+      "noteId": "P0041-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0041",
+      "noteId": "P0041-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0041",
+      "noteId": "P0041-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0041",
+      "noteId": "P0041-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0042",
+      "noteId": "P0042-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0042",
+      "noteId": "P0042-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0042",
+      "noteId": "P0042-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0042",
+      "noteId": "P0042-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0042",
+      "noteId": "P0042-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0043",
+      "noteId": "P0043-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0043",
+      "noteId": "P0043-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0043",
+      "noteId": "P0043-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0044",
+      "noteId": "P0044-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0044",
+      "noteId": "P0044-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0044",
+      "noteId": "P0044-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0044",
+      "noteId": "P0044-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0045",
+      "noteId": "P0045-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0045",
+      "noteId": "P0045-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0045",
+      "noteId": "P0045-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0045",
+      "noteId": "P0045-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0045",
+      "noteId": "P0045-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0046",
+      "noteId": "P0046-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0046",
+      "noteId": "P0046-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0046",
+      "noteId": "P0046-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0047",
+      "noteId": "P0047-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0047",
+      "noteId": "P0047-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0047",
+      "noteId": "P0047-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0047",
+      "noteId": "P0047-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0048",
+      "noteId": "P0048-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0048",
+      "noteId": "P0048-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0048",
+      "noteId": "P0048-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0048",
+      "noteId": "P0048-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0048",
+      "noteId": "P0048-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0049",
+      "noteId": "P0049-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0049",
+      "noteId": "P0049-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0049",
+      "noteId": "P0049-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0050",
+      "noteId": "P0050-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0050",
+      "noteId": "P0050-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0050",
+      "noteId": "P0050-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0050",
+      "noteId": "P0050-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0051",
+      "noteId": "P0051-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0051",
+      "noteId": "P0051-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0051",
+      "noteId": "P0051-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0051",
+      "noteId": "P0051-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0051",
+      "noteId": "P0051-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0052",
+      "noteId": "P0052-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0052",
+      "noteId": "P0052-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0052",
+      "noteId": "P0052-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0053",
+      "noteId": "P0053-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0053",
+      "noteId": "P0053-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0053",
+      "noteId": "P0053-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0053",
+      "noteId": "P0053-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0054",
+      "noteId": "P0054-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0054",
+      "noteId": "P0054-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0054",
+      "noteId": "P0054-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0054",
+      "noteId": "P0054-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0054",
+      "noteId": "P0054-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0055",
+      "noteId": "P0055-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0055",
+      "noteId": "P0055-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0055",
+      "noteId": "P0055-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0056",
+      "noteId": "P0056-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0056",
+      "noteId": "P0056-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0056",
+      "noteId": "P0056-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0056",
+      "noteId": "P0056-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0057",
+      "noteId": "P0057-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0057",
+      "noteId": "P0057-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0057",
+      "noteId": "P0057-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0057",
+      "noteId": "P0057-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0057",
+      "noteId": "P0057-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0058",
+      "noteId": "P0058-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0058",
+      "noteId": "P0058-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0058",
+      "noteId": "P0058-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0059",
+      "noteId": "P0059-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0059",
+      "noteId": "P0059-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0059",
+      "noteId": "P0059-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0059",
+      "noteId": "P0059-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0060",
+      "noteId": "P0060-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0060",
+      "noteId": "P0060-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0060",
+      "noteId": "P0060-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0060",
+      "noteId": "P0060-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0060",
+      "noteId": "P0060-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0061",
+      "noteId": "P0061-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0061",
+      "noteId": "P0061-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0061",
+      "noteId": "P0061-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0062",
+      "noteId": "P0062-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0062",
+      "noteId": "P0062-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0062",
+      "noteId": "P0062-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0062",
+      "noteId": "P0062-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0063",
+      "noteId": "P0063-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0063",
+      "noteId": "P0063-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0063",
+      "noteId": "P0063-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0063",
+      "noteId": "P0063-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0063",
+      "noteId": "P0063-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0064",
+      "noteId": "P0064-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0064",
+      "noteId": "P0064-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0064",
+      "noteId": "P0064-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0065",
+      "noteId": "P0065-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0065",
+      "noteId": "P0065-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0065",
+      "noteId": "P0065-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0065",
+      "noteId": "P0065-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0066",
+      "noteId": "P0066-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0066",
+      "noteId": "P0066-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0066",
+      "noteId": "P0066-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0066",
+      "noteId": "P0066-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0066",
+      "noteId": "P0066-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0067",
+      "noteId": "P0067-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0067",
+      "noteId": "P0067-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0067",
+      "noteId": "P0067-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0068",
+      "noteId": "P0068-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0068",
+      "noteId": "P0068-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0068",
+      "noteId": "P0068-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0068",
+      "noteId": "P0068-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0069",
+      "noteId": "P0069-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0069",
+      "noteId": "P0069-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0069",
+      "noteId": "P0069-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0069",
+      "noteId": "P0069-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0069",
+      "noteId": "P0069-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0070",
+      "noteId": "P0070-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0070",
+      "noteId": "P0070-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0070",
+      "noteId": "P0070-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0071",
+      "noteId": "P0071-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0071",
+      "noteId": "P0071-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0071",
+      "noteId": "P0071-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0071",
+      "noteId": "P0071-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0072",
+      "noteId": "P0072-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0072",
+      "noteId": "P0072-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0072",
+      "noteId": "P0072-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0072",
+      "noteId": "P0072-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0072",
+      "noteId": "P0072-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0073",
+      "noteId": "P0073-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0073",
+      "noteId": "P0073-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0073",
+      "noteId": "P0073-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0074",
+      "noteId": "P0074-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0074",
+      "noteId": "P0074-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0074",
+      "noteId": "P0074-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0074",
+      "noteId": "P0074-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0075",
+      "noteId": "P0075-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0075",
+      "noteId": "P0075-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0075",
+      "noteId": "P0075-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0075",
+      "noteId": "P0075-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0075",
+      "noteId": "P0075-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0076",
+      "noteId": "P0076-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0076",
+      "noteId": "P0076-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0076",
+      "noteId": "P0076-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0077",
+      "noteId": "P0077-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0077",
+      "noteId": "P0077-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0077",
+      "noteId": "P0077-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0077",
+      "noteId": "P0077-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0078",
+      "noteId": "P0078-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0078",
+      "noteId": "P0078-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0078",
+      "noteId": "P0078-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0078",
+      "noteId": "P0078-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0078",
+      "noteId": "P0078-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0079",
+      "noteId": "P0079-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0079",
+      "noteId": "P0079-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0079",
+      "noteId": "P0079-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0080",
+      "noteId": "P0080-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0080",
+      "noteId": "P0080-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0080",
+      "noteId": "P0080-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0080",
+      "noteId": "P0080-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0081",
+      "noteId": "P0081-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0081",
+      "noteId": "P0081-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0081",
+      "noteId": "P0081-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0081",
+      "noteId": "P0081-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0081",
+      "noteId": "P0081-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0082",
+      "noteId": "P0082-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0082",
+      "noteId": "P0082-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0082",
+      "noteId": "P0082-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0083",
+      "noteId": "P0083-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0083",
+      "noteId": "P0083-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0083",
+      "noteId": "P0083-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0083",
+      "noteId": "P0083-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0084",
+      "noteId": "P0084-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0084",
+      "noteId": "P0084-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0084",
+      "noteId": "P0084-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0084",
+      "noteId": "P0084-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0084",
+      "noteId": "P0084-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0085",
+      "noteId": "P0085-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0085",
+      "noteId": "P0085-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0085",
+      "noteId": "P0085-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0086",
+      "noteId": "P0086-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0086",
+      "noteId": "P0086-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0086",
+      "noteId": "P0086-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0086",
+      "noteId": "P0086-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0087",
+      "noteId": "P0087-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0087",
+      "noteId": "P0087-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0087",
+      "noteId": "P0087-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0087",
+      "noteId": "P0087-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0087",
+      "noteId": "P0087-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0088",
+      "noteId": "P0088-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0088",
+      "noteId": "P0088-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0088",
+      "noteId": "P0088-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0089",
+      "noteId": "P0089-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0089",
+      "noteId": "P0089-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0089",
+      "noteId": "P0089-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0089",
+      "noteId": "P0089-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0090",
+      "noteId": "P0090-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0090",
+      "noteId": "P0090-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0090",
+      "noteId": "P0090-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0090",
+      "noteId": "P0090-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0090",
+      "noteId": "P0090-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0091",
+      "noteId": "P0091-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0091",
+      "noteId": "P0091-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0091",
+      "noteId": "P0091-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0092",
+      "noteId": "P0092-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0092",
+      "noteId": "P0092-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0092",
+      "noteId": "P0092-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0092",
+      "noteId": "P0092-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0093",
+      "noteId": "P0093-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0093",
+      "noteId": "P0093-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0093",
+      "noteId": "P0093-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0093",
+      "noteId": "P0093-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0093",
+      "noteId": "P0093-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0094",
+      "noteId": "P0094-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0094",
+      "noteId": "P0094-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0094",
+      "noteId": "P0094-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0095",
+      "noteId": "P0095-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0095",
+      "noteId": "P0095-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0095",
+      "noteId": "P0095-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0095",
+      "noteId": "P0095-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0096",
+      "noteId": "P0096-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0096",
+      "noteId": "P0096-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0096",
+      "noteId": "P0096-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0096",
+      "noteId": "P0096-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0096",
+      "noteId": "P0096-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0097",
+      "noteId": "P0097-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0097",
+      "noteId": "P0097-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0097",
+      "noteId": "P0097-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0098",
+      "noteId": "P0098-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0098",
+      "noteId": "P0098-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0098",
+      "noteId": "P0098-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0098",
+      "noteId": "P0098-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0099",
+      "noteId": "P0099-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0099",
+      "noteId": "P0099-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0099",
+      "noteId": "P0099-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0099",
+      "noteId": "P0099-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0099",
+      "noteId": "P0099-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0100",
+      "noteId": "P0100-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0100",
+      "noteId": "P0100-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0100",
+      "noteId": "P0100-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0101",
+      "noteId": "P0101-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0101",
+      "noteId": "P0101-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0101",
+      "noteId": "P0101-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0101",
+      "noteId": "P0101-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0102",
+      "noteId": "P0102-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0102",
+      "noteId": "P0102-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0102",
+      "noteId": "P0102-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0102",
+      "noteId": "P0102-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0102",
+      "noteId": "P0102-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0103",
+      "noteId": "P0103-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0103",
+      "noteId": "P0103-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0103",
+      "noteId": "P0103-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0104",
+      "noteId": "P0104-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0104",
+      "noteId": "P0104-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0104",
+      "noteId": "P0104-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0104",
+      "noteId": "P0104-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0105",
+      "noteId": "P0105-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0105",
+      "noteId": "P0105-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0105",
+      "noteId": "P0105-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0105",
+      "noteId": "P0105-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0105",
+      "noteId": "P0105-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0106",
+      "noteId": "P0106-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0106",
+      "noteId": "P0106-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0106",
+      "noteId": "P0106-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0107",
+      "noteId": "P0107-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0107",
+      "noteId": "P0107-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0107",
+      "noteId": "P0107-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0107",
+      "noteId": "P0107-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0108",
+      "noteId": "P0108-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0108",
+      "noteId": "P0108-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0108",
+      "noteId": "P0108-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0108",
+      "noteId": "P0108-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0108",
+      "noteId": "P0108-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0109",
+      "noteId": "P0109-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0109",
+      "noteId": "P0109-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0109",
+      "noteId": "P0109-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0110",
+      "noteId": "P0110-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0110",
+      "noteId": "P0110-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0110",
+      "noteId": "P0110-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0110",
+      "noteId": "P0110-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0111",
+      "noteId": "P0111-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0111",
+      "noteId": "P0111-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0111",
+      "noteId": "P0111-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0111",
+      "noteId": "P0111-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0111",
+      "noteId": "P0111-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0112",
+      "noteId": "P0112-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0112",
+      "noteId": "P0112-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0112",
+      "noteId": "P0112-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0113",
+      "noteId": "P0113-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0113",
+      "noteId": "P0113-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0113",
+      "noteId": "P0113-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0113",
+      "noteId": "P0113-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0114",
+      "noteId": "P0114-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0114",
+      "noteId": "P0114-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0114",
+      "noteId": "P0114-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0114",
+      "noteId": "P0114-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0114",
+      "noteId": "P0114-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0115",
+      "noteId": "P0115-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0115",
+      "noteId": "P0115-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0115",
+      "noteId": "P0115-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0116",
+      "noteId": "P0116-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0116",
+      "noteId": "P0116-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0116",
+      "noteId": "P0116-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0116",
+      "noteId": "P0116-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0117",
+      "noteId": "P0117-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0117",
+      "noteId": "P0117-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0117",
+      "noteId": "P0117-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0117",
+      "noteId": "P0117-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0117",
+      "noteId": "P0117-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0118",
+      "noteId": "P0118-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0118",
+      "noteId": "P0118-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0118",
+      "noteId": "P0118-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0119",
+      "noteId": "P0119-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0119",
+      "noteId": "P0119-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0119",
+      "noteId": "P0119-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0119",
+      "noteId": "P0119-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0120",
+      "noteId": "P0120-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0120",
+      "noteId": "P0120-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0120",
+      "noteId": "P0120-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0120",
+      "noteId": "P0120-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0120",
+      "noteId": "P0120-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0121",
+      "noteId": "P0121-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0121",
+      "noteId": "P0121-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0121",
+      "noteId": "P0121-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0122",
+      "noteId": "P0122-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0122",
+      "noteId": "P0122-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0122",
+      "noteId": "P0122-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0122",
+      "noteId": "P0122-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0123",
+      "noteId": "P0123-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0123",
+      "noteId": "P0123-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0123",
+      "noteId": "P0123-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0123",
+      "noteId": "P0123-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0123",
+      "noteId": "P0123-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0124",
+      "noteId": "P0124-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0124",
+      "noteId": "P0124-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0124",
+      "noteId": "P0124-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0125",
+      "noteId": "P0125-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0125",
+      "noteId": "P0125-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0125",
+      "noteId": "P0125-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0125",
+      "noteId": "P0125-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Has not picked up insulin. States it was $90 at the counter and she left it.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0126",
+      "noteId": "P0126-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Not checking sugars. Says nobody showed her how to use the meter.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0126",
+      "noteId": "P0126-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0126",
+      "noteId": "P0126-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0126",
+      "noteId": "P0126-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0126",
+      "noteId": "P0126-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0127",
+      "noteId": "P0127-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Lives alone, no vehicle, nearest bus stop about 2 miles.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0127",
+      "noteId": "P0127-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0127",
+      "noteId": "P0127-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt has no food at home and has been skipping meals.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0128",
+      "noteId": "P0128-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0128",
+      "noteId": "P0128-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0128",
+      "noteId": "P0128-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0128",
+      "noteId": "P0128-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0129",
+      "noteId": "P0129-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0129",
+      "noteId": "P0129-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0129",
+      "noteId": "P0129-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0129",
+      "noteId": "P0129-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0129",
+      "noteId": "P0129-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0130",
+      "noteId": "P0130-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0130",
+      "noteId": "P0130-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0130",
+      "noteId": "P0130-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0131",
+      "noteId": "P0131-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0131",
+      "noteId": "P0131-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0131",
+      "noteId": "P0131-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0131",
+      "noteId": "P0131-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0132",
+      "noteId": "P0132-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0132",
+      "noteId": "P0132-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0132",
+      "noteId": "P0132-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0132",
+      "noteId": "P0132-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0132",
+      "noteId": "P0132-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0133",
+      "noteId": "P0133-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0133",
+      "noteId": "P0133-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0133",
+      "noteId": "P0133-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0134",
+      "noteId": "P0134-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0134",
+      "noteId": "P0134-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0134",
+      "noteId": "P0134-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0134",
+      "noteId": "P0134-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0135",
+      "noteId": "P0135-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0135",
+      "noteId": "P0135-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0135",
+      "noteId": "P0135-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0135",
+      "noteId": "P0135-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0135",
+      "noteId": "P0135-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0136",
+      "noteId": "P0136-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0136",
+      "noteId": "P0136-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0136",
+      "noteId": "P0136-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0137",
+      "noteId": "P0137-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0137",
+      "noteId": "P0137-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0137",
+      "noteId": "P0137-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0137",
+      "noteId": "P0137-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt cannot afford the new insulin prescription.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0138",
+      "noteId": "P0138-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt does not understand how to check glucose or dose insulin.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0138",
+      "noteId": "P0138-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0138",
+      "noteId": "P0138-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0138",
+      "noteId": "P0138-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0138",
+      "noteId": "P0138-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0139",
+      "noteId": "P0139-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt unable to attend follow-up because no ride is available.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0139",
+      "noteId": "P0139-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0139",
+      "noteId": "P0139-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Pt runs out of groceries before the end of each month.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0140",
+      "noteId": "P0140-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Denies transportation concerns. Wife drives.",
+      "expected": [],
+      "category": "negation"
+    },
+    {
+      "patientId": "P0140",
+      "noteId": "P0140-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0140",
+      "noteId": "P0140-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0140",
+      "noteId": "P0140-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0141",
+      "noteId": "P0141-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Transport arranged by SW prior to discharge.",
+      "expected": [],
+      "category": "resolved"
+    },
+    {
+      "patientId": "P0141",
+      "noteId": "P0141-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0141",
+      "noteId": "P0141-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0141",
+      "noteId": "P0141-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0141",
+      "noteId": "P0141-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0142",
+      "noteId": "P0142-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt's brother lost his job and cannot afford his own medications.",
+      "expected": [],
+      "category": "family-only"
+    },
+    {
+      "patientId": "P0142",
+      "noteId": "P0142-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0142",
+      "noteId": "P0142-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0143",
+      "noteId": "P0143-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. NPO after midnight, meals held for procedure.",
+      "expected": [],
+      "category": "clinical-look-alike"
+    },
+    {
+      "patientId": "P0143",
+      "noteId": "P0143-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0143",
+      "noteId": "P0143-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0143",
+      "noteId": "P0143-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0144",
+      "noteId": "P0144-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Previously had trouble affording strips, now has assistance in place.",
+      "expected": [],
+      "category": "past-not-current"
+    },
+    {
+      "patientId": "P0144",
+      "noteId": "P0144-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0144",
+      "noteId": "P0144-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0144",
+      "noteId": "P0144-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0144",
+      "noteId": "P0144-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0145",
+      "noteId": "P0145-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0145",
+      "noteId": "P0145-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0145",
+      "noteId": "P0145-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0146",
+      "noteId": "P0146-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0146",
+      "noteId": "P0146-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0146",
+      "noteId": "P0146-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0146",
+      "noteId": "P0146-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0147",
+      "noteId": "P0147-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0147",
+      "noteId": "P0147-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0147",
+      "noteId": "P0147-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed. Reports running out of food by end of month, skips meals. Afraid of going low on insulin.",
+      "expected": [
+        {
+          "type": "food",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0147",
+      "noteId": "P0147-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0147",
+      "noteId": "P0147-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0148",
+      "noteId": "P0148-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Unable to teach back sliding scale after two attempts. Confused by written instructions.",
+      "expected": [
+        {
+          "type": "health_literacy",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0148",
+      "noteId": "P0148-N02",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0148",
+      "noteId": "P0148-N03",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0149",
+      "noteId": "P0149-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0149",
+      "noteId": "P0149-N02",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0149",
+      "noteId": "P0149-N03",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0149",
+      "noteId": "P0149-N04",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs. Started basal insulin today. Pt worried about affording pens, asks if pills are an option.",
+      "expected": [
+        {
+          "type": "cost",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0412",
+      "noteId": "P0412-N01",
+      "note_type": "Bedside nursing note",
+      "text": "Pt resting comfortably. Bedside review of discharge instructions completed. Pt states daughter drove her in, has no way to get to clinic appts once home.",
+      "expected": [
+        {
+          "type": "transportation",
+          "status": "active"
+        }
+      ],
+      "category": "current-patient-barrier"
+    },
+    {
+      "patientId": "P0412",
+      "noteId": "P0412-N02",
+      "note_type": "Physician progress note",
+      "text": "Glucose trend improved. Discharge medication list reviewed on rounds.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0412",
+      "noteId": "P0412-N03",
+      "note_type": "Social work and case management note",
+      "text": "Home situation reviewed. Follow-up contact number confirmed.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0412",
+      "noteId": "P0412-N04",
+      "note_type": "Discharge summary",
+      "text": "Follow up with endocrinology in 1 to 2 weeks. New start: insulin glargine 10 units nightly.",
+      "expected": [],
+      "category": "routine-note"
+    },
+    {
+      "patientId": "P0412",
+      "noteId": "P0412-N05",
+      "note_type": "Post-discharge nurse call note",
+      "text": "Reached pt 48 hours after discharge. Reviewed follow-up appointment and warning signs.",
+      "expected": [],
+      "category": "routine-note"
+    }
+  ]
+}

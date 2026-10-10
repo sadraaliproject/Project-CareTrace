@@ -1,23 +1,26 @@
 CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS patients (
-  id TEXT PRIMARY KEY, name TEXT NOT NULL, age INTEGER NOT NULL, diabetes INTEGER NOT NULL,
-  gap_open INTEGER NOT NULL, days_overdue INTEGER NOT NULL, a1c REAL NOT NULL,
-  refill_gap INTEGER NOT NULL, priority INTEGER NOT NULL, structured_barrier_code INTEGER NOT NULL,
-  json TEXT NOT NULL
+ id TEXT PRIMARY KEY, name TEXT NOT NULL, age INTEGER NOT NULL, sex TEXT NOT NULL,
+ diabetes_admission INTEGER NOT NULL, followup_gap INTEGER NOT NULL, insulin_not_picked_up INTEGER NOT NULL,
+ likely_to_return INTEGER NOT NULL, days_since_discharge INTEGER NOT NULL, priority INTEGER NOT NULL, json TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS patients_cohort ON patients(diabetes, gap_open, age, priority);
-CREATE TABLE IF NOT EXISTS documents (
-  id TEXT PRIMARY KEY, patient_id TEXT NOT NULL REFERENCES patients(id), type TEXT NOT NULL,
-  date TEXT NOT NULL, text TEXT NOT NULL, json TEXT NOT NULL, created_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS documents_patient ON documents(patient_id, date);
+CREATE INDEX IF NOT EXISTS patients_cohort ON patients(diabetes_admission,followup_gap,age,priority);
+CREATE TABLE IF NOT EXISTS admissions (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),admit_date TEXT NOT NULL,discharge_date TEXT NOT NULL,principal_diagnosis TEXT NOT NULL,json TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS admissions_patient ON admissions(patient_id);
+CREATE TABLE IF NOT EXISTS conditions (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),code TEXT NOT NULL,display TEXT NOT NULL,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS lab_results (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),code TEXT NOT NULL,value REAL NOT NULL,date TEXT NOT NULL,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS medications (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),name TEXT NOT NULL,new_start INTEGER NOT NULL,is_insulin INTEGER NOT NULL,prescribed_date TEXT NOT NULL,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS pharmacy_pickups (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),medication_id TEXT NOT NULL REFERENCES medications(id),picked_up INTEGER NOT NULL,pickup_date TEXT,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS appointments (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),date TEXT NOT NULL,status TEXT NOT NULL,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS emergency_department_visits (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),date TEXT NOT NULL,reason TEXT NOT NULL,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS social_needs (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),type TEXT NOT NULL,code TEXT NOT NULL,date TEXT NOT NULL,json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY,patient_id TEXT NOT NULL REFERENCES patients(id),note_type TEXT NOT NULL,date TEXT NOT NULL,text TEXT NOT NULL,json TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS notes_patient ON notes(patient_id,date);
 CREATE TABLE IF NOT EXISTS assertions (
-  patient_id TEXT NOT NULL REFERENCES patients(id), type TEXT NOT NULL,
-  status TEXT NOT NULL CHECK(status IN ('active','resolved')), document_id TEXT NOT NULL REFERENCES documents(id),
-  quote TEXT NOT NULL, date TEXT NOT NULL, json TEXT NOT NULL, PRIMARY KEY(patient_id, type)
+ patient_id TEXT NOT NULL REFERENCES patients(id),type TEXT NOT NULL,status TEXT NOT NULL CHECK(status='active'),document_id TEXT NOT NULL,
+ quote TEXT NOT NULL,date TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(patient_id,type)
 );
-CREATE INDEX IF NOT EXISTS assertions_filter ON assertions(type, status, patient_id);
-CREATE TABLE IF NOT EXISTS graph_nodes (
+CREATE INDEX IF NOT EXISTS assertions_filter ON assertions(type,status,patient_id);CREATE TABLE IF NOT EXISTS graph_nodes (
   id TEXT PRIMARY KEY, type TEXT NOT NULL, patient_id TEXT, json TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS graph_nodes_patient ON graph_nodes(patient_id);

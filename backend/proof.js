@@ -1,89 +1,184 @@
-import { AS_OF, extractBarriers, reconcileBarriers, parseQuestion } from '../dist/engine.js';
-import { predictText } from './ml.js';
-
-const assertion = (type, status = 'active') => ({ type, status });
-const headline = 'Find diabetic patients missing A1c tests with transportation barriers';
+import {
+  AS_OF,
+  reconcileBarriers,
+  parseQuestion,
+  evaluateExtraction,
+} from "../dist/engine.js";
+import truth from "../ml/hospital-ground-truth.json" with { type: "json" };
+import { predictText } from "./ml.js";
+const headline =
+  "Which patients discharged after a diabetes-related admission have a follow-up gap and a documented barrier?";
 const cases = [
-  { id: 'direct', title: 'A direct, current obstacle', text: 'I have no transportation to my appointments.', expected: [assertion('transportation')] },
-  { id: 'denial', title: 'A denial does not invent a barrier', text: 'Patient denies transportation problems.', expected: [] },
-  { id: 'resolution', title: 'No longer needing help means resolved', text: 'I no longer need transportation help.', expected: [assertion('transportation', 'resolved')] },
-  { id: 'lost-access', title: 'No longer having a ride means active', text: 'I no longer have a ride.', expected: [assertion('transportation')] },
-  { id: 'unresolved', title: 'Not resolved is still active', text: 'The transportation barrier is not resolved.', expected: [assertion('transportation')] },
-  { id: 'family', title: 'A relative is a different person', text: 'Her mother cannot get a ride and cannot afford the medication copay.', expected: [] },
-  { id: 'conditional', title: 'Possible future need is not current evidence', text: 'If the patient cannot get transportation and cannot afford medication, discuss resources.', expected: [] },
-  { id: 'mixed-status', title: 'One resolved barrier, one active barrier', text: 'Transportation is resolved and I cannot afford the medication copay.', expected: [assertion('transportation', 'resolved'), assertion('cost')] },
-  { id: 'scoped-denial', title: 'Negation stays with its own barrier', text: 'Patient denies transportation problems and cannot afford medication.', expected: [assertion('cost')] },
-  { id: 'scoped-access', title: 'Reliable transportation does not erase cost evidence', text: 'Patient has reliable transportation and cannot afford the medication copay.', expected: [assertion('cost')] },
-  { id: 'food-cost', title: 'Food affordability is not medication cost', text: 'Patient cannot afford food.', expected: [assertion('food')] },
-  { id: 'two-people', title: 'Separate the relative from the patient', text: 'Her mother cannot get transportation and the patient cannot afford medication.', expected: [assertion('cost')] },
-  { id: 'source-order', title: 'Source dates beat input order', documents: [
-    { id: 'proof-new', date: '2026-10-09', text: 'Patient denies transportation problems.' },
-    { id: 'proof-old', date: '2026-08-01', text: 'Patient cannot get a ride to the clinic.' }
-  ], expected: [assertion('transportation', 'resolved')], explanation: 'Reconciliation reads the source dates. The newer denial supersedes the older active statement, even when documents arrive in reverse order.' },
-  { id: 'reopened', title: 'A lost ride reopens a resolved barrier', documents: [
-    { id: 'proof-active', date: '2026-07-01', text: 'Patient cannot get a ride to the clinic.' },
-    { id: 'proof-resolved', date: '2026-08-01', text: 'I no longer need transportation help.' },
-    { id: 'proof-reopened', date: '2026-10-09', text: 'I no longer have a ride.' }
-  ], expected: [assertion('transportation')] }
+  {
+    id: "transport",
+    title: "A current transport obstacle",
+    text: "Patient has no ride to the follow-up appointment.",
+    expected: [{ type: "transportation", status: "active" }],
+  },
+  {
+    id: "denied",
+    title: "Transport is available",
+    text: "Denies transportation concerns. Wife drives.",
+    expected: [],
+  },
+  {
+    id: "arranged",
+    title: "Support was already arranged",
+    text: "Transport arranged by SW prior to discharge.",
+    expected: [],
+  },
+  {
+    id: "family",
+    title: "A relative is a different person",
+    text: "Pt's brother lost his job and cannot afford his own medications.",
+    expected: [],
+  },
+  {
+    id: "procedure",
+    title: "Fasting for a procedure is not food insecurity",
+    text: "NPO after midnight, meals held for procedure.",
+    expected: [],
+  },
+  {
+    id: "resolved",
+    title: "Past cost problems are resolved",
+    text: "Previously had trouble affording strips, now has assistance in place.",
+    expected: [],
+  },
+  {
+    id: "cost",
+    title: "A current medication cost obstacle",
+    text: "Patient cannot afford the insulin copay and has not picked it up.",
+    expected: [{ type: "cost", status: "active" }],
+  },
+  {
+    id: "literacy",
+    title: "Teach-back reveals a support need",
+    text: "Patient cannot explain the insulin dose after teach-back.",
+    expected: [{ type: "health_literacy", status: "active" }],
+  },
 ];
-
-const normalized = values => [...new Set(values.map(value => `${value.type}:${value.status}`))].sort();
-const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
-const fail = message => Object.assign(new Error(message), { status: 400 });
-
-/** Execute the same extractor, reconciliation and SQL repository used by the app. */
+const normalized = (items) =>
+  [...new Set(items.map((item) => `${item.type}:active`))].sort();
+const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+export function getExtractionMetrics() {
+  return evaluateExtraction(truth);
+}
+/** Executes production extraction and three separate structured queries. */
 export async function runProof(repo, { text } = {}) {
-  if (text !== undefined && (typeof text !== 'string' || !text.trim() || text.length > 7000)) throw fail('Enter a synthetic challenge between 1 and 7,000 characters.');
-  const evaluated = cases.map(testCase => {
-    const documents = (testCase.documents || [{ id: `proof-${testCase.id}`, date: AS_OF, text: testCase.text }]).map(document => ({ ...document, type: 'Synthetic proof challenge' }));
-    const assertions = testCase.documents ? reconcileBarriers(documents) : extractBarriers(documents[0]);
-    const actual = assertions.map(({ type, status, quote, documentId, date }) => ({ type, status, quote, documentId, date }));
-    const sourceVerified = actual.every(item => documents.some(document => document.id === item.documentId && document.text.includes(item.quote)));
+  if (
+    text !== undefined &&
+    (typeof text !== "string" || !text.trim() || text.length > 7000)
+  )
+    throw Object.assign(
+      new Error("Enter a fictional challenge between 1 and 7,000 characters."),
+      { status: 400 },
+    );
+  const evaluated = cases.map((c) => {
+    const doc = {
+      id: `proof-${c.id}`,
+      date: AS_OF,
+      note_type: "Bedside nursing note",
+      text: c.text,
+    };
+    const actual = reconcileBarriers([doc], []).map((a) => ({
+      ...a,
+      status: "active",
+    }));
+    const sourceVerified = actual.every((a) => doc.text.includes(a.quote));
     return {
-      id: testCase.id, title: testCase.title,
-      text: testCase.text || documents.map(document => `${document.date}: ${document.text}`).join('\n'),
-      expected: testCase.expected, actual,
-      passed: equal(normalized(testCase.expected), normalized(actual)) && sourceVerified,
-      sourceVerified, explanation: testCase.explanation || 'Expected labels were manually specified. Actual labels and exact source quotes are computed by the production extraction rules for this run.'
+      ...c,
+      actual,
+      sourceVerified,
+      passed:
+        equal(normalized(actual), normalized(c.expected)) && sourceVerified,
+      explanation:
+        "Current patient-specific assertions are extracted from the source. Resolved, family-only and clinical look-alike statements create no barrier edge.",
     };
   });
-
-  const { plan } = parseQuestion(headline);
-  const first = await repo.query(plan), second = await repo.query(plan);
-  const firstIds = first.patients.map(patient => patient.id), secondIds = second.patients.map(patient => patient.id);
-  const repeatability = {
-    question: headline, count: second.count, firstCount: first.count, secondCount: second.count,
-    firstFingerprint: first.fingerprint, secondFingerprint: second.fingerprint,
-    passed: first.count === second.count && first.fingerprint === second.fingerprint && equal(firstIds, secondIds)
-  };
-
-  // Fetch authoritative source rows separately; do not accept a highlighted
-  // excerpt solely because it was copied into a query result.
-  const evidence = second.patients.flatMap(patient => patient.barriers
-    .filter(barrier => barrier.type === 'transportation' && barrier.status === 'active')
-    .map(barrier => ({ patientId: patient.id, ...barrier })));
-  const documentIds = [...new Set(evidence.map(item => item.documentId))];
-  // One bounded SQL request avoids one database query per patient on hosted D1.
-  const sources = new Map((await repo.getDocuments(documentIds)).map(document => [document.id, document]));
-  const issues = evidence.flatMap(item => {
+  const parsed = parseQuestion(headline);
+  if (!parsed.ok) throw new Error("The hospital proof query is unsupported.");
+  const results = [];
+  for (let i = 0; i < 3; i++) results.push(await repo.query(parsed.plan));
+  const last = results[2],
+    counts = results.map((r) => r.count),
+    fingerprints = results.map((r) => r.fingerprint),
+    ids = results.map((r) => r.patients.map((p) => p.id));
+  const evidence = last.patients.flatMap((p) =>
+    p.barriers.map((b) => ({ ...b, patientId: p.id })),
+  );
+  const sources = new Map(
+    (
+      await repo.getDocuments([...new Set(evidence.map((b) => b.documentId))])
+    ).map((n) => [n.id, n]),
+  );
+  const issues = evidence.flatMap((item) => {
     const source = sources.get(item.documentId);
-    const verified = source && source.patientId === item.patientId && source.id === item.documentId && source.date === item.date && typeof item.quote === 'string' && item.quote.length > 0 && source.text.includes(item.quote);
-    return verified ? [] : [{ patientId: item.patientId, documentId: item.documentId, reason: 'Source ownership, date, or exact quotation could not be verified.' }];
+    return source &&
+      source.patientId === item.patientId &&
+      source.date === item.date &&
+      (source.text || source.display || "").includes(item.quote)
+      ? []
+      : [
+          {
+            patientId: item.patientId,
+            documentId: item.documentId,
+            reason: "Source ownership, date, or quote mismatch.",
+          },
+        ];
   });
-  const evidenceCoverage = { total: evidence.length, checked: evidence.length, verified: evidence.length - issues.length, passed: issues.length === 0, issues };
-  let custom;
-  if (text !== undefined) {
-    const prediction = predictText(text);
-    custom = { text, assertions: extractBarriers({ id: 'custom-proof', text, date: AS_OF, type: 'Synthetic proof challenge' }), guardrails: prediction.guardrails, persisted: false };
-  }
   return {
-    cases: evaluated, summary: { passed: evaluated.filter(testCase => testCase.passed).length, total: evaluated.length },
-    repeatability, evidenceCoverage, ...(custom ? { custom } : {}), synthetic: true, snapshot: AS_OF,
+    cases: evaluated,
+    summary: {
+      passed: evaluated.filter((c) => c.passed).length,
+      total: evaluated.length,
+    },
+    repeatability: {
+      question: headline,
+      count: last.count,
+      counts,
+      fingerprints,
+      firstFingerprint: fingerprints[0],
+      secondFingerprint: fingerprints[1],
+      passed:
+        new Set(counts).size === 1 &&
+        new Set(fingerprints).size === 1 &&
+        ids.every((list) => equal(list, ids[0])),
+    },
+    evidenceCoverage: {
+      total: evidence.length,
+      checked: evidence.length,
+      verified: evidence.length - issues.length,
+      passed: !issues.length,
+      issues,
+    },
+    extraction: getExtractionMetrics(),
+    ...(text === undefined
+      ? {}
+      : {
+          custom: {
+            text,
+            assertions: reconcileBarriers(
+              [
+                {
+                  id: "custom-proof",
+                  text,
+                  date: AS_OF,
+                  note_type: "Bedside nursing note",
+                },
+              ],
+              [],
+            ),
+            guardrails: predictText(text).guardrails,
+            persisted: false,
+          },
+        }),
+    synthetic: true,
+    snapshot: AS_OF,
     limitations: [
-      'These manually curated synthetic challenges are developer regression checks, not an independent clinical evaluation or a guarantee for arbitrary language.',
-      'This proof executes deterministic extraction and SQL queries. It does not certify OpenAI planning or live service availability.',
-      'Repeatability applies to these two reads of the current snapshot. Concurrent source changes can legitimately change the result.',
-      'A source match verifies provenance and patient ownership; it does not establish clinical truth or causation. No notes, tasks, or patient records are changed.'
-    ]
+      "Ground truth is separately stored and manually labeled. This developer-authored evaluation is not clinical validation.",
+      "Three repeat queries verify deterministic counts for the current snapshot, not future clinical outcomes.",
+      "Exact source presence proves provenance, not causation. Live OpenAI planning is a separate service and is not certified by this check.",
+    ],
   };
 }

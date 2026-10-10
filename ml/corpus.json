@@ -1,149 +1,365 @@
 {
-  "version": "careweave-authored-corpus-v1",
-  "provenance": "Manually authored fictional sentences for a small text-classification experiment. Training and held-out examples are separate authored scenarios, not generated variants of shared sentence templates. Neither split contains real patient records. Labels describe a current patient barrier; resolved, denied, hypothetical, family-only, and neutral statements are none.",
-  "labels": ["transportation", "cost", "food", "health_literacy", "none"],
+  "version": "hospital-authored-v2",
+  "provenance": "Separately authored fictional hospital note sentences. This small developer-created split is not clinical validation. Neither the discharge evaluation ground truth nor its note texts are used for fitting.",
+  "labels": [
+    "transportation",
+    "cost",
+    "food",
+    "health_literacy",
+    "none"
+  ],
   "train": [
-    {"id":"tr-001","label":"transportation","text":"My car broke down and I cannot get to the clinic."},
-    {"id":"tr-002","label":"transportation","text":"The bus route no longer reaches the laboratory."},
-    {"id":"tr-003","label":"transportation","text":"Patient has no ride for the upcoming blood test."},
-    {"id":"tr-004","label":"transportation","text":"A wheelchair accessible vehicle is unavailable for her appointment."},
-    {"id":"tr-005","label":"transportation","text":"Taxi fare is beyond my means so I missed the visit."},
-    {"id":"tr-006","label":"transportation","text":"He depends on unreliable rides and has missed two clinic visits."},
-    {"id":"tr-007","label":"transportation","text":"I live too far from a bus stop to travel to the hospital."},
-    {"id":"tr-008","label":"transportation","text":"The patient cannot drive following surgery and needs transportation."},
-    {"id":"tr-009","label":"transportation","text":"Our only vehicle was repossessed before the scheduled lab work."},
-    {"id":"tr-010","label":"transportation","text":"Transportation remains a barrier because nobody can take me."},
-    {"id":"tr-011","label":"transportation","text":"Patient was stranded after the shuttle service stopped operating."},
-    {"id":"tr-012","label":"transportation","text":"A cancelled ride prevented attendance at the diabetes clinic."},
-    {"id":"tr-013","label":"transportation","text":"I have no transportation to my appointments."},
-    {"id":"tr-014","label":"transportation","text":"The morning bus arrives after the laboratory closes."},
-    {"id":"tr-015","label":"transportation","text":"She cannot walk to the clinic and lacks a driver."},
-    {"id":"tr-016","label":"transportation","text":"My usual ride is no longer available for medical visits."},
-    {"id":"tr-017","label":"transportation","text":"Getting a ride to the appointment has been difficult."},
-    {"id":"tr-018","label":"transportation","text":"The van lift is broken so I cannot travel for testing."},
-    {"id":"tr-019","label":"transportation","text":"We missed the lab because public transit was suspended."},
-    {"id":"tr-020","label":"transportation","text":"I am unable to reach the health center without transportation assistance."},
-    {"id":"tr-021","label":"cost","text":"Patient cannot afford the medication copay."},
-    {"id":"tr-022","label":"cost","text":"The pharmacy price is too high and I left the prescription behind."},
-    {"id":"tr-023","label":"cost","text":"I stretch my pills because paying for another bottle is difficult."},
-    {"id":"tr-024","label":"cost","text":"Insurance stopped covering this medicine and the out of pocket charge is unaffordable."},
-    {"id":"tr-025","label":"cost","text":"She skipped a refill after her income fell."},
-    {"id":"tr-026","label":"cost","text":"Money for the prescription ran out this month."},
-    {"id":"tr-027","label":"cost","text":"The high deductible prevents me from buying medication."},
-    {"id":"tr-028","label":"cost","text":"Patient reports financial hardship and cannot pay for treatment supplies."},
-    {"id":"tr-029","label":"cost","text":"My insulin is too expensive to refill on time."},
-    {"id":"tr-030","label":"cost","text":"After paying rent there is no money for my medicine."},
-    {"id":"tr-031","label":"cost","text":"He needs medication assistance because the monthly cost exceeds his budget."},
-    {"id":"tr-032","label":"cost","text":"I am skipping doses to make an expensive prescription last."},
-    {"id":"tr-033","label":"cost","text":"Patient declined the refill because of the price at checkout."},
-    {"id":"tr-034","label":"cost","text":"Affordability is stopping her from obtaining test strips."},
-    {"id":"tr-035","label":"cost","text":"I cannot cover the copayment until my next paycheck."},
-    {"id":"tr-036","label":"cost","text":"A sudden price increase made the medication unaffordable."},
-    {"id":"tr-037","label":"cost","text":"The patient borrowed money to pay for medicines and cannot continue."},
-    {"id":"tr-038","label":"cost","text":"Cost is a barrier to filling the prescription."},
-    {"id":"tr-039","label":"cost","text":"The assistance benefit expired and she cannot afford another refill."},
-    {"id":"tr-040","label":"cost","text":"I have no money for the medication at the pharmacy."},
-    {"id":"tr-041","label":"food","text":"Patient ran out of food before the end of the month."},
-    {"id":"tr-042","label":"food","text":"I skip dinner so my children can eat."},
-    {"id":"tr-043","label":"food","text":"There are not enough groceries at home."},
-    {"id":"tr-044","label":"food","text":"Our food benefits were cut and the cupboards are empty."},
-    {"id":"tr-045","label":"food","text":"She is hungry because she cannot purchase regular meals."},
-    {"id":"tr-046","label":"food","text":"I rely on a pantry that has been closed for weeks."},
-    {"id":"tr-047","label":"food","text":"Patient reports food insecurity and no reliable supply of groceries."},
-    {"id":"tr-048","label":"food","text":"The family has been reducing meal portions to avoid running out."},
-    {"id":"tr-049","label":"food","text":"I went without lunch all week because we had nothing to eat."},
-    {"id":"tr-050","label":"food","text":"Meals are irregular because her grocery budget is exhausted."},
-    {"id":"tr-051","label":"food","text":"He cannot get enough food from the community pantry."},
-    {"id":"tr-052","label":"food","text":"The fridge is empty and I do not know where dinner will come from."},
-    {"id":"tr-053","label":"food","text":"Patient has been skipping meals after losing food support."},
-    {"id":"tr-054","label":"food","text":"We lack enough food for the coming week."},
-    {"id":"tr-055","label":"food","text":"I cannot afford groceries and have eaten only one meal today."},
-    {"id":"tr-056","label":"food","text":"Access to nutritious meals is limited by an empty food supply."},
-    {"id":"tr-057","label":"food","text":"The patient is worried the remaining groceries will not last."},
-    {"id":"tr-058","label":"food","text":"Hunger has become common since the meal delivery stopped."},
-    {"id":"tr-059","label":"food","text":"My benefits ended and I am running out of food."},
-    {"id":"tr-060","label":"food","text":"She needs a food resource referral because there is nothing to eat at home."},
-    {"id":"tr-061","label":"health_literacy","text":"Patient is confused by the medication instructions."},
-    {"id":"tr-062","label":"health_literacy","text":"I cannot understand the words on my discharge paperwork."},
-    {"id":"tr-063","label":"health_literacy","text":"He is unsure how to follow the written care plan."},
-    {"id":"tr-064","label":"health_literacy","text":"The medicine label is difficult for me to read."},
-    {"id":"tr-065","label":"health_literacy","text":"She misunderstood the testing instructions and needs them explained."},
-    {"id":"tr-066","label":"health_literacy","text":"I do not know what twice daily means on this prescription."},
-    {"id":"tr-067","label":"health_literacy","text":"Patient cannot explain the follow up plan in their own words."},
-    {"id":"tr-068","label":"health_literacy","text":"Medical terminology in the handout is confusing."},
-    {"id":"tr-069","label":"health_literacy","text":"I mixed up the directions for the two medicine bottles."},
-    {"id":"tr-070","label":"health_literacy","text":"Teach back revealed difficulty understanding when to take the tablets."},
-    {"id":"tr-071","label":"health_literacy","text":"The patient needs plain language because the care instructions are unclear."},
-    {"id":"tr-072","label":"health_literacy","text":"I cannot read the clinic forms well enough to complete them."},
-    {"id":"tr-073","label":"health_literacy","text":"She remains confused about preparing for the laboratory test."},
-    {"id":"tr-074","label":"health_literacy","text":"He does not understand the discharge instructions."},
-    {"id":"tr-075","label":"health_literacy","text":"The patient interpreted the medication schedule incorrectly."},
-    {"id":"tr-076","label":"health_literacy","text":"I need someone to explain these unfamiliar medical words."},
-    {"id":"tr-077","label":"health_literacy","text":"Low reading ability makes the treatment leaflet hard to follow."},
-    {"id":"tr-078","label":"health_literacy","text":"The instructions leave me unsure what I should do next."},
-    {"id":"tr-079","label":"health_literacy","text":"Patient has difficulty understanding the timing shown on the pill label."},
-    {"id":"tr-080","label":"health_literacy","text":"I cannot make sense of the written appointment preparation guide."},
-    {"id":"tr-081","label":"none","text":"The appointment has been confirmed for Tuesday."},
-    {"id":"tr-082","label":"none","text":"Patient denies transportation problems."},
-    {"id":"tr-083","label":"none","text":"I now have a reliable ride and no longer need help."},
-    {"id":"tr-084","label":"none","text":"There is enough food at home and no meals were missed."},
-    {"id":"tr-085","label":"none","text":"Her brother cannot afford his prescriptions."},
-    {"id":"tr-086","label":"none","text":"If food access becomes a concern we can review resources."},
-    {"id":"tr-087","label":"none","text":"The patient correctly explained the medication instructions."},
-    {"id":"tr-088","label":"none","text":"Routine laboratory results were reviewed during the visit."},
-    {"id":"tr-089","label":"none","text":"I have no concerns about paying for my medicine."},
-    {"id":"tr-090","label":"none","text":"The nurse documented the current phone number."},
-    {"id":"tr-091","label":"none","text":"Transportation options were discussed for possible future use."},
-    {"id":"tr-092","label":"none","text":"Patient understands the care plan and has no questions."},
-    {"id":"tr-093","label":"none","text":"His mother reports that her bus service is unreliable."},
-    {"id":"tr-094","label":"none","text":"The medication cost issue has resolved after coverage began."},
-    {"id":"tr-095","label":"none","text":"She picked up the refill without difficulty."},
-    {"id":"tr-096","label":"none","text":"The patient may need support someday but reports no present obstacle."},
-    {"id":"tr-097","label":"none","text":"The examination was completed and the next visit scheduled."},
-    {"id":"tr-098","label":"none","text":"Patient denies food insecurity and eats regular meals."},
-    {"id":"tr-099","label":"none","text":"I no longer find the instructions confusing after the review."},
-    {"id":"tr-100","label":"none","text":"A resource brochure was placed in the waiting room."}
+    {
+      "id": "train-transportation-1",
+      "label": "transportation",
+      "text": "No ride is available for my follow-up appointment."
+    },
+    {
+      "id": "train-transportation-2",
+      "label": "transportation",
+      "text": "Patient missed the hospital visit because the bus route was cancelled."
+    },
+    {
+      "id": "train-transportation-3",
+      "label": "transportation",
+      "text": "I cannot get transportation to the clinic after discharge."
+    },
+    {
+      "id": "train-transportation-4",
+      "label": "transportation",
+      "text": "My car broke down and I have nobody to drive me."
+    },
+    {
+      "id": "train-transportation-5",
+      "label": "transportation",
+      "text": "A wheelchair accessible ride is not available."
+    },
+    {
+      "id": "train-transportation-6",
+      "label": "transportation",
+      "text": "The family cannot drive the patient to follow-up."
+    },
+    {
+      "id": "train-transportation-7",
+      "label": "transportation",
+      "text": "Patient reports no way to travel to the hospital."
+    },
+    {
+      "id": "train-transportation-8",
+      "label": "transportation",
+      "text": "Hospital transport is needed because I cannot get a ride."
+    },
+    {
+      "id": "train-transportation-9",
+      "label": "transportation",
+      "text": "Patient cannot reach the appointment without a ride."
+    },
+    {
+      "id": "train-transportation-10",
+      "label": "transportation",
+      "text": "Transportation prevents attendance at the follow-up visit."
+    },
+    {
+      "id": "train-cost-1",
+      "label": "cost",
+      "text": "I cannot afford the new insulin copay."
+    },
+    {
+      "id": "train-cost-2",
+      "label": "cost",
+      "text": "The patient left the new medication at the pharmacy because of cost."
+    },
+    {
+      "id": "train-cost-3",
+      "label": "cost",
+      "text": "My insulin prescription costs more than I can pay."
+    },
+    {
+      "id": "train-cost-4",
+      "label": "cost",
+      "text": "Patient is rationing insulin because the copay is unaffordable."
+    },
+    {
+      "id": "train-cost-5",
+      "label": "cost",
+      "text": "I have no money to pick up my discharge medications."
+    },
+    {
+      "id": "train-cost-6",
+      "label": "cost",
+      "text": "The first insulin fill is too expensive for me."
+    },
+    {
+      "id": "train-cost-7",
+      "label": "cost",
+      "text": "Patient reports medication costs exceed the household budget."
+    },
+    {
+      "id": "train-cost-8",
+      "label": "cost",
+      "text": "The discharge prescription was not collected because I cannot pay."
+    },
+    {
+      "id": "train-cost-9",
+      "label": "cost",
+      "text": "I cannot buy the prescribed glucose strips."
+    },
+    {
+      "id": "train-cost-10",
+      "label": "cost",
+      "text": "Financial hardship prevents the patient from collecting insulin."
+    },
+    {
+      "id": "train-food-1",
+      "label": "food",
+      "text": "Patient has no food at home after discharge."
+    },
+    {
+      "id": "train-food-2",
+      "label": "food",
+      "text": "I skip meals because I cannot afford food."
+    },
+    {
+      "id": "train-food-3",
+      "label": "food",
+      "text": "My groceries ran out and there is no money for more."
+    },
+    {
+      "id": "train-food-4",
+      "label": "food",
+      "text": "Patient reports an empty refrigerator at home."
+    },
+    {
+      "id": "train-food-5",
+      "label": "food",
+      "text": "I do not know where my next meal will come from."
+    },
+    {
+      "id": "train-food-6",
+      "label": "food",
+      "text": "There is not enough food for regular meals."
+    },
+    {
+      "id": "train-food-7",
+      "label": "food",
+      "text": "Patient reports food insecurity affecting regular meals."
+    },
+    {
+      "id": "train-food-8",
+      "label": "food",
+      "text": "I cannot afford groceries since leaving the hospital."
+    },
+    {
+      "id": "train-food-9",
+      "label": "food",
+      "text": "Patient has been hungry because food is unavailable."
+    },
+    {
+      "id": "train-food-10",
+      "label": "food",
+      "text": "Food runs out before the next pay check."
+    },
+    {
+      "id": "train-health_literacy-1",
+      "label": "health_literacy",
+      "text": "Patient cannot explain the new insulin dose after teaching."
+    },
+    {
+      "id": "train-health_literacy-2",
+      "label": "health_literacy",
+      "text": "I do not understand how much insulin to take."
+    },
+    {
+      "id": "train-health_literacy-3",
+      "label": "health_literacy",
+      "text": "Patient confused the morning and evening insulin doses."
+    },
+    {
+      "id": "train-health_literacy-4",
+      "label": "health_literacy",
+      "text": "Teach-back showed the patient could not explain glucose checks."
+    },
+    {
+      "id": "train-health_literacy-5",
+      "label": "health_literacy",
+      "text": "I cannot read the discharge medication instructions."
+    },
+    {
+      "id": "train-health_literacy-6",
+      "label": "health_literacy",
+      "text": "The patient is unsure how to use the insulin pen."
+    },
+    {
+      "id": "train-health_literacy-7",
+      "label": "health_literacy",
+      "text": "I do not understand when to check my glucose."
+    },
+    {
+      "id": "train-health_literacy-8",
+      "label": "health_literacy",
+      "text": "Patient needs simplified insulin instructions after unsuccessful teach-back."
+    },
+    {
+      "id": "train-health_literacy-9",
+      "label": "health_literacy",
+      "text": "I cannot remember which insulin to take at bedtime."
+    },
+    {
+      "id": "train-health_literacy-10",
+      "label": "health_literacy",
+      "text": "Patient cannot demonstrate the prescribed injection steps."
+    },
+    {
+      "id": "train-none-1",
+      "label": "none",
+      "text": "Denies transportation concerns. Wife drives."
+    },
+    {
+      "id": "train-none-2",
+      "label": "none",
+      "text": "Transport arranged by social work prior to discharge."
+    },
+    {
+      "id": "train-none-3",
+      "label": "none",
+      "text": "Brother cannot afford his own medications."
+    },
+    {
+      "id": "train-none-4",
+      "label": "none",
+      "text": "NPO after midnight; meals held for procedure."
+    },
+    {
+      "id": "train-none-5",
+      "label": "none",
+      "text": "Previously had difficulty paying for strips; assistance is now in place."
+    },
+    {
+      "id": "train-none-6",
+      "label": "none",
+      "text": "Patient completed teach-back correctly before discharge."
+    },
+    {
+      "id": "train-none-7",
+      "label": "none",
+      "text": "Patient collected all new prescriptions yesterday."
+    },
+    {
+      "id": "train-none-8",
+      "label": "none",
+      "text": "A hospital follow-up visit is scheduled for next week."
+    },
+    {
+      "id": "train-none-9",
+      "label": "none",
+      "text": "If transportation becomes difficult, call the hospital."
+    },
+    {
+      "id": "train-none-10",
+      "label": "none",
+      "text": "The insulin copay is affordable and was paid."
+    }
   ],
   "test": [
-    {"id":"te-001","label":"transportation","text":"The volunteer driver quit, leaving me unable to attend blood work."},
-    {"id":"te-002","label":"transportation","text":"Patient cancelled the appointment because the medical shuttle never arrived."},
-    {"id":"te-003","label":"transportation","text":"There is no accessible bus connection between my house and the practice."},
-    {"id":"te-004","label":"transportation","text":"My partner works during clinic hours, so I have nobody to drive me."},
-    {"id":"te-005","label":"transportation","text":"A broken car has left the patient unable to reach the lab."},
-    {"id":"te-006","label":"transportation","text":"I cannot arrange transportation for the repeat diabetes test."},
-    {"id":"te-007","label":"transportation","text":"Travel to the health center depends on a ride that frequently cancels."},
-    {"id":"te-008","label":"transportation","text":"The clinic van cannot accommodate my mobility equipment."},
-    {"id":"te-009","label":"cost","text":"The new pharmacy bill consumed more than my weekly wages."},
-    {"id":"te-010","label":"cost","text":"I abandoned the insulin refill when I learned its copayment."},
-    {"id":"te-011","label":"cost","text":"Patient takes fewer tablets because another pack costs too much."},
-    {"id":"te-012","label":"cost","text":"She cannot purchase testing supplies until the assistance grant is renewed."},
-    {"id":"te-013","label":"cost","text":"There is a financial barrier to obtaining his prescribed medicine."},
-    {"id":"te-014","label":"cost","text":"My medication budget does not cover the extra prescription."},
-    {"id":"te-015","label":"cost","text":"Patient delayed refilling because she could not pay the deductible."},
-    {"id":"te-016","label":"cost","text":"I need help with the expense of the treatment my clinician ordered."},
-    {"id":"te-017","label":"food","text":"The patient eats at a shelter because groceries have become scarce."},
-    {"id":"te-018","label":"food","text":"My last grocery bag must feed us for another ten days."},
-    {"id":"te-019","label":"food","text":"She often goes to bed hungry after sharing a small meal with her children."},
-    {"id":"te-020","label":"food","text":"Fresh food is unavailable at home and several dinners have been skipped."},
-    {"id":"te-021","label":"food","text":"I have had nothing to eat since yesterday because the cupboard is bare."},
-    {"id":"te-022","label":"food","text":"Food insecurity worsened when the neighborhood pantry shut down."},
-    {"id":"te-023","label":"food","text":"Patient cannot maintain regular meals with the remaining groceries."},
-    {"id":"te-024","label":"food","text":"The meal delivery benefit ended before another food source was arranged."},
-    {"id":"te-025","label":"health_literacy","text":"I confused the fasting directions with the instructions for my tablets."},
-    {"id":"te-026","label":"health_literacy","text":"Patient needs help decoding the medical vocabulary in the after visit summary."},
-    {"id":"te-027","label":"health_literacy","text":"She cannot tell which instruction sheet applies to her current prescription."},
-    {"id":"te-028","label":"health_literacy","text":"The written schedule is unclear to me and I keep mixing up the times."},
-    {"id":"te-029","label":"health_literacy","text":"He misread the preparation leaflet and did not understand the required steps."},
-    {"id":"te-030","label":"health_literacy","text":"Please explain the care instructions in words I can understand."},
-    {"id":"te-031","label":"health_literacy","text":"During teach back the patient could not describe the medication plan."},
-    {"id":"te-032","label":"health_literacy","text":"The dosing chart is too confusing for me to follow independently."},
-    {"id":"te-033","label":"none","text":"A daughter described her own difficulty buying medicine, while the patient reported none."},
-    {"id":"te-034","label":"none","text":"Since joining the ride program I can get to every appointment."},
-    {"id":"te-035","label":"none","text":"The team asked about hunger, and the patient denied any shortage of food."},
-    {"id":"te-036","label":"none","text":"New instructions were read back accurately and no clarification was needed."},
-    {"id":"te-037","label":"none","text":"The clinician signed the completed laboratory order."},
-    {"id":"te-038","label":"none","text":"If a future refill becomes expensive, assistance information will be available."},
-    {"id":"te-039","label":"none","text":"The chart was transferred after the practice changed its scheduling software."},
-    {"id":"te-040","label":"none","text":"I used to struggle with the copay but it is now covered in full."}
+    {
+      "id": "test-transportation-1",
+      "label": "transportation",
+      "text": "The patient has no ride for the diabetes follow-up."
+    },
+    {
+      "id": "test-transportation-2",
+      "label": "transportation",
+      "text": "Unable to attend the hospital appointment because transport is unavailable."
+    },
+    {
+      "id": "test-transportation-3",
+      "label": "transportation",
+      "text": "I cannot travel to the clinic without someone driving me."
+    },
+    {
+      "id": "test-transportation-4",
+      "label": "transportation",
+      "text": "No accessible vehicle is available for this patient."
+    },
+    {
+      "id": "test-cost-1",
+      "label": "cost",
+      "text": "I left insulin at the pharmacy because I cannot afford it."
+    },
+    {
+      "id": "test-cost-2",
+      "label": "cost",
+      "text": "Patient cannot pay the prescription copayment after discharge."
+    },
+    {
+      "id": "test-cost-3",
+      "label": "cost",
+      "text": "My discharge medicines are unaffordable."
+    },
+    {
+      "id": "test-cost-4",
+      "label": "cost",
+      "text": "No funds are available to purchase the new insulin."
+    },
+    {
+      "id": "test-food-1",
+      "label": "food",
+      "text": "There is nothing to eat in my home."
+    },
+    {
+      "id": "test-food-2",
+      "label": "food",
+      "text": "Patient cannot afford enough groceries for regular meals."
+    },
+    {
+      "id": "test-food-3",
+      "label": "food",
+      "text": "My food ran out three days ago."
+    },
+    {
+      "id": "test-food-4",
+      "label": "food",
+      "text": "The patient is skipping meals due to food insecurity."
+    },
+    {
+      "id": "test-health_literacy-1",
+      "label": "health_literacy",
+      "text": "I do not understand the insulin instructions on this sheet."
+    },
+    {
+      "id": "test-health_literacy-2",
+      "label": "health_literacy",
+      "text": "Patient cannot teach back the insulin dosing plan."
+    },
+    {
+      "id": "test-health_literacy-3",
+      "label": "health_literacy",
+      "text": "The patient is confused about how to check blood sugar."
+    },
+    {
+      "id": "test-health_literacy-4",
+      "label": "health_literacy",
+      "text": "I cannot follow the written discharge instructions."
+    },
+    {
+      "id": "test-none-1",
+      "label": "none",
+      "text": "Patient denies difficulty attending appointments."
+    },
+    {
+      "id": "test-none-2",
+      "label": "none",
+      "text": "Insulin was delivered and the patient understands the dose."
+    },
+    {
+      "id": "test-none-3",
+      "label": "none",
+      "text": "His sister struggles to purchase her own prescriptions."
+    },
+    {
+      "id": "test-none-4",
+      "label": "none",
+      "text": "Meals were withheld for an inpatient test."
+    }
   ]
 }

@@ -52,7 +52,8 @@ async function jsonRequest(path, body, method) {
   assert.ok(response.ok, `${path} returned ${response.status}: ${payload.error || ''}; database: ${requestState.errors.join('; ')}`);
   return payload;
 }
-const counts = () => Object.fromEntries(['patients', 'documents', 'assertions', 'graph_nodes', 'graph_edges', 'tasks', 'runs'].map(table => [table, db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count]));
+const counts = () => Object.fromEntries(['patients', 'admissions', 'conditions', 'lab_results', 'medications', 'pharmacy_pickups', 'appointments', 'emergency_department_visits', 'social_needs', 'notes', 'assertions', 'graph_nodes', 'graph_edges', 'tasks', 'runs'].map(table => [table, db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count]));
+const question = 'Which patients discharged after a diabetes-related admission have an open follow-up gap and a documented barrier we can act on, and what is the right action for each?';
 try {
   assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
   const page = await request('/'); assert.equal(page.status, 200); assert.match(await page.text(), /Careweave/);
@@ -75,7 +76,8 @@ try {
   }
   assert.equal(seed.count, 1000);
   const fullCounts = counts();
-  assert.equal(fullCounts.documents, 3000);
+  assert.equal(fullCounts.admissions, 1000);
+  assert.ok(fullCounts.notes >= 450 && fullCounts.notes <= 750);
   // An already completed first/last batch may be retried after a lost response.
   for (const offset of [0, 990, 1000]) {
     const retry = await jsonRequest('/api/seed', { offset });
@@ -83,46 +85,63 @@ try {
     assert.deepEqual(counts(), fullCounts, 'Idempotent seed retries must not duplicate records.');
   }
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
-  const result = await jsonRequest('/api/agent', { question: 'Find diabetic patients overdue for A1c tests with transportation barriers.' });
-  assert.equal(result.result.count, 82);
+  const result = await jsonRequest('/api/agent', { question });
+  assert.equal(result.ok, true);
+  const originalCount = result.result.count;
+  assert.ok(originalCount > 0);
+  assert.ok(result.result.patients.some(patient => patient.id === 'P0412'));
+  for (const followUp of ['Which patients report a cost barrier and never picked up their discharge insulin?', 'Who is likely to return?']) {
+    const alternate = await jsonRequest('/api/agent', { question: followUp });
+    assert.equal(alternate.ok, true, followUp);
+    assert.ok(alternate.result.count > 0, followUp);
+  }
   const graph = await jsonRequest('/api/graph?mode=patient&patientId=P0412');
-  assert.equal(graph.nodes.length, 9);
-  const populationGraph = await jsonRequest('/api/graph?mode=population&limit=420');
-  assert.ok(populationGraph.nodes.length > 100);
+  assert.ok(graph.nodes.length > 9 && graph.nodes.length <= 50);
+  assert.ok(graph.edges.some(edge => edge.type === 'LIKELY_TO_RETURN'));
+  const hospitalGraph = await jsonRequest('/api/graph?mode=discharges&limit=50');
+  assert.ok(hospitalGraph.nodes.length <= 50);
   const bootstrap = await jsonRequest('/api/bootstrap');
   assert.equal(bootstrap.patients.length, 1000);
+  const baseline = await jsonRequest('/api/search', { question });
+  assert.equal(Object.hasOwn(baseline, 'count'), false, 'Note retrieval must not pretend to provide a joined patient count.');
   const beforePlanning = counts();
   const defaults = await jsonRequest('/api/simulate/defaults');
   const simulated = await jsonRequest('/api/simulate', { ...defaults, budget: 350 });
-  assert.equal(simulated.population.total, 1000);
+  assert.equal(simulated.patients.total, 1000);
   assert.ok(simulated.optimized.allBarriersAddressed > 0);
   assert.ok(simulated.optimized.budgetUsed <= 350);
   assert.equal(simulated.hypothetical, true);
   for (const id of simulated.graphOverlay.nodes) assert.ok(db.prepare('SELECT id FROM graph_nodes WHERE id=?').get(id), `Simulation node ${id} exists`);
   for (const id of simulated.graphOverlay.edges) assert.ok(db.prepare('SELECT id FROM graph_edges WHERE id=?').get(id), `Simulation edge ${id} exists`);
   const proof = await jsonRequest('/api/proof', {});
-  assert.equal(proof.summary.total, 14); assert.equal(proof.summary.passed, 14);
-  assert.equal(proof.repeatability.passed, true); assert.equal(proof.repeatability.count, 82);
-  assert.equal(proof.evidenceCoverage.passed, true); assert.equal(proof.evidenceCoverage.verified, 82);
+  assert.ok(proof.summary.total >= 5); assert.equal(proof.summary.passed, proof.summary.total);
+  assert.equal(proof.repeatability.passed, true); assert.equal(proof.repeatability.count, originalCount);
+  assert.equal(proof.evidenceCoverage.passed, true); assert.equal(proof.evidenceCoverage.verified, proof.evidenceCoverage.total);
+  assert.equal(proof.repeatability.counts.length, 3);
   assert.deepEqual(counts(), beforePlanning, 'Proof and resource simulation must not change persistent state.');
   const task = await jsonRequest('/api/tasks', { patientId: 'P0412', barrier: 'transportation' });
   const approved = await jsonRequest(`/api/tasks/${task.id}`, { version: task.version, status: 'approved' }, 'PATCH');
   assert.equal(approved.sent, false);
-  await jsonRequest('/api/patients/P0412/documents', { text: 'Patient no longer needs transportation help and now has reliable rides.', date: '2026-10-10', synthetic: true });
-  const after = await jsonRequest('/api/query', { question: 'Find diabetic patients overdue for A1c tests with transportation barriers.' });
-  assert.equal(after.result.count, 81);
+  await jsonRequest('/api/patients/P0412/documents', { text: 'Patient no longer needs transportation help and now has reliable rides.', note_type: 'Post-discharge nurse call note', date: '2026-10-10', synthetic: true });
+  const after = await jsonRequest('/api/query', { question });
+  assert.equal(after.result.count, originalCount - 1);
   const tasks = await jsonRequest('/api/tasks');
   assert.equal(tasks.tasks.find(item => item.id === task.id).status, 'needs_review');
   const afterProof = await jsonRequest('/api/proof', {});
-  assert.equal(afterProof.repeatability.count, 81); assert.equal(afterProof.evidenceCoverage.verified, 81);
+  assert.equal(afterProof.repeatability.count, originalCount - 1); assert.equal(afterProof.evidenceCoverage.verified, afterProof.evidenceCoverage.total);
   const afterSimulation = await jsonRequest('/api/simulate', { patientIds: ['P0412'], barriers: ['transportation'] });
   assert.equal(afterSimulation.optimized.patientsReached, 0);
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
   const metrics = await jsonRequest('/api/ml/metrics');
-  assert.equal(metrics.testSize, 40);
+  assert.ok(metrics.testSize > 0);
+  assert.equal(metrics.extraction.total, 600);
+  assert.ok(Number.isFinite(metrics.extraction.precision));
+  assert.ok(Number.isFinite(metrics.extraction.recall));
   assert.equal((await request('/.env')).status, 404);
+  assert.equal((await request('/ml/hospital-ground-truth.json')).status, 404);
+  assert.equal((await request('/hospital-ground-truth.json')).status, 404);
   const successful = observed.filter(item => !item.errors.length), maxQueries = Math.max(...successful.map(item => item.queries));
   const seedMax = Math.max(...successful.filter(item => item.path === '/api/seed').map(item => item.queries));
   assert.ok(maxQueries <= LIMITS.queries);
-  console.log(`Bundled Worker verified: foreign keys ON; 50-statement D1 invocation limit; 100-parameter SQL limit; atomic/idempotent 1,000-patient seed; cohort 82 → 81; task invalidation; live proof and simulation; source isolation. Maximum statements/request: ${maxQueries}; seed: ${seedMax}.`);
+  console.log(`Bundled Worker verified: foreign keys ON; 50-statement D1 invocation limit; 100-parameter SQL limit; atomic/idempotent 1,000-patient hospital seed; cohort ${originalCount} → ${originalCount - 1}; task invalidation; live proof and simulation; source isolation. Maximum statements/request: ${maxQueries}; seed: ${seedMax}.`);
 } finally { db.close(); }

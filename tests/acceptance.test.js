@@ -2,119 +2,96 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseQuestion, runQuery, patients } from '../dist/engine.js';
 
-// Independently selected natural-language cases. For optional syntax, a visible
-// refusal is acceptable; executing a different cohort is not.
-function faithfulOrRejected(question, verify) {
-  const result = parseQuestion(question);
-  if (!result.ok) {
-    assert.equal(typeof result.error, 'string');
-    return;
-  }
-  verify(result.plan);
-}
+const question = 'Which patients discharged after a diabetes-related admission have an open follow-up gap and a documented barrier we can act on, and what is the right action for each?';
 
-test('the requested demo question selects missing A1c tests, not all diabetes gaps', () => {
-  const parsed = parseQuestion('Find diabetic patients missing an A1c test because they cannot get transportation');
+test('the hospital question selects an open follow-up gap with current evidence', () => {
+  const parsed = parseQuestion(question);
   assert.equal(parsed.ok, true, parsed.error);
-  assert.equal(parsed.plan.gapType, 'overdue');
-  assert.equal(parsed.plan.diabetesOnly, true);
-  assert.deepEqual(parsed.plan.barriers, ['transportation']);
-  assert.equal(parsed.plan.status, 'active');
+  assert.equal(parsed.plan.diabetesAdmissionOnly, true);
+  assert.equal(parsed.plan.gapOnly, true);
+  assert.equal(parsed.plan.barrierPresence, 'present');
   const result = runQuery(parsed.plan);
   assert.ok(result.count > 0);
-  assert.ok(result.patients.every(p => p.gaps.some(g => g.type === 'a1c_overdue')));
-  assert.ok(result.patients.some(p => p.id === 'P0412'));
-});
-
-test('exact and inclusive ages are honored or explicitly declined', () => {
-  faithfulOrRejected('Find diabetic patients aged 65 with transportation barriers', plan => {
-    assert.equal(plan.ageMin, 65);
-    assert.equal(plan.ageMax, 65);
-  });
-  faithfulOrRejected('Find patients aged 65 or younger with transportation barriers', plan => assert.equal(plan.ageMax, 65));
-  faithfulOrRejected('Find patients age 17 with cost barriers', plan => {
-    assert.equal(plan.ageMin, 17);
-    assert.equal(plan.ageMax, 17);
-  });
-});
-
-test('all barriers is an intersection and regardless-of-gap really includes both states', () => {
-  faithfulOrRejected('Find patients with all barriers', plan => {
-    assert.equal(plan.barriers.length, 4);
-    assert.equal(plan.barrierMode, 'all');
-  });
-  faithfulOrRejected('Find patients with a barrier', plan => {
-    assert.equal(plan.barriers.length, 4);
-    assert.equal(plan.barrierMode, 'any');
-  });
-  faithfulOrRejected('Find patients with transportation barriers regardless of care gaps', plan => assert.equal(plan.gapOnly, false));
-  faithfulOrRejected('Find patients with transportation barriers with or without diabetes', plan => assert.equal(plan.diabetesOnly, false));
-});
-
-test('unrepresentable negation is declined instead of reversing the request', () => {
-  const questions = [
-    'Find patients without any barriers',
-    'Find patients with no open care gaps',
-    'Find patients with transportation barriers not food insecurity',
-    'Find patients with transportation barriers and no medication refill gaps',
-    'Find patients not diabetic with transportation barriers',
-    'Find patients without an open care gap',
-    'Find patients with no overdue tests and transportation barriers',
-    'Find patients without medication',
-    'Find patients with a completed A1c test and transportation barriers'
-  ];
-  for (const question of questions) {
-    const result = parseQuestion(question);
-    assert.equal(result.ok, false, question);
+  assert.ok(result.patients.some(patient => patient.id === 'P0412'));
+  for (const patient of result.patients) {
+    assert.equal(patient.admission.diabetesRelated, true);
+    assert.equal(patient.followUpGap.open, true);
+    assert.ok(patient.barriers.length > 0);
   }
 });
 
-test('unsupported mixed predicates and time windows are not silently flattened', () => {
-  const questions = [
-    'Find patients with current transportation and previously resolved cost barriers',
-    'Find patients aged 50 to 60 or 70 to 80 with transportation barriers',
-    'Find patients with transportation barriers in 2025',
-    'Find patients with less than 2 barriers',
-    'Find patients with food or cost and transportation barriers',
-    'Find patients with current transportation and no longer cost barriers',
-    'Find patients with current barriers and resolved transportation',
-    'Find patients with high A1c and an overdue A1c test',
-    'Find patients with transportation barriers over 50 years ago'
-  ];
-  for (const question of questions) {
-    const result = parseQuestion(question);
-    assert.equal(result.ok, false, question);
+test('cost and discharge insulin query uses both supported conditions', () => {
+  const parsed = parseQuestion('Which patients report a cost barrier and never picked up their discharge insulin?');
+  assert.equal(parsed.ok, true, parsed.error);
+  assert.deepEqual(parsed.plan.barriers, ['cost']);
+  assert.equal(parsed.plan.insulinNotPickedUp, true);
+  const result = runQuery(parsed.plan);
+  assert.ok(result.count > 0);
+  for (const patient of result.patients) {
+    assert.ok(patient.barriers.some(barrier => barrier.type === 'cost'));
+    assert.ok(patient.medications.some(medication => medication.isInsulin && medication.newStart && !medication.pickedUp));
   }
 });
 
-test('negated resolution and the union of gap types are faithful or declined', () => {
-  faithfulOrRejected('Find patients with transportation barriers not resolved', plan => assert.equal(plan.status, 'active'));
-  faithfulOrRejected('Find patients with elevated A1c or an overdue A1c test', plan => {
-    assert.equal(plan.gapOnly, true);
-    assert.equal(plan.gapType, 'any');
-  });
+test('the likely-to-return query uses the explicit derived rule', () => {
+  const parsed = parseQuestion('Who is likely to return?');
+  assert.equal(parsed.ok, true, parsed.error);
+  assert.equal(parsed.plan.likelyToReturn, true);
+  const result = runQuery(parsed.plan);
+  assert.ok(result.count > 0);
+  assert.ok(result.patients.every(patient => patient.likelyToReturn));
 });
 
-test('refill minimum is inclusive and strict language advances the boundary', () => {
-  const strict = parseQuestion('Find diabetic patients with refill gaps over 30 days and cost barriers');
-  const inclusive = parseQuestion('Find diabetic patients with refill gaps at least 30 days and cost barriers');
-  assert.equal(strict.ok, true, strict.error);
-  assert.equal(inclusive.ok, true, inclusive.error);
-  assert.equal(strict.plan.refillMin, 31);
-  assert.equal(inclusive.plan.refillMin, 30);
-  assert.ok(runQuery(strict.plan).patients.every(p => p.refillGap > 30));
-  assert.ok(runQuery(inclusive.plan).patients.every(p => p.refillGap >= 30));
+test('the standard discharge-call group remains separate from supported barriers', () => {
+  const parsed = parseQuestion('Show patients with an open follow-up gap and no documented barrier');
+  assert.equal(parsed.ok, true, parsed.error);
+  assert.equal(parsed.plan.barrierPresence, 'absent');
+  const result = runQuery(parsed.plan);
+  assert.ok(result.count > 0);
+  assert.ok(result.patients.every(patient => patient.followUpGap.open && patient.barriers.length === 0));
 });
 
-test('every retained barrier assertion is traceable to its patient source document', () => {
-  assert.equal(patients.length, 1000);
-  assert.equal(new Set(patients.map(p => p.id)).size, 1000);
+test('exact age bounds are honored or the unsupported wording is declined', () => {
+  for (const [text, low, high] of [
+    ['Show patients aged 65 with transportation barriers', 65, 65],
+    ['Show patients aged 65 or older with transportation barriers', 65, null],
+    ['Show patients aged 65 or younger with transportation barriers', null, 65],
+  ]) {
+    const parsed = parseQuestion(text);
+    if (!parsed.ok) { assert.equal(typeof parsed.error, 'string'); continue; }
+    assert.equal(parsed.plan.ageMin, low, text);
+    assert.equal(parsed.plan.ageMax, high, text);
+  }
+});
+
+test('unsupported clinical predicates and time windows are not answered as a different query', () => {
+  for (const text of [
+    'Which patients had a stroke?',
+    'Show discharged patients with cancer and transportation barriers',
+    'Show patients discharged in 2024 with a transportation barrier',
+    'Which patients will certainly be readmitted tomorrow?',
+  ]) {
+    const parsed = parseQuestion(text);
+    assert.equal(parsed.ok, false, text);
+    assert.equal(typeof parsed.error, 'string');
+  }
+});
+
+test('each current barrier is traceable to its own clinical note or coded hospital row', () => {
   for (const patient of patients) {
     for (const barrier of patient.barriers) {
-      const document = patient.documents.find(doc => doc.id === barrier.documentId);
-      assert.ok(document, `${patient.id}: missing source ${barrier.documentId}`);
-      assert.ok(document.text.includes(barrier.quote), `${patient.id}: excerpt is not in its source`);
-      assert.equal(barrier.date, document.date);
+      const coded = patient.socialNeeds.find(row => row.id === barrier.documentId);
+      if (coded) {
+        const source = coded;
+        assert.ok(source, `${patient.id}: coded source must belong to the patient`);
+        assert.equal(source.type, barrier.type);
+      } else {
+        const source = patient.notes.find(note => note.id === barrier.documentId);
+        assert.ok(source, `${patient.id}: clinical note must belong to the patient`);
+        assert.ok(source.text.includes(barrier.quote), `${patient.id}: evidence must be an exact source excerpt`);
+        assert.equal(barrier.note_type, source.note_type);
+        assert.equal(barrier.date, source.date);
+      }
     }
   }
 });
