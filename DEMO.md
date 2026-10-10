@@ -52,3 +52,6 @@ A what-if calculation temporarily removes one barrier for its query. It shows ho
 **What still needs validation?** Real OpenAI account connectivity once a key is added, performance on varied questions with the chosen model, and any clinical or hospital use beyond this fictional demonstration.
 
 After approving a task, open it in Review queue and select Listen to this approved brief. Review the exact text, then generate audio with ElevenLabs. Play or download the MP3. Explain that this reads a reviewed care-team task and does not send anything to a patient.
+
+
+Gemini demonstration: open Orlando Daugherty (P0009), select Prepare the next step, then Prepare Gemini care brief. Explain that the graph supplies the four permitted steps and evidence; Gemini chooses their order. Open a source and inspect the Gemini instructions. Preparing an individual step creates a draft for human review.

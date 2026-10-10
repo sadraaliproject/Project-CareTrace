@@ -32,6 +32,8 @@ export function createAppServer(options = {}) {
         : process.env.OPENAI_API_KEY,
       model: options.model || process.env.OPENAI_MODEL || "gpt-4.1-mini",
       elevenLabsApiKey: process.env.ELEVENLABS_API_KEY,
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      geminiModel: process.env.GEMINI_MODEL || "gemini-3.1-flash-lite",
       elevenLabsVoiceId: process.env.ELEVENLABS_VOICE_ID,
       elevenLabsModel: process.env.ELEVENLABS_MODEL || "eleven_flash_v2_5",
       fetchImpl: options.fetchImpl || fetch,

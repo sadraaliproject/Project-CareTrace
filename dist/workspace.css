@@ -4649,6 +4649,25 @@ h1 {
   border: 1px solid #d7e4c6;
   border-radius: 16px;
 }
+.gemini-entry {
+  margin: 24px 0;
+  padding: 20px;
+  background: #f3eff9;
+  border-radius: 16px;
+}
+.gemini-steps {
+  padding-left: 24px;
+}
+.gemini-steps li {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid #d7e4c6;
+  border-radius: 16px;
+}
+.gemini-steps small {
+  display: block;
+  margin: 12px 0;
+}
 .audio-transcript {
   white-space: pre-line;
   padding: 20px;

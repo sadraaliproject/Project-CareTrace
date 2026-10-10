@@ -1,6 +1,6 @@
 # Optional services and judging setup
 
-> Archived setup for the earlier care-brief implementation. The current workspace uses the OpenAI investigation agent described in [README](../README.md) and [LIVE_WORKSPACE](LIVE_WORKSPACE.md). Gemini and the earlier staff-sign-in flow remain archived. The current workspace now supports ElevenLabs for reading approved care-team tasks, with exact text preview and explicit generation. Follow the current README for that feature; the sections below describe the earlier care studio.
+> Archived setup for the earlier care-brief implementation. The current workspace uses the OpenAI investigation agent described in [README](../README.md) and [LIVE_WORKSPACE](LIVE_WORKSPACE.md). The current workspace now supports Gemini to order verified care-team steps through the patient’s **Prepare Gemini care brief** button. The earlier staff-sign-in flow remains archived. The current workspace now supports ElevenLabs for reading approved care-team tasks, with exact text preview and explicit generation. Follow the current README for that feature; the sections below describe the earlier care studio.
 
 Careweave's graph, exact SQL counts, source evidence and English/Spanish care briefs work with the synthetic local dataset. Device speech is available when the browser has a compatible voice. Gemini and ElevenLabs are optional live services; an API key or a green configuration indicator alone does not establish a successful live call.
 

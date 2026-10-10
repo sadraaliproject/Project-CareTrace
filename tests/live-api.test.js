@@ -569,3 +569,54 @@ test("audio generation has a durable budget and fails honestly on invalid audio"
     await context.store.close();
   }
 });
+
+test("Gemini brief API validates body, evidence, service output and budget without creating tasks", async () => {
+  let calls = 0;
+  const context = await setup({
+    config: () => ({
+      geminiApiKey: "test",
+      fetchImpl: async (_url, init) => {
+        calls++;
+        const steps = JSON.parse(JSON.parse(init.body).input).steps;
+        return Response.json({
+          status: "completed",
+          steps: [
+            {
+              type: "model_output",
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    stepIds: steps.map((s) => s.id).reverse(),
+                  }),
+                },
+              ],
+            },
+          ],
+        });
+      },
+    }),
+    limits: { modelInvestigationsPerHour: 1 },
+  });
+  try {
+    const request = (id, body = {}) =>
+      context.request("/patients/" + id + "/care-brief", {
+        method: "POST",
+        body,
+        cookie: context.cookie,
+      });
+    assert.equal((await request("P0009", { text: "invent" })).status, 400);
+    assert.equal((await request("P9999")).status, 404);
+    const response = await request("P0009");
+    assert.equal(response.status, 200);
+    const brief = await response.json();
+    assert.equal(brief.steps.length, 4);
+    assert.equal(brief.reviewRequired, true);
+    for (const step of brief.steps)
+      assert.equal(graph.source(step.sourceId).patientId, "P0009");
+    assert.equal(calls, 1);
+    assert.equal((await request("P0009")).status, 429);
+  } finally {
+    context.store.close();
+  }
+});

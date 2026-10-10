@@ -3,6 +3,7 @@ import { AS_OF } from "../dist/pilot-data.js";
 import { validateFilters } from "./live-graph.js";
 import { LIVE_LIMITS } from "./live-store.js";
 import { taskAudioText, generateTaskAudio } from "./task-audio.js";
+import { careBriefSteps, orderCareBrief } from "./gemini-brief.js";
 import {
   runLiveAgent,
   liveSystemPrompt,
@@ -184,6 +185,7 @@ export function createLiveApi({
           ok: true,
           mode: settings.apiKey ? "openai" : "rules",
           aiConfigured: Boolean(settings.apiKey),
+          geminiConfigured: Boolean(settings.geminiApiKey),
           audioConfigured: Boolean(
             settings.elevenLabsApiKey && settings.elevenLabsVoiceId,
           ),
@@ -214,6 +216,53 @@ export function createLiveApi({
             "This investigation was not found in your session.",
           );
         return respond(result);
+      }
+      const careBriefMatch = route.match(/^\/patients\/([^/]+)\/care-brief$/);
+      if (careBriefMatch && method === "POST") {
+        const id = assertId(careBriefMatch[1], patientIdPattern, "patient");
+        const body = await readBody(request, limits.requestBytes);
+        fields(body, []);
+        const patient = graph.getPatient(id);
+        if (!patient) fail(404, "not_found", "This patient was not found.");
+        const steps = careBriefSteps(graph, patient);
+        if (!steps.length)
+          fail(
+            409,
+            "no_steps",
+            "No supported missed next steps are documented for this patient.",
+          );
+        if (!settings.geminiApiKey)
+          fail(
+            503,
+            "gemini_not_configured",
+            "Gemini is not configured on this server.",
+          );
+        if (
+          !(await store.reserveRun(sessionId, crypto.randomUUID(), true, now()))
+        )
+          fail(
+            429,
+            "gemini_limit",
+            "The demo's AI budget is reached. Try again later.",
+          );
+        try {
+          const brief = await orderCareBrief(steps, settings, request.signal);
+          return respond({
+            ...brief,
+            patientId: id,
+            patientName: patient.name,
+            asOf: AS_OF,
+            reviewRequired: true,
+            explanation:
+              "Gemini chose the order. The graph supplied the facts, sources and permitted actions. No new instructions were generated.",
+          });
+        } catch {
+          fail(
+            502,
+            "gemini_unavailable",
+            "Gemini could not produce a validated care brief. Your original records and task queue are unchanged.",
+          );
+        }
       }
       const patientMatch = route.match(/^\/patients\/([^/]+)$/);
       if (patientMatch && method === "GET") {

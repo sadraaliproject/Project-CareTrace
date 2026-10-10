@@ -82,7 +82,10 @@ let graphCanvas;
 let dialogReturnFocus;
 let audioUrl;
 let audioController;
+let briefController;
 function clearAudio() {
+  briefController?.abort();
+  briefController = null;
   audioController?.abort();
   audioController = null;
   if (audioUrl) URL.revokeObjectURL(audioUrl);
@@ -264,7 +267,7 @@ function patientPanel() {
       ["no_show", "no-show"].includes(a.status),
     ),
     medicine = p.medications?.find((m) => m.newStart && !m.pickedUp);
-  return `<section class="patient-story-panel"><div class="patient-summary"><span class="patient-avatar">${esc(initial(p.name))}</span><div><strong>${esc(p.name)}</strong><small>${esc(p.id)} · Age ${p.age} · ${esc(p.admission?.unit || p.unit)}</small></div><span class="window-badge">Day ${days} of 30</span></div><span class="w-eyebrow">${["WHAT HAPPENED", "WHAT WAS IN THE WAY", "THE NEXT USEFUL STEP"][state.beat]}</span><h2>${state.beat === 0 ? (hasGap ? "The plan did not make it all the way home." : "The discharge plan, connected.") : state.beat === 1 ? (type === "transportation" ? "A missed visit can start with a missing ride." : type === "cost" ? "The prescription was ready. The money was not." : type === "food" ? "Safe care starts with enough to eat." : type === "health_literacy" ? "The instructions were not clear enough." : "The chart needs a closer look.") : BARRIERS[type]?.short || "Start with the discharge call."}</h2>${state.beat === 0 ? `<div class="missed-facts"><div><span>↗</span><p><strong>${appointment ? "Follow-up visit missed" : completedVisit ? "Follow-up completed" : hasGap ? "Follow-up remains open" : "See the follow-up record"}</strong><small>${esc(appointment?.clinic || completedVisit?.clinic || "Care transitions follow-up")}${appointment ? " · " + date(appointment.date) : ""}</small></p></div><div><span>Rx</span><p><strong>${medicine ? esc(medicine.name) + " not collected" : "Review medication pickup"}</strong><small>Check what happened after the discharge prescription.</small></p></div></div>` : quote ? `<button class="evidence-snippet" data-action="source" data-id="${esc(bedside?.sourceId || bedside?.note_id)}"><span>≋ ${esc(note?.note_type || bedside?.note_type || "Clinical note")}</span><blockquote>“${esc(quote)}”</blockquote><small>${esc(note?.author_role || bedside?.authorRole || "Care team")} · ${date(note?.written_datetime || bedside?.date)} <b>↗</b></small></button>` : '<p class="no-barrier-note">No current barrier is documented. The standard discharge call is the next step.</p>'}<div class="matched-action"><span>MATCHED TO ${esc(metadata.owner).toUpperCase()}</span><p>${esc(metadata.action)}</p></div><div class="patient-actions">${type ? btn("Prepare care-team task", "prepare-task", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before preparing a task"' : ""}`, "primary") : btn("Open discharge record", "source", `data-id="${esc(p.admission?.id)}"`, "primary")}${type ? btn("What if we resolve this?", "what-if", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before simulating a change"' : ""}`, "quiet") : ""}</div><p class="human-note"><span>✓</span> ${state.asOf ? "Historical view. Return to today to prepare a next step." : "A person reviews every next step."}</p></section>`;
+  return `<section class="patient-story-panel"><div class="patient-summary"><span class="patient-avatar">${esc(initial(p.name))}</span><div><strong>${esc(p.name)}</strong><small>${esc(p.id)} · Age ${p.age} · ${esc(p.admission?.unit || p.unit)}</small></div><span class="window-badge">Day ${days} of 30</span></div><span class="w-eyebrow">${["WHAT HAPPENED", "WHAT WAS IN THE WAY", "THE NEXT USEFUL STEP"][state.beat]}</span><h2>${state.beat === 0 ? (hasGap ? "The plan did not make it all the way home." : "The discharge plan, connected.") : state.beat === 1 ? (type === "transportation" ? "A missed visit can start with a missing ride." : type === "cost" ? "The prescription was ready. The money was not." : type === "food" ? "Safe care starts with enough to eat." : type === "health_literacy" ? "The instructions were not clear enough." : "The chart needs a closer look.") : BARRIERS[type]?.short || "Start with the discharge call."}</h2>${state.beat === 0 ? `<div class="missed-facts"><div><span>↗</span><p><strong>${appointment ? "Follow-up visit missed" : completedVisit ? "Follow-up completed" : hasGap ? "Follow-up remains open" : "See the follow-up record"}</strong><small>${esc(appointment?.clinic || completedVisit?.clinic || "Care transitions follow-up")}${appointment ? " · " + date(appointment.date) : ""}</small></p></div><div><span>Rx</span><p><strong>${medicine ? esc(medicine.name) + " not collected" : "Review medication pickup"}</strong><small>Check what happened after the discharge prescription.</small></p></div></div>` : quote ? `<button class="evidence-snippet" data-action="source" data-id="${esc(bedside?.sourceId || bedside?.note_id)}"><span>≋ ${esc(note?.note_type || bedside?.note_type || "Clinical note")}</span><blockquote>“${esc(quote)}”</blockquote><small>${esc(note?.author_role || bedside?.authorRole || "Care team")} · ${date(note?.written_datetime || bedside?.date)} <b>↗</b></small></button>` : '<p class="no-barrier-note">No current barrier is documented. The standard discharge call is the next step.</p>'}<div class="matched-action"><span>MATCHED TO ${esc(metadata.owner).toUpperCase()}</span><p>${esc(metadata.action)}</p></div><div class="patient-actions">${type ? btn("Prepare care-team task", "prepare-task", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before preparing a task"' : ""}`, "primary") : btn("Open discharge record", "source", `data-id="${esc(p.admission?.id)}"`, "primary")}${type ? btn("What if we resolve this?", "what-if", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before simulating a change"' : ""}`, "quiet") : ""}</div>${state.status?.geminiConfigured && (type || hasGap) ? `<section class="gemini-entry"><h3>Connect the next steps</h3><p>Gemini can order a care-team brief using this patient’s linked evidence.</p>${btn("Prepare Gemini care brief", "gemini-brief", `data-id="${esc(p.id)}" ${state.asOf ? "disabled" : ""}`, "secondary")}</section>` : ""}<p class="human-note"><span>✓</span> ${state.asOf ? "Historical view. Return to today to prepare a next step." : "A person reviews every next step."}</p></section>`;
 }
 function investigationView() {
   const r = state.result?.ok ? state.result.result : null;
@@ -563,6 +566,44 @@ function showTask(task) {
     );
   }
 }
+async function geminiBrief(id) {
+  showDialog(
+    "Preparing the connected care brief",
+    '<p role="status">Gemini is ordering the documented next steps. The backend will check every action and source.</p>',
+  );
+  const controller = new AbortController();
+  briefController = controller;
+  try {
+    const response = await fetch(
+      "/api/v1/patients/" + encodeURIComponent(id) + "/care-brief",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+        signal: controller.signal,
+      },
+    );
+    const brief = await response.json();
+    if (!response.ok)
+      throw new Error(
+        brief.error?.message || "The care brief could not finish.",
+      );
+    if (controller.signal.aborted) return;
+    showDialog(
+      "Connected care brief for " + brief.patientName,
+      `<span class="source-tag">GEMINI · ${esc(brief.model)} · REVIEW REQUIRED</span><p>${esc(brief.explanation)}</p><p>Fictional patient ${esc(brief.patientId)} · Record as of ${date(brief.asOf)}</p><ol class="gemini-steps">${brief.steps.map((step) => `<li><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p><small>Suggested care-team role: ${esc(step.owner)}</small><button class="task-evidence" data-action="source" data-id="${esc(step.sourceId)}"><blockquote>“${esc(step.quote)}”</blockquote><small>Open source ${esc(step.sourceId)} ↗</small></button>${step.barrier ? btn("Prepare this care-team task", "prepare-task", `data-id="${esc(id)}" data-barrier="${esc(step.barrier)}"`, "secondary") : ""}</li>`).join("")}</ol><details><summary>Inspect the Gemini instructions</summary><pre>${esc(brief.prompt)}</pre></details><p>A person reviews each task before approval. This brief does not create tasks, contact anyone, or arrange services.</p>`,
+      true,
+    );
+  } catch (error) {
+    if (!controller.signal.aborted)
+      showDialog(
+        "The Gemini brief could not finish",
+        `<p>${esc(error.message)}</p><p>The original graph and task queue are unchanged.</p>`,
+      );
+  } finally {
+    if (briefController === controller) briefController = null;
+  }
+}
 async function previewTaskAudio(id) {
   try {
     const brief = await api("/tasks/" + encodeURIComponent(id) + "/brief");
@@ -783,6 +824,7 @@ document.addEventListener("click", async (e) => {
   }
   if (action === "prepare-task")
     return prepareTask(el.dataset.id, el.dataset.barrier);
+  if (action === "gemini-brief") return geminiBrief(el.dataset.id);
   if (action === "what-if") return whatIf(el.dataset.id, el.dataset.barrier);
   if (action === "queue-filter") {
     state.queue = el.dataset.status;

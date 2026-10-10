@@ -24,6 +24,8 @@ export default {
             apiKey: env.OPENAI_API_KEY,
             model: env.OPENAI_MODEL || "gpt-4.1-mini",
             elevenLabsApiKey: env.ELEVENLABS_API_KEY,
+            geminiApiKey: env.GEMINI_API_KEY,
+            geminiModel: env.GEMINI_MODEL || "gemini-3.1-flash-lite",
             elevenLabsVoiceId: env.ELEVENLABS_VOICE_ID,
             elevenLabsModel: env.ELEVENLABS_MODEL || "eleven_flash_v2_5",
             hosted: true,
