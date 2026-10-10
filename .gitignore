@@ -16,3 +16,6 @@ dist/server/
 dist/vendor/
 dist/.openai/
 
+# Separate GitHub Desktop checkout owned by the user.
+/Hackathon 26/
+

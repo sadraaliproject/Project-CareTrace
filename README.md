@@ -39,6 +39,14 @@ Restart the server. The key stays on the backend and is ignored by Git. Hosted s
 
 Without a key, a labeled deterministic planner executes the same supported hospital questions against SQL. With a key, the OpenAI Responses agent investigates through constrained graph tools. A configured label does not prove a successful model call: run a complete live question with the intended key before judging. The automatic suite uses mocked model responses for this path.
 
+## Patient handoff and optional services
+
+Open **Patient handoff** to turn the current graph evidence into a short English or Spanish brief. Every step shows its supporting note or hospital fact. Review the wording before using device voice or downloading the text. The backend rejects generated audio when its evidence revision is outdated; nothing is sent to a patient.
+
+Optional **Gemini** integration orders the complete set of supported actions through a validated structured response. Optional **ElevenLabs** integration reads the exact reviewed text. Neither service is required for the local brief; device speech depends on the browser's available voices. API tests use simulated responses. Live service verification remains pending account setup and keys.
+
+See [service setup and the judging route](docs/SPONSOR_SETUP.md) and the [unpublished DEV article draft](docs/DEV_ARTICLE_DRAFT.md). On the public site, visitors can explore and prepare previews. Shared note/task edits and paid AI calls require an allowed staff sign-in. Visitor investigations do not write shared history. The local server remains a loopback demo workspace.
+
 ## Two source layers
 
 **Hospital data store:** admissions and discharges, problem list, admission A1c and inpatient glucose, discharge medications, our outpatient pharmacy pickup records, follow-up appointments, return emergency department visits, and coded social needs.

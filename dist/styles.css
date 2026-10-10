@@ -1989,3 +1989,26 @@ footer {
 .repeat-counts b {
   font-size: 28px;
 }
+/* Public visitors can explore while staff controls shared changes. */
+.access-notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 12px 16px;
+  margin-bottom: 22px;
+  border: 1px solid #d8e5df;
+  border-radius: 12px;
+  color: #245b4f;
+  background: #eff6f1;
+  font-size: 13px;
+  font-weight: 700;
+}
+.access-notice span {
+  font-weight: 400;
+  color: #536860;
+}
+.access-notice a {
+  margin-left: auto;
+  color: #245b4f;
+}

@@ -19,7 +19,7 @@ const vocabulary = [
 ];
 const normalize = text => text.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z])([A-Z][a-z])/g, '$1 $2').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const patterns = vocabulary.map(term => ({ term, pattern: new RegExp(`\\b${term.replaceAll(' ', '\\s+')}s?\\b`, 'i') }));
-const ignoredDirectories = new Set(['node_modules', '.git', '.sites-runtime', '.wrangler', 'data', 'server', 'vendor']);
+const ignoredDirectories = new Set(['node_modules', '.git', '.sites-runtime', '.wrangler', 'data', 'server', 'vendor', 'Hackathon 26']);
 const authoredExtensions = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py', '.ps1', '.sh', '.json', '.sql', '.html', '.css', '.md', '.yml', '.yaml', '.toml', '.txt', '.csv', '.example', '.code-workspace']);
 const findings = [];
 const historicalFindings = [];

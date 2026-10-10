@@ -1,6 +1,7 @@
 import { AS_OF, BARRIERS, makeDraft, matchesPlan } from "./engine.js";
 import { NOTE_TYPES } from "./ontology.js";
 import { createGraph, graphColors } from "./graph.js";
+import { createCareStudio } from "./care-studio.js";
 
 const QUESTIONS = {
   main: "Which patients discharged after a diabetes-related admission have an open follow-up gap and a documented barrier we can act on, and what is the right action for each?",
@@ -60,7 +61,7 @@ const reasons = (p) =>
 const pill = (text, tone = "") =>
   `<span class="pill ${tone}">${esc(text)}</span>`;
 const btn = (text, cmd, attributes = "", style = "") =>
-  `<button class="btn ${style}" data-cmd="${cmd}" ${attributes}>${text}</button>`;
+  `<button class="btn ${style}" data-cmd="${cmd}" ${attributes} ${["save-task", "task-update", "note-commit"].includes(cmd) && state.status.access?.canWrite === false ? 'disabled title="Staff sign-in is required to change shared data"' : ""}>${text}</button>`;
 const empty = (title, body) =>
   `<div class="empty"><span>✳</span><h2>${title}</h2><p>${body}</p></div>`;
 const heading = (eyebrow, title, description, controls = "") =>
@@ -112,6 +113,22 @@ let graphController,
   toastTimer,
   returnFocus;
 const pending = new Set();
+const studio = createCareStudio({
+  api,
+  toast,
+  rerender: () => {
+    if (state.view === "handoff") render();
+  },
+  onPatient: (id) => openPatient(id),
+  onGraph: async (id) => {
+    studio.dispose();
+    state.patientId = id;
+    state.graphMode = "patient";
+    state.view = "home";
+    await loadGraph();
+    window.scrollTo({ top: 0 });
+  },
+});
 async function api(path, body, method) {
   const response = await fetch(path, {
     method: method || (body === undefined ? "GET" : "POST"),
@@ -160,6 +177,10 @@ async function start() {
     let seed = await api("/api/seed"),
       attempts = 0;
     while (!seed.complete) {
+      if (state.status.access?.canWrite === false)
+        throw new Error(
+          "The owner needs to sign in once to prepare the hospital database.",
+        );
       if (++attempts > 110)
         throw new Error("Setup did not finish. Refresh to resume.");
       $("#app").innerHTML =
@@ -184,12 +205,20 @@ async function start() {
 const NAV = [
   ["home", "⌘", "Hospital view"],
   ["cohort", "▦", "Patients & actions"],
+  ["handoff", "◉", "Patient handoff"],
   ["notes", "▤", "Clinical note lab"],
   ["proof", "✓", "Proof & accuracy"],
   ["tasks", "☷", "Care team tasks"],
   ["impact", "◎", "Resource planner"],
   ["history", "◷", "Saved investigations"],
 ];
+function accessNotice() {
+  const access = state.status.access;
+  if (!access || access.mode === "local") return "";
+  return access.canWrite
+    ? '<div class="access-notice">Staff workspace <span>Shared note and task changes are enabled.</span></div>'
+    : `<div class="access-notice">Visitor preview <span>Explore freely. Shared notes and tasks require staff access.</span><a href="${esc(access.signInPath)}" target="_top">Staff sign-in →</a></div>`;
+}
 function shell(content) {
   return `<aside class="sidebar"><a href="#" data-cmd="nav" data-view="home" class="brand"><span>✚</span> careweave</a><div class="brand-sub">THE FIRST 30 DAYS HOME</div><div class="nav-label">HOSPITAL CARE TRANSITIONS</div><nav aria-label="Main navigation">${NAV.map(([id, symbol, name]) => `<button class="nav-item ${state.view === id ? "active" : ""}" data-cmd="nav" data-view="${id}" aria-label="${name}" title="${name}" aria-current="${state.view === id ? "page" : "false"}"><span aria-hidden="true">${symbol}</span><span>${name}</span>${id === "tasks" && state.tasks.filter((t) => t.status === "pending").length ? `<b>${state.tasks.filter((t) => t.status === "pending").length}</b>` : ""}</button>`).join("")}</nav><div class="sidebar-bottom"><div class="connection"><i class="${state.connected ? "live" : ""}"></i><div>${state.connected ? "Hospital demo connected" : "Connection unavailable"}<small>${state.status.model ? "OpenAI configured" : "Local rules + graph tools"}</small></div></div><p>The answer was already<br>in our own notes.</p></div></aside><div class="workspace"><header class="topbar"><span><b>Northstar Hospital System</b><small>Care transitions workspace</small></span><div>${pill("100% synthetic data", "green")}<span class="snapshot">${date(AS_OF)} snapshot</span></div></header><main id="main-content">${!state.connected ? `<div class="alert">${esc(state.error || "The hospital database is unavailable.")} ${btn("Reconnect", "reload")}</div>` : ""}${content}<footer>Fictional patients. Hospital-owned sources. Human review required.<span>No calls, messages, medication changes, or bookings are sent.</span></footer></main></div>`;
 }
@@ -368,8 +397,12 @@ function render() {
     tasks: taskView,
     history: historyView,
     impact: impactView,
+    handoff: () =>
+      studio.render({ patients: state.patients, status: state.status }),
   };
-  $("#app").innerHTML = shell((views[state.view] || homeView)());
+  $("#app").innerHTML = shell(
+    accessNotice() + (views[state.view] || homeView)(),
+  );
   bind();
   if (state.view === "home" && state.graph) drawGraph();
 }
@@ -574,7 +607,7 @@ async function openPatient(id, selectedType) {
   const actionable =
     (patient.barriers.length > 0 || patient.followUpGap?.open) && !state.stale;
   $("#overlay-root").innerHTML =
-    `<div class="backdrop" data-cmd="close"></div><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="patient-title"><header><div><div class="eyebrow">${patient.id} · ${patient.age} YEARS · FICTIONAL PATIENT</div><h2 id="patient-title">${esc(patient.name)}</h2></div>${btn("×", "close", 'aria-label="Close patient details"', "icon-btn")}</header><div class="drawer-body"><div class="button-row">${pill(`Day ${patient.daysSinceDischarge} after discharge`, "green")}${pill(patient.followUpGap?.open ? "Open follow-up gap" : "No open follow-up gap")}${patient.likelyToReturn ? pill("Likely to return · demo rule", "amber") : ""}</div><section class="clinical-facts"><div class="eyebrow">HOSPITAL DATA STORE</div><h3>What our hospital’s tables show</h3><dl><dt>Admission</dt><dd>${esc(patient.admission.principalDiagnosis)}<small>${date(patient.admission.admitDate)} → ${date(patient.admission.dischargeDate)} · ${esc(patient.admission.unit)}</small></dd><dt>Admission labs</dt><dd>${patient.labs.map((l) => `${esc(l.name)}: <b>${esc(l.value)}${esc(l.unit)}</b>`).join("<br>")}</dd><dt>Follow-up visit</dt><dd>${patient.appointments.length ? patient.appointments.map((a) => `${esc(a.clinic)} · ${date(a.date)}<br>${pill(a.status.replaceAll("_", " "), a.status === "completed" ? "green" : "amber")}`).join("<br>") : "Nothing scheduled"}</dd><dt>Discharge medication / our pharmacy</dt><dd>${patient.medications.map((m) => `${esc(m.name)} ${m.newStart ? "· new start" : ""}<br>${pill(m.pickedUp ? "Picked up " + date(m.pickupDate) : "Not picked up", m.pickedUp ? "green" : "amber")}`).join("<br>")}</dd><dt>Follow-up gap reason</dt><dd>${esc(reasons(patient) || "No open reason under the demo rule")}</dd><dt>Coded social needs</dt><dd>${patient.socialNeeds?.length ? patient.socialNeeds.map((s) => `${esc(s.code)} · ${label(s.type)}`).join("<br>") : "No coded social need. Read the clinical notes for context."}</dd><dt>Emergency department returns</dt><dd>${patient.emergencyVisits?.length ? patient.emergencyVisits.map((v) => `${date(v.date)} · ${esc(v.reason || v.diagnosis)}`).join("<br>") : "No return visit recorded in this snapshot"}</dd></dl></section><section><div class="eyebrow">THE PATIENT’S REPORTED REASON</div><h3>Evidence our own staff recorded</h3>${btn("Open patient graph", "patient-graph", `data-id="${patient.id}"`, "secondary")}${patient.barriers.map((b) => sourceHtml(patient, b)).join("") || '<div class="rule-note">No current barrier is documented. The standard discharge call asks what help is needed and reschedules the visit.</div>'}<details class="all-notes"><summary>All clinical notes (${patient.notes.length})</summary>${patient.notes.map((n) => `<article><b>${esc(n.note_type)} · ${relative(n)}</b><small>${esc(n.authorRole)} · ${n.id}</small><p>${esc(n.text)}</p></article>`).join("")}</details></section><section class="draft-section"><div class="eyebrow">TRANSITIONS-OF-CARE ACTION</div><h3>A useful next step, ready for review</h3><label for="task-barrier">Action to prepare</label><select id="task-barrier">${(patient.barriers.length ? patient.barriers.map((b) => b.type) : ["standard"]).map((t) => `<option value="${t}" ${t === type ? "selected" : ""}>${label(t)} · ${owner(t)}</option>`).join("")}</select><p>${esc(nextAction(type))}</p>${draft && actionable ? `<label for="task-title">Task title</label><input id="task-title" value="${esc(draft.title)}" ${existing?.status === "approved" ? "readonly" : ""}><label for="task-body">Discharge follow-up draft</label><textarea id="task-body" rows="9" ${existing?.status === "approved" ? "readonly" : ""}>${esc(draft.body)}</textarea><div class="button-row">${existing?.status === "approved" ? pill("Approval recorded", "green") : btn(existing ? "Save draft changes" : "Prepare demo task", "save-task", `data-type="${type}" ${existing ? `data-id="${existing.id}"` : ""}`, "primary")}</div>` : `<div class="rule-note">${state.stale ? "Rerun the saved question before preparing a task." : "This patient has no open follow-up gap under the demo rule."}</div>`}<p class="small-text">Human review required. No call, medication change, referral, or booking is performed.</p></section></div></section>`;
+    `<div class="backdrop" data-cmd="close"></div><section class="drawer" role="dialog" aria-modal="true" aria-labelledby="patient-title"><header><div><div class="eyebrow">${patient.id} · ${patient.age} YEARS · FICTIONAL PATIENT</div><h2 id="patient-title">${esc(patient.name)}</h2></div>${btn("×", "close", 'aria-label="Close patient details"', "icon-btn")}</header><div class="drawer-body"><div class="button-row">${pill(`Day ${patient.daysSinceDischarge} after discharge`, "green")}${pill(patient.followUpGap?.open ? "Open follow-up gap" : "No open follow-up gap")}${patient.likelyToReturn ? pill("Likely to return · demo rule", "amber") : ""}</div><section class="clinical-facts"><div class="eyebrow">HOSPITAL DATA STORE</div><h3>What our hospital’s tables show</h3><dl><dt>Admission</dt><dd>${esc(patient.admission.principalDiagnosis)}<small>${date(patient.admission.admitDate)} → ${date(patient.admission.dischargeDate)} · ${esc(patient.admission.unit)}</small></dd><dt>Admission labs</dt><dd>${patient.labs.map((l) => `${esc(l.name)}: <b>${esc(l.value)}${esc(l.unit)}</b>`).join("<br>")}</dd><dt>Follow-up visit</dt><dd>${patient.appointments.length ? patient.appointments.map((a) => `${esc(a.clinic)} · ${date(a.date)}<br>${pill(a.status.replaceAll("_", " "), a.status === "completed" ? "green" : "amber")}`).join("<br>") : "Nothing scheduled"}</dd><dt>Discharge medication / our pharmacy</dt><dd>${patient.medications.map((m) => `${esc(m.name)} ${m.newStart ? "· new start" : ""}<br>${pill(m.pickedUp ? "Picked up " + date(m.pickupDate) : "Not picked up", m.pickedUp ? "green" : "amber")}`).join("<br>")}</dd><dt>Follow-up gap reason</dt><dd>${esc(reasons(patient) || "No open reason under the demo rule")}</dd><dt>Coded social needs</dt><dd>${patient.socialNeeds?.length ? patient.socialNeeds.map((s) => `${esc(s.code)} · ${label(s.type)}`).join("<br>") : "No coded social need. Read the clinical notes for context."}</dd><dt>Emergency department returns</dt><dd>${patient.emergencyVisits?.length ? patient.emergencyVisits.map((v) => `${date(v.date)} · ${esc(v.reason || v.diagnosis)}`).join("<br>") : "No return visit recorded in this snapshot"}</dd></dl></section><section><div class="eyebrow">THE PATIENT’S REPORTED REASON</div><h3>Evidence our own staff recorded</h3>${btn("Open patient graph", "patient-graph", `data-id="${patient.id}"`, "secondary")}${btn("Prepare patient handoff →", "patient-handoff", `data-id="${patient.id}"`, "secondary")}${patient.barriers.map((b) => sourceHtml(patient, b)).join("") || '<div class="rule-note">No current barrier is documented. The standard discharge call asks what help is needed and reschedules the visit.</div>'}<details class="all-notes"><summary>All clinical notes (${patient.notes.length})</summary>${patient.notes.map((n) => `<article><b>${esc(n.note_type)} · ${relative(n)}</b><small>${esc(n.authorRole)} · ${n.id}</small><p>${esc(n.text)}</p></article>`).join("")}</details></section><section class="draft-section"><div class="eyebrow">TRANSITIONS-OF-CARE ACTION</div><h3>A useful next step, ready for review</h3><label for="task-barrier">Action to prepare</label><select id="task-barrier">${(patient.barriers.length ? patient.barriers.map((b) => b.type) : ["standard"]).map((t) => `<option value="${t}" ${t === type ? "selected" : ""}>${label(t)} · ${owner(t)}</option>`).join("")}</select><p>${esc(nextAction(type))}</p>${draft && actionable ? `<label for="task-title">Task title</label><input id="task-title" value="${esc(draft.title)}" ${existing?.status === "approved" ? "readonly" : ""}><label for="task-body">Discharge follow-up draft</label><textarea id="task-body" rows="9" ${existing?.status === "approved" ? "readonly" : ""}>${esc(draft.body)}</textarea><div class="button-row">${existing?.status === "approved" ? pill("Approval recorded", "green") : btn(existing ? "Save draft changes" : "Prepare demo task", "save-task", `data-type="${type}" ${existing ? `data-id="${existing.id}"` : ""}`, "primary")}</div>` : `<div class="rule-note">${state.stale ? "Rerun the saved question before preparing a task." : "This patient has no open follow-up gap under the demo rule."}</div>`}<p class="small-text">Human review required. No call, medication change, referral, or booking is performed.</p></section></div></section>`;
   document.body.style.overflow = "hidden";
   $("#task-barrier")?.addEventListener("change", (event) =>
     operation("patient", () => openPatient(id, event.target.value)),
@@ -593,7 +626,16 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   const d = target.dataset;
   operation(d.cmd, async () => {
-    if (d.cmd === "nav") {
+    if (d.cmd.startsWith("studio-")) {
+      await studio.handleClick(d.cmd, target);
+    } else if (d.cmd === "patient-handoff") {
+      closeDrawer();
+      state.view = "handoff";
+      studio.open(d.id);
+      render();
+      window.scrollTo({ top: 0 });
+    } else if (d.cmd === "nav") {
+      if (state.view === "handoff" && d.view !== "handoff") studio.dispose();
       state.view = d.view;
       state.error = "";
       render();
@@ -709,6 +751,7 @@ document.addEventListener("click", (event) => {
             synthetic: true,
           });
           await refresh();
+          studio.invalidate();
           n.preview = null;
           state.stale = !!state.result;
           state.simulation = null;
@@ -783,6 +826,9 @@ document.addEventListener("click", (event) => {
         tasks: state.tasks,
       });
   });
+});
+document.addEventListener("change", (event) => {
+  if (state.view === "handoff") studio.handleChange(event);
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && state.drawer) closeDrawer();

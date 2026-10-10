@@ -9,6 +9,12 @@ import { runAgent } from "./agent.js";
 import { predictText, getMlMetrics, extractWithModel } from "./ml.js";
 import { getSimulationDefaults, simulateFromRepository } from "./insights.js";
 import { runProof, getExtractionMetrics } from "./proof.js";
+import {
+  requestAccess,
+  integrationStatus,
+  changesSharedData,
+} from "./access.js";
+import { buildCareBrief, synthesizeCareBrief } from "./care-studio.js";
 
 const headers = {
   "Content-Type": "application/json; charset=utf-8",
@@ -53,6 +59,7 @@ export function createApi({
   storage = "sqlite",
 }) {
   let modelBusy = false;
+  let studioBusy = false;
   return async function handleApi(request) {
     const url = new URL(request.url),
       path = url.pathname,
@@ -75,19 +82,37 @@ export function createApi({
           );
       }
       const settings = config();
+      const access = requestAccess(request, settings, storage);
+      const integrations = integrationStatus(settings);
+      if (!access.canWrite && changesSharedData(path, method))
+        return json(
+          {
+            ok: false,
+            error:
+              "Visitor preview cannot change shared patient notes or tasks. Sign in with an authorized staff account.",
+          },
+          403,
+        );
       if (path === "/api/status" && method === "GET")
         return json({
           backend: true,
-          model: Boolean(settings.apiKey),
+          model: Boolean(settings.apiKey && access.canUsePaidAI),
           modelName: settings.apiKey ? settings.model : null,
           synthetic: true,
           storage,
           snapshot: AS_OF,
           ml: { available: true, name: "Careweave barrier classifier" },
+          access,
+          integrations,
         });
       if (path === "/api/plan") {
         if (method !== "POST")
           return json({ ok: false, error: "Use POST." }, 405);
+        if (!access.canUsePaidAI)
+          throw fail(
+            "Live AI is available to authorized staff. The local graph demo is available to everyone.",
+            403,
+          );
         if (!settings.apiKey)
           return json(
             {
@@ -133,6 +158,8 @@ export function createApi({
         if (path.endsWith("/predict")) return json(ml);
         let model = null;
         if (body.useModel && settings.apiKey) {
+          if (!access.canUsePaidAI)
+            throw fail("Live AI is available to authorized staff.", 403);
           try {
             model = await extractWithModel({ ...body, ...settings });
           } catch (error) {
@@ -158,6 +185,57 @@ export function createApi({
       }
       // No database initialization is needed for health, extraction, or planner endpoints.
       const repo = await getRepository();
+      if (
+        (path === "/api/care-brief" || path === "/api/care-audio") &&
+        method === "POST"
+      ) {
+        const body = await input(request);
+        if (
+          typeof body.patientId !== "string" ||
+          !/^P\d{4}$/.test(body.patientId)
+        )
+          throw fail("Choose a patient from this hospital demo.");
+        if (body.useGemini !== undefined && typeof body.useGemini !== "boolean")
+          throw fail("Choose local text or Gemini.");
+        const paid = path === "/api/care-audio" || body.useGemini === true;
+        if (paid && !access.canUsePaidAI)
+          throw fail(
+            "Live AI and generated audio are available to authorized staff. Local text and device voice are available to everyone.",
+            403,
+          );
+        if (studioBusy && paid)
+          throw fail(
+            "A care brief or audio request is already running. Try again shortly.",
+            429,
+          );
+        const patient = await repo.getPatient(body.patientId);
+        if (!patient) throw fail("Patient not found.", 404);
+        if (paid) studioBusy = true;
+        try {
+          if (path === "/api/care-brief")
+            return json(await buildCareBrief(patient, body, settings));
+          const result = await synthesizeCareBrief(patient, body, settings);
+          const latest = await buildCareBrief(
+            await repo.getPatient(body.patientId),
+            { language: body.language },
+          );
+          if (latest.revision !== result.revision)
+            throw fail(
+              "The patient evidence changed while audio was being created. Create and review a new brief.",
+              409,
+            );
+          return new Response(result.audio, {
+            headers: {
+              "Content-Type": result.contentType,
+              "Cache-Control": "no-store",
+              "X-Content-Type-Options": "nosniff",
+              "X-Careweave-Revision": result.revision,
+            },
+          });
+        } finally {
+          if (paid) studioBusy = false;
+        }
+      }
       if (path === "/api/search" && method === "POST")
         return json(await repo.searchNotes((await input(request)).question));
       if (path === "/api/simulate/defaults" && method === "GET")
@@ -179,11 +257,13 @@ export function createApi({
           ontology,
           tasks,
           runs,
-          model: Boolean(settings.apiKey),
+          model: Boolean(settings.apiKey && access.canUsePaidAI),
           modelName: settings.apiKey ? settings.model : null,
           storage,
           snapshot: AS_OF,
           synthetic: true,
+          access,
+          integrations,
         });
       }
       if (path === "/api/seed" && method === "POST") {
@@ -227,18 +307,20 @@ export function createApi({
           : parseQuestion(body.question, body.previousPlan);
         if (!parsed.ok) return json({ ...parsed, engine: "deterministic-sql" });
         const result = await repo.query(parsed.plan);
-        const run = await repo.saveRun({
-          question: body.question,
-          ...parsed,
-          result,
-          engine: "deterministic-sql",
-          events: result.events,
-        });
+        const run = access.canWrite
+          ? await repo.saveRun({
+              question: body.question,
+              ...parsed,
+              result,
+              engine: "deterministic-sql",
+              events: result.events,
+            })
+          : null;
         return json({
           ...parsed,
           result,
           engine: "deterministic-sql",
-          runId: run.id,
+          runId: run?.id || null,
         });
       }
       if (path === "/api/agent" && method === "POST") {
@@ -259,9 +341,11 @@ export function createApi({
             previousPlan: body.previousPlan,
             repo,
             ...settings,
+            apiKey: access.canUsePaidAI ? settings.apiKey : undefined,
+            persist: access.canWrite,
             onEvent,
           });
-          if (result.ok && result.result && !result.runId) {
+          if (access.canWrite && result.ok && result.result && !result.runId) {
             const run = await repo.saveRun({
               question: body.question,
               ...result,

@@ -6,6 +6,8 @@
 
 All records are synthetic. The judging snapshot is October 10, 2026. The app considers 1,000 adults discharged from the hospital system in the preceding 90 days; 150 had a diabetes-related admission.
 
+For the newer **Patient handoff** experience with English/Spanish briefs and reviewed audio, use the [optional-service judging route](docs/SPONSOR_SETUP.md#three-minute-judging-route). A local text brief works immediately; Gemini and ElevenLabs require your own account keys and a successful live rehearsal. The public preview protects shared edits behind staff sign-in.
+
 ## Before the judges arrive
 
 1. Start the local app with Node 24: `npm install`, then `npm start`. Open [localhost:4173](http://localhost:4173), or press F5 in `Careweave.code-workspace`.

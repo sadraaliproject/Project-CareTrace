@@ -117,6 +117,7 @@ export async function runAgent({
   model = "gpt-4.1-mini",
   fetchImpl = fetch,
   onEvent = () => {},
+  persist = true,
 }) {
   const events = [];
   const startedAt = new Date().toISOString();
@@ -154,9 +155,9 @@ export async function runAgent({
       plan,
       result,
       events,
-      runId,
+      runId: persist ? runId : null,
     };
-    if (typeof repo?.saveRun === "function") {
+    if (persist && typeof repo?.saveRun === "function") {
       try {
         const saved = await repo.saveRun({
           id: runId,
