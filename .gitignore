@@ -9,6 +9,12 @@ coverage/
 test-results/
 playwright-report/
 exports/
+data/
+.sites-runtime/
+.wrangler/
+dist/server/
+dist/vendor/
+dist/.openai/
 
 # Existing nested clone; the application root is the working repository.
 /Hackathon 26/

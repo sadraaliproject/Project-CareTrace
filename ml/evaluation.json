@@ -1,0 +1,409 @@
+{
+  "model": "careweave-multinomial-naive-bayes-v1",
+  "algorithm": "multinomial-naive-bayes",
+  "features": "unigrams+bigrams",
+  "trainSize": 100,
+  "testSize": 40,
+  "vocabularySize": 1068,
+  "accuracy": 0.725,
+  "macroF1": 0.71289592760181,
+  "confusion": {
+    "transportation": {
+      "transportation": 7,
+      "cost": 0,
+      "food": 0,
+      "health_literacy": 0,
+      "none": 1
+    },
+    "cost": {
+      "transportation": 0,
+      "cost": 6,
+      "food": 1,
+      "health_literacy": 1,
+      "none": 0
+    },
+    "food": {
+      "transportation": 0,
+      "cost": 1,
+      "food": 7,
+      "health_literacy": 0,
+      "none": 0
+    },
+    "health_literacy": {
+      "transportation": 0,
+      "cost": 1,
+      "food": 0,
+      "health_literacy": 6,
+      "none": 1
+    },
+    "none": {
+      "transportation": 2,
+      "cost": 1,
+      "food": 1,
+      "health_literacy": 1,
+      "none": 3
+    }
+  },
+  "confusionAxes": {
+    "rows": "actual",
+    "columns": "predicted"
+  },
+  "perClass": {
+    "transportation": {
+      "precision": 0.7777777777777778,
+      "recall": 0.875,
+      "f1": 0.823529411764706,
+      "support": 8
+    },
+    "cost": {
+      "precision": 0.6666666666666666,
+      "recall": 0.75,
+      "f1": 0.7058823529411765,
+      "support": 8
+    },
+    "food": {
+      "precision": 0.7777777777777778,
+      "recall": 0.875,
+      "f1": 0.823529411764706,
+      "support": 8
+    },
+    "health_literacy": {
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 0.75,
+      "support": 8
+    },
+    "none": {
+      "precision": 0.6,
+      "recall": 0.375,
+      "f1": 0.4615384615384615,
+      "support": 8
+    }
+  },
+  "examples": [
+    {
+      "id": "te-001",
+      "text": "The volunteer driver quit, leaving me unable to attend blood work.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.8864743285194511,
+      "correct": true
+    },
+    {
+      "id": "te-002",
+      "text": "Patient cancelled the appointment because the medical shuttle never arrived.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.774130442797888,
+      "correct": true
+    },
+    {
+      "id": "te-003",
+      "text": "There is no accessible bus connection between my house and the practice.",
+      "expected": "transportation",
+      "predicted": "none",
+      "score": 0.4677247729813501,
+      "correct": false
+    },
+    {
+      "id": "te-004",
+      "text": "My partner works during clinic hours, so I have nobody to drive me.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.9712026320055951,
+      "correct": true
+    },
+    {
+      "id": "te-005",
+      "text": "A broken car has left the patient unable to reach the lab.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.988882428515675,
+      "correct": true
+    },
+    {
+      "id": "te-006",
+      "text": "I cannot arrange transportation for the repeat diabetes test.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.7338167594265383,
+      "correct": true
+    },
+    {
+      "id": "te-007",
+      "text": "Travel to the health center depends on a ride that frequently cancels.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.9996635116156031,
+      "correct": true
+    },
+    {
+      "id": "te-008",
+      "text": "The clinic van cannot accommodate my mobility equipment.",
+      "expected": "transportation",
+      "predicted": "transportation",
+      "score": 0.8227363608237869,
+      "correct": true
+    },
+    {
+      "id": "te-009",
+      "text": "The new pharmacy bill consumed more than my weekly wages.",
+      "expected": "cost",
+      "predicted": "cost",
+      "score": 0.4288355525830948,
+      "correct": true
+    },
+    {
+      "id": "te-010",
+      "text": "I abandoned the insulin refill when I learned its copayment.",
+      "expected": "cost",
+      "predicted": "cost",
+      "score": 0.7671986157465801,
+      "correct": true
+    },
+    {
+      "id": "te-011",
+      "text": "Patient takes fewer tablets because another pack costs too much.",
+      "expected": "cost",
+      "predicted": "cost",
+      "score": 0.6979460970556118,
+      "correct": true
+    },
+    {
+      "id": "te-012",
+      "text": "She cannot purchase testing supplies until the assistance grant is renewed.",
+      "expected": "cost",
+      "predicted": "cost",
+      "score": 0.7878993490601369,
+      "correct": true
+    },
+    {
+      "id": "te-013",
+      "text": "There is a financial barrier to obtaining his prescribed medicine.",
+      "expected": "cost",
+      "predicted": "cost",
+      "score": 0.9517384415699864,
+      "correct": true
+    },
+    {
+      "id": "te-014",
+      "text": "My medication budget does not cover the extra prescription.",
+      "expected": "cost",
+      "predicted": "cost",
+      "score": 0.7441838010799697,
+      "correct": true
+    },
+    {
+      "id": "te-015",
+      "text": "Patient delayed refilling because she could not pay the deductible.",
+      "expected": "cost",
+      "predicted": "food",
+      "score": 0.5160124473680943,
+      "correct": false
+    },
+    {
+      "id": "te-016",
+      "text": "I need help with the expense of the treatment my clinician ordered.",
+      "expected": "cost",
+      "predicted": "health_literacy",
+      "score": 0.6059512746595325,
+      "correct": false
+    },
+    {
+      "id": "te-017",
+      "text": "The patient eats at a shelter because groceries have become scarce.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.7738528950001494,
+      "correct": true
+    },
+    {
+      "id": "te-018",
+      "text": "My last grocery bag must feed us for another ten days.",
+      "expected": "food",
+      "predicted": "cost",
+      "score": 0.639636754579198,
+      "correct": false
+    },
+    {
+      "id": "te-019",
+      "text": "She often goes to bed hungry after sharing a small meal with her children.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.7435234576208494,
+      "correct": true
+    },
+    {
+      "id": "te-020",
+      "text": "Fresh food is unavailable at home and several dinners have been skipped.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.6411264114706773,
+      "correct": true
+    },
+    {
+      "id": "te-021",
+      "text": "I have had nothing to eat since yesterday because the cupboard is bare.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.9846922395009401,
+      "correct": true
+    },
+    {
+      "id": "te-022",
+      "text": "Food insecurity worsened when the neighborhood pantry shut down.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.8221877680234346,
+      "correct": true
+    },
+    {
+      "id": "te-023",
+      "text": "Patient cannot maintain regular meals with the remaining groceries.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.9779522558702615,
+      "correct": true
+    },
+    {
+      "id": "te-024",
+      "text": "The meal delivery benefit ended before another food source was arranged.",
+      "expected": "food",
+      "predicted": "food",
+      "score": 0.9873523699385823,
+      "correct": true
+    },
+    {
+      "id": "te-025",
+      "text": "I confused the fasting directions with the instructions for my tablets.",
+      "expected": "health_literacy",
+      "predicted": "health_literacy",
+      "score": 0.8910053933600512,
+      "correct": true
+    },
+    {
+      "id": "te-026",
+      "text": "Patient needs help decoding the medical vocabulary in the after visit summary.",
+      "expected": "health_literacy",
+      "predicted": "none",
+      "score": 0.3785230243734195,
+      "correct": false
+    },
+    {
+      "id": "te-027",
+      "text": "She cannot tell which instruction sheet applies to her current prescription.",
+      "expected": "health_literacy",
+      "predicted": "cost",
+      "score": 0.6556780910144651,
+      "correct": false
+    },
+    {
+      "id": "te-028",
+      "text": "The written schedule is unclear to me and I keep mixing up the times.",
+      "expected": "health_literacy",
+      "predicted": "health_literacy",
+      "score": 0.950299204981546,
+      "correct": true
+    },
+    {
+      "id": "te-029",
+      "text": "He misread the preparation leaflet and did not understand the required steps.",
+      "expected": "health_literacy",
+      "predicted": "health_literacy",
+      "score": 0.9698255042762106,
+      "correct": true
+    },
+    {
+      "id": "te-030",
+      "text": "Please explain the care instructions in words I can understand.",
+      "expected": "health_literacy",
+      "predicted": "health_literacy",
+      "score": 0.9934851477697878,
+      "correct": true
+    },
+    {
+      "id": "te-031",
+      "text": "During teach back the patient could not describe the medication plan.",
+      "expected": "health_literacy",
+      "predicted": "health_literacy",
+      "score": 0.9112262743910482,
+      "correct": true
+    },
+    {
+      "id": "te-032",
+      "text": "The dosing chart is too confusing for me to follow independently.",
+      "expected": "health_literacy",
+      "predicted": "health_literacy",
+      "score": 0.8705843303342876,
+      "correct": true
+    },
+    {
+      "id": "te-033",
+      "text": "A daughter described her own difficulty buying medicine, while the patient reported none.",
+      "expected": "none",
+      "predicted": "health_literacy",
+      "score": 0.6482499848170252,
+      "correct": false
+    },
+    {
+      "id": "te-034",
+      "text": "Since joining the ride program I can get to every appointment.",
+      "expected": "none",
+      "predicted": "transportation",
+      "score": 0.8591691979272514,
+      "correct": false
+    },
+    {
+      "id": "te-035",
+      "text": "The team asked about hunger, and the patient denied any shortage of food.",
+      "expected": "none",
+      "predicted": "food",
+      "score": 0.7628794336648018,
+      "correct": false
+    },
+    {
+      "id": "te-036",
+      "text": "New instructions were read back accurately and no clarification was needed.",
+      "expected": "none",
+      "predicted": "none",
+      "score": 0.5967179773664679,
+      "correct": true
+    },
+    {
+      "id": "te-037",
+      "text": "The clinician signed the completed laboratory order.",
+      "expected": "none",
+      "predicted": "none",
+      "score": 0.3757144069064177,
+      "correct": true
+    },
+    {
+      "id": "te-038",
+      "text": "If a future refill becomes expensive, assistance information will be available.",
+      "expected": "none",
+      "predicted": "cost",
+      "score": 0.6310086006818604,
+      "correct": false
+    },
+    {
+      "id": "te-039",
+      "text": "The chart was transferred after the practice changed its scheduling software.",
+      "expected": "none",
+      "predicted": "transportation",
+      "score": 0.4228735673333917,
+      "correct": false
+    },
+    {
+      "id": "te-040",
+      "text": "I used to struggle with the copay but it is now covered in full.",
+      "expected": "none",
+      "predicted": "none",
+      "score": 0.4636768503647037,
+      "correct": true
+    }
+  ],
+  "trainingHash": "fnv1a32:31565a4d",
+  "testHash": "fnv1a32:79bed18f",
+  "limitation": "Small, manually authored synthetic corpus. The held-out split was not used for training, but was authored by the same development team. Scores are uncalibrated classifier rankings, not clinical confidence. This is not a clinical or independently validated model.",
+  "splitPolicy": "Explicit fixed train/test split. No test examples contribute to fitting or vocabulary."
+}

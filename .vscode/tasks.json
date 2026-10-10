@@ -32,6 +32,8 @@
       },
       "problemMatcher": []
     },
+    { "label": "Careweave: Train local ML", "type": "npm", "script": "train", "problemMatcher": [] },
+    { "label": "Careweave: Build hosted app", "type": "npm", "script": "build", "problemMatcher": [] },
     {
       "label": "Careweave: Export synthetic data",
       "type": "npm",

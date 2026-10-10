@@ -1,60 +1,69 @@
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, mkdir, copyFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { planWithModel, validatePlan } from './planner.js';
+import { createApi } from './backend/api.js';
+import { createSqliteRepository } from './backend/sqlite.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
-if (existsSync(resolve(root, '.env'))) process.loadEnvFile(resolve(root, '.env'));
+const envFile = resolve(root, '.env');
+if (existsSync(envFile)) process.loadEnvFile(envFile);
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon' };
 
-export function createAppServer({ apiKey = process.env.OPENAI_API_KEY, model = process.env.OPENAI_MODEL || 'gpt-4.1-mini', fetchImpl = fetch } = {}) {
+export function createAppServer(options = {}) {
+  const { fetchImpl = fetch, filename = resolve(root, 'data/careweave.sqlite') } = options;
+  let repositoryPromise;
+  const getRepository = () => repositoryPromise ||= createSqliteRepository({ filename }).then(async repo => { await repo.seed(); return repo; });
+  const config = () => {
+    // Keys added during the preview become available on the next request.
+    if (!process.env.OPENAI_API_KEY && existsSync(envFile)) process.loadEnvFile(envFile);
+    return { apiKey: Object.hasOwn(options, 'apiKey') ? options.apiKey : process.env.OPENAI_API_KEY, model: options.model || process.env.OPENAI_MODEL || 'gpt-4.1-mini', fetchImpl };
+  };
+  const api = createApi({ getRepository, config, storage: 'sqlite' });
   const publicRoot = resolve(root, 'dist');
-  let modelBusy = false;
-  return createServer(async (req, res) => {
-    const json = (status, data) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(data)); };
+  const server = createServer(async (req, res) => {
+    const json = (status, data) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); };
     try {
-      const url = new URL(req.url, 'http://localhost');
-      if (url.pathname === '/api/status' && req.method === 'GET') return json(200, { model: Boolean(apiKey), modelName: apiKey ? model : null, synthetic: true, snapshot: '2026-10-10' });
-      if (url.pathname === '/api/plan') {
-        if (req.method !== 'POST') return json(405, { ok: false, error: 'Use POST.' });
-        const allowed = [`http://127.0.0.1:${req.socket.localPort}`, `http://localhost:${req.socket.localPort}`];
-        if (req.headers.origin && !allowed.includes(req.headers.origin)) return json(403, { ok: false, error: 'Cross-origin model requests are disabled.' });
-        if (!apiKey) return json(503, { ok: false, error: 'No model key configured. The deterministic demo engine is available.' });
-        if (modelBusy) return json(429, { ok: false, error: 'One analysis is already running. Try again shortly.' });
-        let body = '';
-        for await (const chunk of req) {
-          body += chunk;
-          if (Buffer.byteLength(body) > 12000) return json(413, { ok: false, error: 'Question is too large.' });
+      const url = new URL(req.url, `http://127.0.0.1:${req.socket.localPort}`);
+      if (url.pathname.startsWith('/api/')) {
+        const init = { method: req.method, headers: req.headers };
+        if (!['GET', 'HEAD'].includes(req.method)) {
+          const chunks = []; let length = 0;
+          for await (const chunk of req) { length += chunk.length; if (length > 12000) return json(413, { ok: false, error: 'Request is too large.' }); chunks.push(chunk); }
+          init.body = Buffer.concat(chunks);
         }
-        let input;
-        try { input = JSON.parse(body); } catch { return json(400, { ok: false, error: 'Invalid JSON.' }); }
-        if (typeof input.question !== 'string' || input.question.trim().length < 3 || input.question.length > 1500) return json(400, { ok: false, error: 'Enter a question between 3 and 1,500 characters.' });
-        if (input.previousPlan != null && !validatePlan(input.previousPlan)) return json(400, { ok: false, error: 'Invalid previous query.' });
-        if (modelBusy) return json(429, { ok: false, error: 'One analysis is already running. Try again shortly.' });
-        modelBusy = true;
-        try { return json(200, await planWithModel({ ...input, apiKey, model, fetchImpl })); }
-        catch (error) { return json(502, { ok: false, error: error.name === 'TimeoutError' ? 'Model request timed out. The deterministic engine is still available.' : error.message }); }
-        finally { modelBusy = false; }
+        const response = await api(new Request(url, init));
+        res.writeHead(response.status, Object.fromEntries(response.headers));
+        if (response.body) for await (const chunk of response.body) { if (res.destroyed) break; res.write(chunk); }
+        res.end();
+        return;
       }
-      if (url.pathname.startsWith('/api/')) return json(404, { ok: false, error: 'Unknown endpoint.' });
       if (!['GET', 'HEAD'].includes(req.method)) return json(405, { error: 'Method not allowed.' });
-      const path = resolve(publicRoot, '.' + decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname));
+      const decoded = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
+      if (decoded.includes('\\') || decoded.split('/').some(segment => segment.startsWith('.') || segment === 'server')) return json(403, { error: 'Forbidden.' });
+      const path = resolve(publicRoot, '.' + decoded);
       if (!path.startsWith(publicRoot + sep)) return json(403, { error: 'Forbidden.' });
       if (!(await stat(path)).isFile()) return json(404, { error: 'Not found.' });
       const content = await readFile(path);
       res.writeHead(200, { 'Content-Type': mime[extname(path)] || 'application/octet-stream', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin' });
       res.end(req.method === 'HEAD' ? undefined : content);
     } catch (error) {
-      json(error.code === 'ENOENT' || error.code === 'ENOTDIR' ? 404 : 400, { error: 'Resource unavailable.' });
+      if (!res.headersSent) json(error.code === 'ENOENT' || error.code === 'ENOTDIR' ? 404 : 500, { ok: false, error: 'Resource unavailable.' });
+      else res.end();
     }
   });
+  server.on('close', () => { repositoryPromise?.then(repo => repo.close()).catch(() => {}); });
+  return server;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const vendor = resolve(root, 'dist/vendor');
+  await mkdir(vendor, { recursive: true });
+  try { await copyFile(resolve(root, 'node_modules/cytoscape/dist/cytoscape.min.js'), resolve(vendor, 'cytoscape.min.js')); }
+  catch { console.error('Run npm install to enable the interactive graph library.'); }
   const port = Number(process.env.PORT || 4173);
   const server = createAppServer();
-  server.listen(port, '127.0.0.1', () => console.log(`Careweave ready: http://127.0.0.1:${port}\nQuery engine: ${process.env.OPENAI_API_KEY ? 'model + deterministic execution' : 'deterministic demo (no API key required)'}`));
+  server.listen(port, '127.0.0.1', () => console.log(`Careweave ready: http://127.0.0.1:${port}\nPersistent SQLite backend · synthetic data only\nOpenAI: ${process.env.OPENAI_API_KEY ? 'configured' : 'add OPENAI_API_KEY to .env to enable live tool calling'}`));
   server.on('error', error => { console.error(`Unable to start Careweave: ${error.message}`); process.exitCode = 1; });
 }

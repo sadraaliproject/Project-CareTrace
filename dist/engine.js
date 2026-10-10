@@ -33,6 +33,39 @@ const ACTIVE = {
   health_literacy: /\b(cannot|can't|unable|does not understand|do not understand|doesn't understand|don't understand|confus(?:ed|ing|ion)|barrier|difficulty)\b/i,
 };
 
+// Temporal phrases describe a change in the predicate that follows them.
+// Losing access is an active obstacle; losing the need for help is resolution.
+const LOST_ACCESS = {
+  transportation: /\bno longer\s+(?:(?:have|has|have access to|has access to|can get|can arrange|can use|can take)\b.{0,35}\b(?:rides?|transport(?:ation)?|car|bus|vehicle)|(?:reaches?|serves?|runs?|operates?|comes?|takes?|available|reliable)\b)/,
+  cost: /\bno longer\s+(?:can\s+)?afford\b|\bno longer\s+(?:have|has)\s+(?:enough\s+)?money\b/,
+  food: /\bno longer\s+(?:have|has|receive|receives|can get)\s+(?:enough\s+|regular\s+)?(?:food|groceries|meals)\b/,
+  health_literacy: /\bno longer\s+(?:can\s+)?(?:understand|understands|read)\b/,
+};
+const NO_LONGER_RESOLVED = {
+  transportation: /\bno longer\s+(?:needs?|requires?)\b.{0,40}\b(?:transport(?:ation)?|rides?)\b|\bno longer\s+(?:have|has)\s+(?:a\s+)?transportation\s+(?:barrier|problem)\b/,
+  cost: /\bno longer\s+(?:struggle|struggles|struggling|have trouble|has trouble|have difficulty)\b.{0,35}\b(?:afford|pay|cost|copay)\b|\bno longer\s+(?:have|has)\s+(?:a\s+)?cost\s+(?:barrier|problem)\b/,
+  food: /\bno longer\s+(?:(?:have|has|experience|experiences)\s+food insecurity|hungry|skipping meals|running out of food)\b/,
+  health_literacy: /\bno longer\s+(?:confused|confusing|have difficulty understanding|has difficulty understanding|struggle to understand|struggles to understand)\b/,
+};
+const RESTORED_ACCESS = {
+  transportation: /\bnow has reliable\b|\bnow (?:have|has)\s+(?:a\s+)?reliable (?:ride|transportation)\b/,
+  cost: /\b(?:now can afford|can now afford)\b/,
+  food: /\b(?:now has enough|now receives regular)\b/,
+  health_literacy: /\bnow understands\b/,
+};
+
+export function temporalStatusFor(type, text) {
+  const lower = text.toLowerCase().replace(/[’‘]/g, "'");
+  if (!BARRIERS[type]) return null;
+  if (/\b(?:not|never|isn't|wasn't|not yet)\s+(?:fully\s+)?resolved\b/.test(lower)) return 'active';
+  if (TERMS[type].test(lower) && /\bno longer\s+(?:(?:a|an)\s+)?(?:problem|barrier|difficult|issue)\b/.test(lower)) return 'resolved';
+  if (/\bno longer\b/.test(lower) && NO_LONGER_RESOLVED[type].test(lower)) return 'resolved';
+  if (LOST_ACCESS[type].test(lower)) return 'active';
+  if (/\bno longer\b/.test(lower)) return 'ambiguous';
+  if (/\b(?:not anymore|resolved)\b/.test(lower) || RESTORED_ACCESS[type].test(lower)) return 'resolved';
+  return null;
+}
+
 /** Rules extract assertions from text; patient seeds are never consulted here. */
 export function extractBarriers(doc) {
   return extractAssertions(doc).filter(a => a.status !== 'negated');
@@ -51,9 +84,11 @@ function extractAssertions(doc) {
     if (/\b(?:if (?:the )?patient|might (?:need|have)|may (?:need|develop)|screen(?:ed|ing)? for|discussed possible|at risk for)\b/.test(lower)) continue;
     for (const type of Object.keys(BARRIERS)) {
       if (!TERMS[type].test(lower)) continue;
-      const resolved = /\b(?:no longer|not anymore|resolved|now has reliable|now understands|now can afford|now has enough|now receives regular|can now afford)\b/.test(lower);
-      const negated = /\b(?:denies|denied|no difficulty|no problems?|no issues?|no concerns?|not a barrier|without difficulty|never had|do not need|does not need|doesn't need|don't need|does not have (?:a |any )?(?:transportation|cost|food|health literacy)|no (?:transportation|cost|food insecurity|health literacy) (?:barrier|problem|concern)|transportation is reliable|has reliable transportation|has enough food|understands (?:the |her |his )?(?:medication )?instructions)\b/.test(lower);
-      if (!resolved && !negated && !ACTIVE[type].test(lower)) continue;
+      const temporal = temporalStatusFor(type, lower);
+      if (temporal === 'ambiguous') continue;
+      const resolved = temporal === 'resolved';
+      const negated = (temporal !== 'active' || /\b(?:denies|denied)\b/.test(lower)) && /\b(?:denies|denied|no difficulty|no problems?|no issues?|no concerns?|not a barrier|without difficulty|never had|do not need|does not need|doesn't need|don't need|does not have (?:a |any )?(?:transportation|cost|food|health literacy)|no (?:transportation|cost|food insecurity|health literacy) (?:barrier|problem|concern)|transportation is reliable|has reliable transportation|has enough food|understands (?:the |her |his )?(?:medication )?instructions)\b/.test(lower);
+      if (!resolved && !negated && temporal !== 'active' && !ACTIVE[type].test(lower)) continue;
       output.push({
         type, status: resolved ? 'resolved' : negated ? 'negated' : 'active', documentId: doc.id || 'input',
         quote, date: doc.date || AS_OF, source: doc.type || 'Note', confidence: resolved ? 0.98 : 0.96,

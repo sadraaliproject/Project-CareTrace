@@ -1,6 +1,6 @@
 {
   "name": "careweave",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "description": "Synthetic-data care barrier intelligence and coordination demo",
@@ -8,7 +8,13 @@
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
     "export-data": "node scripts/export-data.js",
-    "check": "node --check server.js && node --check planner.js && node --check dist/engine.js && node --check dist/app.js"
+    "check": "node scripts/check.js",
+    "build": "node scripts/build-worker.js",
+    "train": "node scripts/train-model.js",
+    "db:generate": "drizzle-kit generate",
+    "demo:reset": "node scripts/reset-demo.js"
   },
-  "engines": { "node": ">=22" }
+  "dependencies": { "cytoscape": "3.33.1" },
+  "devDependencies": { "esbuild": "0.25.12", "drizzle-kit": "0.31.10", "drizzle-orm": "0.45.2" },
+  "engines": { "node": ">=24" }
 }

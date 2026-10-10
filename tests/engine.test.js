@@ -107,6 +107,51 @@ test('negation is scoped to the assertion and does not suppress another real bar
   assert.equal(items[0].quote, 'cannot afford the medication copay.');
 });
 
+test('temporal negation distinguishes loss of a ride from resolution of transportation need', () => {
+  for (const text of [
+    'I no longer have a ride.',
+    'The bus route no longer reaches the laboratory.',
+    'Patient no longer has reliable transportation.',
+    'My usual ride is no longer available for medical visits.',
+    'The transportation barrier is not resolved.'
+  ]) {
+    const assertions = extractBarriers(doc(text));
+    assert.deepEqual(assertions.map(b => [b.type, b.status]), [['transportation', 'active']], text);
+    assert.equal(assertions[0].quote, text);
+  }
+  assert.deepEqual(extractBarriers(doc('I no longer need transportation help.')).map(b => [b.type, b.status]), [['transportation', 'resolved']]);
+  assert.deepEqual(extractBarriers(doc('Patient no longer has a transportation barrier.')).map(b => [b.type, b.status]), [['transportation', 'resolved']]);
+  assert.deepEqual(extractBarriers(doc('Patient no longer has food insecurity.')).map(b => [b.type, b.status]), [['food', 'resolved']]);
+  assert.deepEqual(extractBarriers(doc('Patient denies transportation problems.')), []);
+});
+
+test('a later loss of access reopens a previously resolved barrier, retaining the new source', () => {
+  const history = [
+    doc('Patient cannot get a ride to the clinic.', '2026-07-01', 'need'),
+    doc('I no longer need transportation help.', '2026-08-01', 'help-arranged'),
+    doc('I no longer have a ride.', '2026-10-09', 'ride-lost')
+  ];
+  const barriers = reconcileBarriers(history.reverse());
+  assert.equal(barriers.length, 1);
+  assert.equal(barriers[0].status, 'active');
+  assert.equal(barriers[0].documentId, 'ride-lost');
+  assert.equal(barriers[0].quote, 'I no longer have a ride.');
+});
+
+test('the default ingestion note resolves transportation with its exact new source', () => {
+  const text = 'Patient: My daughter now drives me to appointments. Transportation is no longer a problem.';
+  const latest = doc(text, '2026-10-10', 'default-ingestion-note');
+  assert.deepEqual(extractBarriers(latest).map(b => [b.type, b.status, b.quote]), [['transportation', 'resolved', 'Transportation is no longer a problem.']]);
+  const reconciled = reconcileBarriers([doc('I have no transportation to my appointments.', '2026-10-07', 'previous-need'), latest]);
+  assert.equal(reconciled[0].status, 'resolved');
+  assert.equal(reconciled[0].documentId, 'default-ingestion-note');
+  for (const [type, sentence] of [
+    ['cost', 'Medication cost is no longer a barrier.'],
+    ['food', 'Food access is no longer an issue.'],
+    ['health_literacy', 'Understanding the instructions is no longer difficult.']
+  ]) assert.deepEqual(extractBarriers(doc(sentence)).map(b => [b.type, b.status]), [[type, 'resolved']]);
+});
+
 test('the graph is a valid typed projection and graph metrics count its actual contents', () => {
   const graph = buildGraph();
   const ids = new Set(graph.nodes.map(n => n.id));

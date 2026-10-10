@@ -1,97 +1,175 @@
 # Careweave
 
-**Find the reason care is missing. Prepare the next step.**
+**Discover the reason care is missing. Trace the evidence. Prepare the next step.**
 
-Careweave is a working hackathon prototype for exploring diabetes care gaps across 1,000 fictional patients. Ask a cohort question, inspect the exact source evidence, and prepare a care-coordination task for human review.
+Careweave is a full-stack hackathon prototype for investigating diabetes care gaps across **1,000 fictional patients**. Its central interface is an interactive care graph: patients connect to diagnoses, overdue care, source documents, barriers, and potential interventions. A question becomes an exact SQL cohort, an inspectable evidence path, and a care-coordination draft that a human can review.
 
-The demo is about finding practical barriers hidden in notes and phone transcripts. The graph supports the workflow behind the scenes; the interface begins with the patient problem.
+The memorable demo: find **82 patients** with overdue A1c tests and current transportation barriers, inspect Maya Bennett's source transcript, prepare a task, then add a fictional follow-up resolving her transportation problem. The same query now returns **81**, the graph changes, and the old task requires renewed evidence review. These counts apply to a fresh database with only that follow-up added.
+
+Everything uses a fixed synthetic snapshot of **October 10, 2026**. No real patient information is needed or supported.
 
 ## Run locally
 
-Requires Node.js 22 or newer.
+Requires **Node.js 24 or newer** and npm. The local database uses Node's built-in `node:sqlite` module; no separate database service is required.
 
 ```sh
 npm install
 npm start
 ```
 
-Open [http://localhost:4173](http://localhost:4173). Run the automated checks with:
+Open [http://localhost:4173](http://localhost:4173). The first database request seeds `data/careweave.sqlite`; subsequent starts retain your notes, tasks, analysis runs, and audit events. Confirm that the sidebar says **Backend connected**, with **sqlite** storage. A disconnected static preview remains available, but it does not provide the full persistent workflow.
 
-```sh
-npm test
-```
+On a fresh dataset the graph contains **4,797 nodes and 6,632 edges**, backed by **3,000 source documents**. The population canvas displays a labeled sample for responsiveness; totals describe the full stored graph. Patient and cohort views show connected evidence relevant to their selection.
 
-The core demo runs without an API key. Patient generation, evidence extraction, cohort queries, and task drafting execute locally in the browser. The optional server route can use OpenAI to translate a natural-language question into a structured query plan. The local engine validates and executes the plan against the same dataset.
+### GitHub and Visual Studio Code
 
-### Open in Visual Studio Code
+Repository: [sadraaliproject/Hackathon-26](https://github.com/sadraaliproject/Hackathon-26).
 
-Open `Careweave.code-workspace`, then press **F5** and select **Careweave: Run and debug**. VS Code starts the server and opens the local demo. Stop an existing server on port 4173 before launching another.
+After installing dependencies, open `Careweave.code-workspace` in VS Code. Press **F5** and choose **Careweave: Run and debug**. The debugger starts the Node server and opens the app. Stop another server using port 4173 first.
 
-Use **Terminal > Run Task** for the included start, test, JavaScript check, and data export tasks. **Ctrl+Shift+B** runs the JavaScript check. No extensions or package installation are required for the core demo.
+**Terminal → Run Task** includes start, tests, JavaScript checks, local ML training, hosted build, and baseline data export. **Ctrl+Shift+B** runs the JavaScript checks.
 
-The GitHub repository is [sadraaliproject/Hackathon-26](https://github.com/sadraaliproject/Hackathon-26).
+### Connect OpenAI locally
 
-### Optional language-model planning
+If `.env` does not exist, copy `.env.example` to `.env`. Add the key in that local file:
 
-Copy `.env.example` to `.env`, add an API key, and restart the local server. Never place secrets in the static frontend or commit `.env`.
-
-```text
+```dotenv
 OPENAI_API_KEY=your_key_here
 OPENAI_MODEL=gpt-4.1-mini
 PORT=4173
 ```
 
-The optional model is a question planner. It does not supply patient counts or replace the evidence rules. If the model is unavailable, the application uses the labeled deterministic parser. The static hosted demo also uses that parser. This distinction is visible in the product and should be stated during judging.
+Restart the server and refresh the app to see its configured mode. `.env` is ignored by Git, and the key is used only by the backend. Do not put it into frontend JavaScript or a source document. A local `.env` does not configure a hosted deployment; hosted credentials must be configured separately as server secrets.
 
-### Export the reproducible artifacts
+With a key, the OpenAI Responses agent can call `get_ontology`, `query_patients`, `expand_node`, `get_evidence`, and `build_cohort`. The backend validates tool arguments, permits only supported graph relationships, requires supporting evidence before finalizing a nonempty barrier cohort, and computes the final count. The model cannot submit SQL or approve/send outreach. Actual tool events stream to the interface.
+
+Without a key, the clearly labeled deterministic parser produces a supported plan and executes the same database query. Local ML, graph exploration, source ingestion, and task review still work. Model failures are displayed; a configured label alone does not prove a successful live call. The OpenAI path has mocked integration coverage; validate it with your own key before promising a live generative demo.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UI[Browser: Cytoscape graph and workbench] --> API[Shared HTTP API and streamed tool events]
+    API --> Agent[OpenAI tool agent or deterministic planner]
+    Agent --> Guard[Validated plans and ontology tools]
+    Guard --> Repo[Persistent repository]
+    API --> Notes[Synthetic note ingestion]
+    Notes --> Rules[Source quotes and temporal reconciliation]
+    Rules --> Repo
+    API --> ML[Local trained classifier: preview suggestions]
+    Repo --> SQLite[Local Node 24 SQLite]
+    Repo --> D1[Hosted Worker D1 adapter]
+    Repo --> Workflow[Versioned tasks, saved runs, audit events]
+```
+
+The browser is a vanilla JavaScript frontend with Cytoscape.js rendering. The shared API runs behind either the local Node HTTP server or the hosted Worker. `createRepository(adapter)` provides the same SQL-backed behavior through native SQLite and D1 adapters.
+
+The property graph is persisted as typed `graph_nodes` and `graph_edges`, alongside indexed patients, documents, and current assertions. This is **a SQL-backed property graph, not Neo4j**. Exact cohort filtering uses bound SQL parameters. Graph expansion reads stored edges and accepts only permitted ontology relationships.
+
+| Node path | Relationship | Purpose |
+| --- | --- | --- |
+| Patient → Condition | `HAS_CONDITION` | Documented synthetic diagnosis |
+| Patient → CareGap | `HAS_GAP` | A1c gap under the visible demo rule |
+| Patient → Document | `HAS_DOCUMENT` | Original fictional source |
+| Document → Barrier | `EVIDENCES` | Exact quote, date, and current assertion status |
+| Patient → Barrier | `EXPERIENCES` | Patient-specific active/resolved state |
+| Barrier → Intervention | `ADDRESSED_BY` | Illustrative coordination option |
+
+## Features to show judges
+
+- **Care graph:** explore population, cohort, patient, and ontology views; inspect typed nodes, evidence paths, and graph expansion. Sampling is identified separately from full graph totals.
+- **Cohort workbench:** ask supported questions, inspect interpreted filters, compare repeatable fingerprints, and see exact counts. Display limits do not change the full cohort count.
+- **Live note lab:** preview a fictional note, compare classifier suggestions and rule-supported assertions, then persist it. The latest dated patient assertion determines the current barrier. Dates after the snapshot are rejected.
+- **Care queue:** prepare and edit source-linked drafts, approve them for the simulated workflow, and mark them complete. Task versions prevent stale reviewer updates. New evidence invalidates affected pending or approved tasks.
+- **Run history:** replay saved questions, result snapshots, fingerprints, and tool events. Replay restores the saved result; its accompanying graph shows current data and is labeled accordingly. Rerun the question to compute a new result.
+- **Evidence lab:** inspect negation, family-only statements, hypothetical concerns, resolved barriers, rule evaluation, and trained-model metrics.
+- **Capacity planning:** choose a number of outreach slots and inspect an eligible worklist ordered by the visible demo priority heuristic.
+
+Task states are `pending → approved → completed`, with `needs_review` after relevant evidence changes and `cancelled` for withdrawn work. Revalidation refreshes a task from current active evidence; a resolved barrier cannot simply be approved again. Completion is a **simulated coordination status**, not confirmation of a clinical outcome or an external action.
+
+## What the ML model does
+
+`backend/ml.js` implements a trained **multinomial Naive Bayes classifier** with unigram and bigram features. Its five topic labels are transportation, medication cost, food insecurity, health literacy, and none. The corpus and learned artifact are included in `ml/` and can be reproduced with:
+
+```sh
+npm run train
+```
+
+The fixed corpus has **100 training examples and 40 held-out examples**. The current artifact achieves **72.5% held-out accuracy (29/40)** and **0.713 macro F1**. The held-out split does not contribute vocabulary or training counts. Both splits were manually authored by the same development team and are small, synthetic examples; this is not an independent clinical evaluation. The Evidence lab exposes the confusion matrix and errors.
+
+Classifier scores are uncalibrated topic rankings, **not clinical confidence**. Classifier suggestions alone do not create graph facts. Separate deterministic rules check patient scope, exact source text, negation, and temporal status before source-backed assertions enter the graph. Optional OpenAI extraction is also an inspectable preview. Rule checks and model evaluation measure different components and must not be presented as one accuracy score.
+
+## Data, repeatability, and reset
+
+The baseline generator creates 1,000 fictional patients with three source documents each. It is custom synthetic data, not Synthea, an EHR export, or a representative population. Its date never advances automatically.
+
+The illustrative A1c care-gap rule is **diabetes plus an A1c older than 365 days or above 9%**. Questions about missing tests select only the overdue-test subset. Refill delay is a separate filter. These are demo definitions, not clinical guidelines. Priority is a transparent heuristic, not a validated risk model.
+
+The same supported filter plan and database state produce the same ordered patient IDs and fingerprint. A source update can intentionally change both. Historic run results remain saved separately from current patient records. Repository tests check SQL agreement with the baseline, persistence after reopen, temporal updates, task invalidation, graph integrity, and hosted adapter limits.
+
+To reset the **local** judging workspace, first stop the server and debugger, then run:
+
+```sh
+npm run demo:reset -- --confirm
+npm start
+```
+
+The script archives the database and any SQLite sidecar files under timestamped backup names in `data/`. The next start creates a fresh baseline. It does not erase backups or reset a hosted D1 database. Keep the server stopped while archiving files.
 
 ```sh
 npm run export-data
 ```
 
-This creates a local `exports/` directory containing the synthetic patient population, ontology, evidence graph, extraction evaluation, and the demo query's structured plan, result IDs, source trace, and fingerprint. These generated files are ignored by Git. The evaluation uses synthetic, template-derived examples; its scores are demonstration checks, not independent clinical accuracy measurements.
+This exports the reproducible **baseline generator** data, full baseline graph, ontology, evaluation, and headline query audit into `exports/`. It does not include later database edits. Use the app's exports or `/api/export` for current stored records and a bounded graph/audit export.
 
-## What works
+## API reference
 
-- A reproducible, locally generated population of 1,000 synthetic patients, with structured diabetes care gaps and fictional source documents.
-- A typed in-memory evidence graph linking patients, gaps, barriers, and source records.
-- Rule-based extraction that distinguishes supported current barriers from resolved or negated mentions within its supported patterns.
-- Structured cohort execution for supported questions, with exact counts and patient-level evidence.
-- A temporal barrier view that makes changing circumstances inspectable.
-- Capacity-aware prioritization for exploring how a limited number of outreach slots changes the proposed worklist.
-- An evidence lab for inspecting challenging language and extraction decisions.
-- A browser-local queue of draft care-coordination tasks and a human approval step.
+All routes use JSON except `/api/agent` with `stream: true`, which returns server-sent events. Mutation routes accept only same-origin browser requests. This is not a production authentication system.
 
-The optional OpenAI planner broadens question interpretation. All supported paths still produce structured filters and local execution, so the result can be inspected instead of relying on an uncheckable narrative.
+| Method and route | Result or request |
+| --- | --- |
+| `GET /api/status` | Backend, storage, model configuration, and snapshot |
+| `GET /api/bootstrap` | Current patients, metrics, ontology, tasks, and recent runs |
+| `GET /api/seed` | Initialization progress |
+| `POST /api/seed` | Idempotent seed batch; body `{ "offset": 0 }` |
+| `POST /api/query` | Deterministic SQL query; `question`, optional `previousPlan` or explicit `plan` |
+| `POST /api/agent` | Bounded agent; `question`, optional `previousPlan`, `stream` |
+| `POST /api/plan` | Optional OpenAI structured question planning |
+| `GET /api/graph` | `mode`, optional `patientId`, comma-separated `patientIds`, `limit` |
+| `GET /api/graph/expand/:id` | One-hop traversal; optional `relationship` |
+| `GET /api/patients` | Paginated patients using `limit` and `offset` |
+| `GET /api/patients/:id` | Current fictional patient and sources |
+| `GET /api/documents/:id` | Exact source document |
+| `POST /api/patients/:id/documents` | Ingest `text`, `date`, `type`, and `synthetic: true` |
+| `POST /api/extract` | Rules, classifier, and optional model preview for `text` |
+| `POST /api/ml/predict` | Learned topic rankings for `text` |
+| `GET /api/ml/metrics` | Held-out classifier evaluation and separate rule checks |
+| `GET /api/tasks` | Persisted task queue |
+| `POST /api/tasks` | Create from `patientId`, `barrier`, optional `title` and `body` |
+| `PATCH /api/tasks/:id` | Update `status`, `title`, or `body`; current integer `version` required |
+| `DELETE /api/tasks/:id` | Soft-cancel; optional version query parameter |
+| `GET /api/runs` and `GET /api/runs/:id` | Recent runs and a saved execution |
+| `GET /api/audit` | Recent workflow audit events |
+| `GET /api/export` | Current records, tasks, runs, and bounded graph/audit data |
 
-## Reproduce the demonstration
+Supported cohort fields are four barrier types, any/all barrier matching, shared active/resolved/any status, diabetes scope, care-gap scope and type, inclusive age bounds, minimum refill delay, age/priority ordering, and a display limit. Unsupported predicates are rejected rather than deliberately approximated. Model interpretation can still be wrong: inspect the proposed filters before relying on a result.
 
-Follow [DEMO.md](./DEMO.md) for a three-minute pitch, live follow-up questions, and evidence checks. Start with:
+## Checks and hosting
 
-> Find diabetic patients missing an A1c test because they cannot get transportation.
+```sh
+npm run check
+npm test
+npm run build
+```
 
-The most useful proof is to open a result, trace its barrier to a source document, inspect a resolved-barrier example, and prepare a task. A repeated query should return the same count against the same data and filter plan.
+The build bundles the frontend and shared API as `dist/server/index.js`, with the Worker entry in `worker/index.js`. The hosted runtime expects a D1 binding named **`DB`** and the generated SQLite migration in `drizzle/`. `db/schema.js` is the Drizzle schema; `backend/schema.sql` initializes native SQLite. Use `npm run db:generate` after a deliberate schema change and keep both definitions aligned.
 
-## What makes it distinctive
+The D1 adapter preserves repository behavior and atomic mutation batches. Synthetic initialization commits each patient's documents, assertions, and graph together, so retrying setup is safe. The browser displays initialization progress when a new hosted database needs seeding.
 
-**Evidence has a timeline.** A past statement about transportation is not automatically treated as a present obstacle. The demo exposes the status and source behind the decision.
-
-**Capacity is part of the workflow.** An organization can inspect a limited outreach worklist instead of receiving an unbounded list of recommendations. Prioritization is a transparent demo heuristic, not a clinically validated risk score.
-
-**A result can become reviewable work.** Drafts retain the patient, reason, and evidence context and require a human approval step. This makes the handoff visible and testable.
-
-These are implemented workflow properties, not a claim that general-purpose chat tools cannot answer similar questions. The benefit to demonstrate is repeatable structured execution, source traceability, and the connected review process.
+Hosted runtime code and configuration are included. A successful local test or build is **not** proof that an external deployment, database binding, or model secret works. Verify `/api/status`, baseline graph totals, a query, and a persisted task on the judging URL before presenting it. See [DEMO.md](./DEMO.md) for the walkthrough.
 
 ## Prototype boundaries
 
-All records and people are fictional. The synthetic generator is custom; it is not Synthea, an EHR export, or a representative clinical population. This application has no clinical validation and is not a medical decision system.
+This is a synthetic workflow prototype, not a medical decision system. It does not diagnose, recommend clinical treatment, determine program eligibility, verify transportation availability, contact patients, book rides, send referrals, or write to an EHR. Approving a task records a review state only; nothing is sent.
 
-The graph is in memory, not Neo4j. Extraction uses explicit language rules, not a trained clinical NLP model. The deterministic question parser supports a bounded vocabulary and can miss wording outside those rules. Current and resolved classifications are only as reliable as the demonstrated patterns and source chronology. Ambiguous evidence requires human review.
-
-Care-gap definitions, ranking, program suggestions, and draft language are illustrative. The diabetes gap rule is an A1c older than 365 days or an A1c above 9%; missing-test questions select the overdue-test subset. A medication refill delay is a separate filter. These are demo definitions, not clinical guidelines. Recommendations do not establish patient eligibility, medical necessity, coverage, transportation availability, or suitability for any real service. Approval records the review state locally; it does not contact a patient, book a ride, submit a referral, or send data to an outside care team.
-
-The task queue uses browser `localStorage`. It is specific to that browser and origin, has no multi-user synchronization or audit-grade persistence, and is not suitable for protected health information. Clearing browser site data removes local tasks. There is no authentication, authorization, EHR integration, or production privacy/compliance claim.
-
-## Before any real-world pilot
-
-A real deployment would require agreed clinical definitions, access controls, consent and data-governance review, security engineering, source-system integration, robust temporal and negation evaluation, an auditable task system, and validation with the intended care team. The prototype intentionally focuses on the demonstrable synthetic workflow.
+The database and event history provide prototype persistence, not tamper-proof auditing or a production multi-user care platform. The app has no application-level role-based access controls, clinical validation, real-hospital integration, or compliance certification. Do not put protected health information into it. A real-world pilot would need an appropriate clinical definition and evaluation process, security and access controls, consent/data governance, validated extraction, and approved source-system integrations.

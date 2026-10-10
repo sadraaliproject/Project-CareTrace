@@ -1,0 +1,15 @@
+import { build } from 'esbuild';
+import { readFile, writeFile, copyFile, mkdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
+await mkdir('dist/vendor', { recursive: true });
+await copyFile('node_modules/cytoscape/dist/cytoscape.min.js', 'dist/vendor/cytoscape.min.js');
+await mkdir('.sites-runtime', { recursive: true });
+const assets = {};
+const files = ['index.html', 'styles.css', 'app.js', 'engine.js', 'graph.js', 'vendor/cytoscape.min.js'];
+for (const file of files) assets['/' + file] = { content: await readFile(resolve('dist', file), 'utf8'), type: file.endsWith('.js') ? 'text/javascript; charset=utf-8' : file.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/html; charset=utf-8' };
+await writeFile('.sites-runtime/assets.json', JSON.stringify(assets));
+await mkdir('dist/server', { recursive: true });
+await build({ entryPoints: ['worker/index.js'], bundle: true, outfile: 'dist/server/index.js', format: 'esm', platform: 'browser', target: 'es2022', minify: true });
+await mkdir('dist/.openai', { recursive: true });
+await copyFile('.openai/hosting.json', 'dist/.openai/hosting.json');
+console.log('Built shared API + D1 Worker and embedded frontend assets.');
