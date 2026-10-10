@@ -4642,3 +4642,24 @@ h1 {
     font-size: 21px;
   }
 }
+
+.task-audio-entry {
+  margin: 24px 0;
+  padding: 20px;
+  border: 1px solid #d7e4c6;
+  border-radius: 16px;
+}
+.audio-transcript {
+  white-space: pre-line;
+  padding: 20px;
+  background: #f4f7ed;
+  border-radius: 14px;
+}
+#task-audio-result {
+  margin-top: 20px;
+}
+#task-audio-result audio {
+  display: block;
+  width: 100%;
+  margin: 16px 0;
+}

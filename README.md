@@ -68,3 +68,7 @@ The new migration is additive. Older migration history and earlier integration r
 | Synthetic data and measured reader | `dist/pilot-data.js`, `pilot-reader.js`, `pilot-labels.js`                                           |
 
 Read [the presenter guide](DEMO.md), [the agent architecture](docs/LIVE_WORKSPACE.md), and [the extraction measurements](docs/ENHANCEMENT_REPORT.md). Earlier integrations under `backend/agent.js`, `backend/api.js`, and the archived server are retained for reference and regression checks, but are not the active workspace API.
+
+## Reviewed task audio
+
+Approved or completed tasks offer an exact-text preview and ElevenLabs MP3 generation. Configure ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID and optional ELEVENLABS_MODEL (default eleven_flash_v2_5) in the ignored local .env or protected Sites runtime settings. Restart locally or redeploy after changes. Audio reads the server-owned care-team task verbatim; it is not a patient instruction, clinical translation, booking or patient contact. Only session-owned reviewed tasks are eligible. Requests share the durable AI budget (12 per session/hour and 50 globally/day), have a 25-second service timeout and a 2 MB audio cap. Playback/download is browser-local and closing the dialog releases the audio. Gemini and the earlier care studio remain archived.

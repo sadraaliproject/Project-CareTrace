@@ -2,6 +2,7 @@ import { BARRIERS } from "../dist/ontology.js";
 import { AS_OF } from "../dist/pilot-data.js";
 import { validateFilters } from "./live-graph.js";
 import { LIVE_LIMITS } from "./live-store.js";
+import { taskAudioText, generateTaskAudio } from "./task-audio.js";
 import {
   runLiveAgent,
   liveSystemPrompt,
@@ -183,6 +184,9 @@ export function createLiveApi({
           ok: true,
           mode: settings.apiKey ? "openai" : "rules",
           aiConfigured: Boolean(settings.apiKey),
+          audioConfigured: Boolean(
+            settings.elevenLabsApiKey && settings.elevenLabsVoiceId,
+          ),
           storage: { kind: store.kind, persistent: store.persistent },
           promptVersion: LIVE_PROMPT_VERSION,
           limits,
@@ -266,6 +270,73 @@ export function createLiveApi({
             "This demo session has reached its task limit.",
           );
         return respond(result, result.created ? 201 : 200);
+      }
+      const audioMatch = route.match(/^\/tasks\/([^/]+)\/(brief|audio)$/);
+      if (
+        audioMatch &&
+        ((audioMatch[2] === "brief" && method === "GET") ||
+          (audioMatch[2] === "audio" && method === "POST"))
+      ) {
+        assertId(audioMatch[1], uuid, "task");
+        const task = (await store.listTasks(sessionId)).find(
+          (t) => t.id === audioMatch[1],
+        );
+        if (!task)
+          fail(404, "not_found", "This task was not found in your session.");
+        if (!["approved", "completed"].includes(task.status))
+          fail(
+            409,
+            "review_required",
+            "Approve the care-team task before generating audio.",
+          );
+        const text = taskAudioText(task);
+        if (audioMatch[2] === "brief")
+          return respond({ text, service: "ElevenLabs", taskId: task.id });
+        const body = await readBody(request, limits.requestBytes);
+        fields(body, []);
+        if (
+          !settings.elevenLabsApiKey ||
+          !/^[a-zA-Z0-9_-]{1,100}$/.test(settings.elevenLabsVoiceId || "")
+        )
+          fail(
+            503,
+            "audio_not_configured",
+            "ElevenLabs audio is not configured on this server.",
+          );
+        // Speech shares the durable model budget: bounded across sessions and Workers.
+        if (
+          !(await store.reserveRun(sessionId, crypto.randomUUID(), true, now()))
+        )
+          fail(
+            429,
+            "audio_limit",
+            "The demo's AI/audio budget is reached. Try again later.",
+          );
+        try {
+          const audio = await generateTaskAudio(text, settings, request.signal);
+          const current = (await store.listTasks(sessionId)).find(
+            (t) => t.id === task.id,
+          );
+          if (!current || !["approved", "completed"].includes(current.status))
+            fail(
+              409,
+              "review_required",
+              "Task approval changed while audio was generated. Review the task again.",
+            );
+          headers.set("content-type", "audio/mpeg");
+          headers.set(
+            "content-disposition",
+            'inline; filename="careweave-reviewed-task.mp3"',
+          );
+          return new Response(audio, { headers });
+        } catch (error) {
+          if (error instanceof ApiError) throw error;
+          fail(
+            502,
+            "audio_unavailable",
+            "ElevenLabs could not generate audio. Your approved text remains available; retry later.",
+          );
+        }
       }
       const taskMatch = route.match(/^\/tasks\/([^/]+)$/);
       if (taskMatch && method === "PATCH") {

@@ -452,3 +452,120 @@ test("a disconnected stream aborts the model call and never saves a partial resu
     context.store.close();
   }
 });
+
+test("reviewed task audio is session-owned, reads server text, and rejects arbitrary speech", async () => {
+  const calls = [];
+  const context = await setup({
+    config: () => ({
+      elevenLabsApiKey: "test-secret",
+      elevenLabsVoiceId: "BellaVoice",
+      fetchImpl: async (url, options) => {
+        calls.push(JSON.parse(options.body));
+        return new Response(new Uint8Array([73, 68, 51, 1, 2, 3]), {
+          headers: { "content-type": "audio/mpeg" },
+        });
+      },
+    }),
+  });
+  try {
+    const created = await (
+      await context.request("/tasks", {
+        method: "POST",
+        cookie: context.cookie,
+        body: { patientId: "P0008", barrier: "transportation" },
+      })
+    ).json();
+    const id = created.task.id;
+    const path = "/tasks/" + id;
+    assert.equal(
+      (
+        await context.request(path + "/audio", {
+          method: "POST",
+          cookie: context.cookie,
+          body: {},
+        })
+      ).status,
+      409,
+    );
+    await context.request(path, {
+      method: "PATCH",
+      cookie: context.cookie,
+      body: { status: "approved" },
+    });
+    const preview = await (
+      await context.request(path + "/brief", { cookie: context.cookie })
+    ).json();
+    assert.match(preview.text, /fictional patient P0008/);
+    assert.equal((await context.request(path + "/brief")).status, 404);
+    assert.equal(
+      (
+        await context.request(path + "/audio", {
+          method: "POST",
+          cookie: context.cookie,
+          body: { text: "arbitrary" },
+        })
+      ).status,
+      400,
+    );
+    const audio = await context.request(path + "/audio", {
+      method: "POST",
+      cookie: context.cookie,
+      body: {},
+    });
+    assert.equal(audio.status, 200);
+    assert.equal(audio.headers.get("content-type"), "audio/mpeg");
+    assert.equal(audio.headers.get("cache-control"), "no-store");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].text, preview.text);
+  } finally {
+    await context.store.close();
+  }
+});
+
+test("audio generation has a durable budget and fails honestly on invalid audio", async () => {
+  const context = await setup({
+    limits: { modelInvestigationsPerHour: 1 },
+    config: () => ({
+      elevenLabsApiKey: "test-secret",
+      elevenLabsVoiceId: "BellaVoice",
+      fetchImpl: async () =>
+        new Response("not audio", {
+          headers: { "content-type": "audio/mpeg" },
+        }),
+    }),
+  });
+  try {
+    const created = await (
+      await context.request("/tasks", {
+        method: "POST",
+        cookie: context.cookie,
+        body: { patientId: "P0008", barrier: "transportation" },
+      })
+    ).json();
+    const path = "/tasks/" + created.task.id;
+    await context.request(path, {
+      method: "PATCH",
+      cookie: context.cookie,
+      body: { status: "approved" },
+    });
+    const failed = await context.request(path + "/audio", {
+      method: "POST",
+      cookie: context.cookie,
+      body: {},
+    });
+    assert.equal(failed.status, 502);
+    assert.equal((await failed.json()).error.code, "audio_unavailable");
+    assert.equal(
+      (
+        await context.request(path + "/audio", {
+          method: "POST",
+          cookie: context.cookie,
+          body: {},
+        })
+      ).status,
+      429,
+    );
+  } finally {
+    await context.store.close();
+  }
+});

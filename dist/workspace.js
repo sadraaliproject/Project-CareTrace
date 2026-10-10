@@ -80,6 +80,14 @@ const state = {
 };
 let graphCanvas;
 let dialogReturnFocus;
+let audioUrl;
+let audioController;
+function clearAudio() {
+  audioController?.abort();
+  audioController = null;
+  if (audioUrl) URL.revokeObjectURL(audioUrl);
+  audioUrl = null;
+}
 const primary = (p) => p?.primary_barrier || p?.primaryBarrier;
 const barriers = (p) =>
   (p?.barriers || []).filter(
@@ -332,6 +340,7 @@ async function openNode(node) {
     );
 }
 function showDialog(title, body, wide = false) {
+  clearAudio();
   if (!state.dialog) dialogReturnFocus = document.activeElement;
   state.dialog = { title };
   $("#overlay-root").innerHTML =
@@ -339,6 +348,7 @@ function showDialog(title, body, wide = false) {
   $("#overlay-root .close-button")?.focus();
 }
 function closeDialog() {
+  clearAudio();
   state.dialog = null;
   state.trace = false;
   $("#overlay-root").innerHTML = "";
@@ -546,6 +556,57 @@ function showTask(task) {
     `<div class="task-review-meta"><span class="source-tag">${esc(task.status)}</span><strong>${esc(task.patientId)}</strong><span>${esc(task.owner)}</span></div><p class="task-draft-body">${esc(task.body)}</p><h3>Evidence attached to this draft</h3>${evidence.map((e) => `<button class="task-evidence" data-action="source" data-id="${esc(e.sourceId || e.note_id || e.id)}"><blockquote>“${esc(e.quote || e.evidence_sentence || e.text || JSON.stringify(e))}”</blockquote><small>${esc(e.noteType || e.note_type || e.sourceKind || "Source record")} · ${esc(e.sourceId || e.note_id || e.id)} ↗</small></button>`).join("")}<div class="review-notice"><span>◈</span><p>Review the evidence and wording before approving. This task stays in the demonstration; no patient is contacted.</p></div><div class="review-actions">${task.status === "draft" ? btn("Approve this draft", "task-status", `data-id="${esc(task.id)}" data-status="approved"`, "primary") : task.status === "approved" ? btn("Mark completed in demo", "task-status", `data-id="${esc(task.id)}" data-status="completed"`, "primary") : '<span class="completed-label">✓ Completed in this demonstration</span>'}${task.status !== "draft" ? btn("Return to draft", "task-status", `data-id="${esc(task.id)}" data-status="draft"`, "secondary") : btn("Keep as draft", "close", "", "secondary")}</div>`,
     true,
   );
+  if (task.status !== "draft") {
+    $(".w-dialog-body").insertAdjacentHTML(
+      "beforeend",
+      `<section class="task-audio-entry"><h3>A reviewed next step, read aloud</h3><p>Preview the exact care-team text, then generate audio. Nothing is sent to a patient.</p>${state.status?.audioConfigured ? btn("Listen to this approved brief", "audio-preview", `data-id="${esc(task.id)}"`, "secondary") : "<p>ElevenLabs is not configured on this server.</p>"}</section>`,
+    );
+  }
+}
+async function previewTaskAudio(id) {
+  try {
+    const brief = await api("/tasks/" + encodeURIComponent(id) + "/brief");
+    showDialog(
+      "Listen to the reviewed care-team brief",
+      `<p>This is synthetic speech from ElevenLabs. It reads the approved task; it does not contact anyone or confirm a booking.</p><h3>Exact text to be read</h3><p class="audio-transcript">${esc(brief.text)}</p>${btn("Generate audio with ElevenLabs", "audio-generate", `data-id="${esc(id)}"`, "primary")}<div id="task-audio-result" role="status" aria-live="polite"></div>`,
+      true,
+    );
+  } catch (error) {
+    toast(error.message);
+  }
+}
+async function playTaskAudio(id, button) {
+  button.disabled = true;
+  const output = $("#task-audio-result");
+  output.textContent = "Generating the reviewed text with ElevenLabs…";
+  const controller = new AbortController();
+  audioController = controller;
+  try {
+    const response = await fetch(
+      "/api/v1/tasks/" + encodeURIComponent(id) + "/audio",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+        signal: controller.signal,
+      },
+    );
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error?.message || "Audio could not be generated.");
+    }
+    const blob = await response.blob();
+    if (!output.isConnected || controller.signal.aborted) return;
+    audioUrl = URL.createObjectURL(blob);
+    output.innerHTML = `<p>Generated with ElevenLabs. Use the player to listen.</p><audio controls aria-label="Approved care-team brief" src="${audioUrl}"></audio><p><a href="${audioUrl}" download="careweave-reviewed-task.mp3">Download audio</a></p>`;
+    button.textContent = "Audio ready";
+  } catch (error) {
+    if (!output.isConnected || controller.signal.aborted) return;
+    output.textContent = error.message;
+    button.disabled = false;
+  } finally {
+    if (audioController === controller) audioController = null;
+  }
 }
 async function updateTask(id, status) {
   try {
@@ -732,6 +793,8 @@ document.addEventListener("click", async (e) => {
     return showTask(state.tasks.find((t) => t.id === el.dataset.id));
   if (action === "task-status")
     return updateTask(el.dataset.id, el.dataset.status);
+  if (action === "audio-preview") return previewTaskAudio(el.dataset.id);
+  if (action === "audio-generate") return playTaskAudio(el.dataset.id, el);
   if (action === "trace") {
     state.trace = true;
     renderTrace();

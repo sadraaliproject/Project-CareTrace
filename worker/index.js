@@ -23,6 +23,9 @@ export default {
           config: () => ({
             apiKey: env.OPENAI_API_KEY,
             model: env.OPENAI_MODEL || "gpt-4.1-mini",
+            elevenLabsApiKey: env.ELEVENLABS_API_KEY,
+            elevenLabsVoiceId: env.ELEVENLABS_VOICE_ID,
+            elevenLabsModel: env.ELEVENLABS_MODEL || "eleven_flash_v2_5",
             hosted: true,
           }),
         });

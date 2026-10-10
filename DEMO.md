@@ -50,3 +50,5 @@ A what-if calculation temporarily removes one barrier for its query. It shows ho
 **Can the AI act by itself?** Its tools read and calculate. Preparing and approving a demonstration task are explicit user actions. It cannot contact anyone, book transport, or change medical care.
 
 **What still needs validation?** Real OpenAI account connectivity once a key is added, performance on varied questions with the chosen model, and any clinical or hospital use beyond this fictional demonstration.
+
+After approving a task, open it in Review queue and select Listen to this approved brief. Review the exact text, then generate audio with ElevenLabs. Play or download the MP3. Explain that this reads a reviewed care-team task and does not send anything to a patient.
