@@ -4609,3 +4609,36 @@ h1 {
     padding: 16px;
   }
 }
+.simulation-summary {
+  margin: 20px 0;
+  padding: 24px;
+  background: #f6f5ea;
+  border: 1px solid #ccd8bd;
+  border-radius: 12px;
+}
+.simulation-summary h3 {
+  margin: 16px 0;
+  font-family: Georgia, serif;
+  font-weight: 400;
+  font-size: 23px;
+  color: #304c27;
+}
+.simulation-summary > p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #526b4d;
+}
+.w-dialog-body > .simulation-summary {
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+@media (max-width: 767px) {
+  .simulation-summary {
+    padding: 16px;
+  }
+  .simulation-summary h3 {
+    font-size: 21px;
+  }
+}

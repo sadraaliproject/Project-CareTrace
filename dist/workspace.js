@@ -260,7 +260,7 @@ function patientPanel() {
 }
 function investigationView() {
   const r = state.result?.ok ? state.result.result : null;
-  return `<div class="investigation-heading"><div><span class="w-eyebrow">FOLLOW THE EVIDENCE</span><h1>${state.busy ? "Connecting the care story…" : r ? "A clear answer. A next step for each person." : "Start with a question worth following."}</h1><p>${state.lastQuestion ? esc(state.lastQuestion) : "Ask across the hospital records, then open any patient’s evidence."}</p></div>${state.result ? btn("Export evidence", "export", "", "secondary") : ""}</div><div class="investigation-composer-row">${composer(true)}<div class="investigation-status">${state.busy ? `<div class="working-state"><span class="activity-ring"></span><strong>${esc(state.events.at(-1)?.label || "Reading the question")}</strong><small>${state.events.length} completed tools</small>${btn("Stop", "cancel", "", "quiet")}</div>` : `<div>${modeBadge()}<p>${state.result?.mode === "openai" ? "An OpenAI agent chose tools. The graph computed the result." : "Structured rules select the route. The graph computes the result."}</p>${btn(state.events.length ? `Inspect ${state.events.length} tool calls` : "Inspect the system", "trace", "", "quiet")}</div>`}</div></div>${state.error ? `<div class="inline-error" role="alert"><strong>The investigation could not finish.</strong><p>${esc(state.error)}</p>${btn("Retry the question", "retry", "", "secondary")}${state.status?.aiConfigured ? btn("Use rules for this question", "retry-rules", "", "quiet") : ""}</div>` : ""}${r ? `<div class="answer-summary"><div class="answer-count"><strong>${num(r.count)}</strong><span>patients match</span></div><div><span class="w-eyebrow">ANSWER FROM THE CONNECTED RECORD</span><p>${esc(state.result.answer || "These patients match the question. Open a patient to review their evidence.")}</p>${r.assumptions?.length ? `<small>${esc(r.assumptions.join(" "))}</small>` : ""}</div></div>${groupCards(r)}<div class="result-toolbar"><div><h2>The people behind the count</h2><span>${state.group === "all" ? r.patients.length : r.patients.filter((p) => primary(p) === state.group).length} shown${r.count > r.patients.length ? ` of ${num(r.count)} matches` : ""}</span></div><div>${btn("All patients", "filter", 'data-group="all"', state.group === "all" ? "active-filter" : "quiet")}${btn("Inspect tool calls", "trace", "", "quiet")}</div></div><div class="cohort-and-case"><section class="cohort-panel">${patientList(r.patients.filter((p) => state.group === "all" || primary(p) === state.group))}</section><div class="selected-care-story">${graphPanel()}${patientPanel()}</div></div>` : state.busy ? `<div class="running-evidence"><div class="subtle-spinner"></div><h2>Every completed step appears below.</h2><div>${state.events.map((e) => `<p><span>✓</span>${esc(e.label || e.tool)}<small>${Number(e.durationMs || 0).toFixed(1)} ms</small></p>`).join("")}</div></div>` : `<div class="start-investigation"><span>✳</span><h2>Ask in your own words.</h2><p>Try one of these starting points, or ask about a unit, barrier, date window, or missed next step.</p><div>${STARTERS.map((q) => `<button data-action="starter" data-question="${esc(q)}">${esc(q)} ↗</button>`).join("")}</div></div>`}`;
+  return `<div class="investigation-heading"><div><span class="w-eyebrow">FOLLOW THE EVIDENCE</span><h1>${state.busy ? "Connecting the care story…" : r ? "A clear answer. A next step for each person." : "Start with a question worth following."}</h1><p>${state.lastQuestion ? esc(state.lastQuestion) : "Ask across the hospital records, then open any patient’s evidence."}</p></div>${state.result ? btn("Export evidence", "export", "", "secondary") : ""}</div><div class="investigation-composer-row">${composer(true)}<div class="investigation-status">${state.busy ? `<div class="working-state"><span class="activity-ring"></span><strong>${esc(state.events.at(-1)?.label || "Reading the question")}</strong><small>${state.events.length} completed tools</small>${btn("Stop", "cancel", "", "quiet")}</div>` : `<div>${modeBadge()}<p>${state.result?.mode === "openai" ? "An OpenAI agent chose tools. The graph computed the result." : "Structured rules select the route. The graph computes the result."}</p>${btn(state.events.length ? `Inspect ${state.events.length} tool calls` : "Inspect the system", "trace", "", "quiet")}</div>`}</div></div>${state.error ? `<div class="inline-error" role="alert"><strong>The investigation could not finish.</strong><p>${esc(state.error)}</p>${btn("Retry the question", "retry", "", "secondary")}${state.status?.aiConfigured ? btn("Use rules for this question", "retry-rules", "", "quiet") : ""}</div>` : ""}${r ? `<div class="answer-summary"><div class="answer-count"><strong>${num(r.count)}</strong><span>patients match</span></div><div><span class="w-eyebrow">ANSWER FROM THE CONNECTED RECORD</span><p>${esc(state.result.answer || "These patients match the question. Open a patient to review their evidence.")}</p>${r.assumptions?.length ? `<small>${esc(r.assumptions.join(" "))}</small>` : ""}</div></div>${state.result.simulation ? simulationSummary(state.result.simulation) : ""}${groupCards(r)}<div class="result-toolbar"><div><h2>The people behind the count</h2><span>${state.group === "all" ? r.patients.length : r.patients.filter((p) => primary(p) === state.group).length} shown${r.count > r.patients.length ? ` of ${num(r.count)} matches` : ""}</span></div><div>${btn("All patients", "filter", 'data-group="all"', state.group === "all" ? "active-filter" : "quiet")}${btn("Inspect tool calls", "trace", "", "quiet")}</div></div><div class="cohort-and-case"><section class="cohort-panel">${patientList(r.patients.filter((p) => state.group === "all" || primary(p) === state.group))}</section><div class="selected-care-story">${graphPanel()}${patientPanel()}</div></div>` : state.busy ? `<div class="running-evidence"><div class="subtle-spinner"></div><h2>Every completed step appears below.</h2><div>${state.events.map((e) => `<p><span>✓</span>${esc(e.label || e.tool)}<small>${Number(e.durationMs || 0).toFixed(1)} ms</small></p>`).join("")}</div></div>` : `<div class="start-investigation"><span>✳</span><h2>Ask in your own words.</h2><p>Try one of these starting points, or ask about a unit, barrier, date window, or missed next step.</p><div>${STARTERS.map((q) => `<button data-action="starter" data-question="${esc(q)}">${esc(q)} ↗</button>`).join("")}</div></div>`}`;
 }
 function groupCards(r) {
   const groups = (r.groups || []).filter((g) => g.count);
@@ -487,14 +487,13 @@ async function investigate(question, mode = "auto") {
     state.previousFilters =
       finalResult.filters || finalResult.result?.filters || null;
     state.runId = finalResult.runId;
-    state.graph = finalResult.graph || finalResult.result?.graph || state.graph;
     const id = finalResult.patientId || finalResult.result?.patients?.[0]?.id;
     if (id) {
       const detail = await api("/patients/" + encodeURIComponent(id));
       state.patient = detail.patient;
-      state.graph = finalResult.simulation
-        ? finalResult.simulation.graph || finalResult.graph || detail.graph
-        : detail.graph;
+      // The patient workspace always shows the recorded facts. Temporary
+      // simulation outcomes have their own clearly labeled comparison panel.
+      state.graph = detail.graph;
     }
     state.runs = (await api("/runs")).runs || [];
     if (!finalResult.ok || finalResult.error)
@@ -568,6 +567,20 @@ async function updateTask(id, status) {
     toast(error.message);
   }
 }
+function simulationSummary(data) {
+  const { patientId, barrier } = data;
+  const beforeType = data.before.primaryBarrier;
+  const afterType = data.after.primaryBarrier;
+  const remaining = barriers(data.patient).map((item) => label(item.type));
+  const unchanged = data.before.count === data.after.count;
+  const countExplanation = unchanged
+    ? remaining.length
+      ? `The count stays at ${num(data.after.count)}. ${remaining.join(" and ")} ${remaining.length === 1 ? "remains" : "remain"} documented, so this person still matches the question.`
+      : `The count stays at ${num(data.after.count)} because this question’s filters still include the patient. Resolving a barrier does not remove the recorded missed next step.`
+    : `The same question now matches ${num(data.after.count)} patients. This changes the matching list; it does not mean a follow-up visit has happened or a health outcome has improved.`;
+
+  return `<section class="simulation-summary"><span class="source-tag">TEMPORARY SIMULATION · ORIGINAL RECORDS UNCHANGED</span><h3>Suppose ${esc(label(barrier).toLowerCase())} is resolved for ${esc(patientId)}</h3><div class="what-if-counts"><div><span>Matching patients now</span><strong>${num(data.before.count)}</strong></div><i>→</i><div><span>With this barrier resolved</span><strong>${num(data.after.count)}</strong></div></div><p class="what-if-reason">${esc(countExplanation)}</p><div class="what-if-routing"><div><small>CURRENT PRIORITY</small><strong>${esc(label(beforeType))}</strong><span>${esc(spec(beforeType).owner)}</span><p>${esc(spec(beforeType).action)}</p></div><i aria-hidden="true">→</i><div><small>PRIORITY IN THE SIMULATION</small><strong>${esc(afterType ? label(afterType) : "No active barrier remains")}</strong><span>${esc(spec(afterType).owner)}</span><p>${esc(spec(afterType).action)}</p></div></div><p>${esc(data.explanation || "The graph query was rerun with the selected barrier marked resolved in a temporary copy.")}</p><div class="review-notice"><span>◈</span><p>The patient graph and evidence show the original record. This comparison belongs to ${esc(patientId)}, even if you select another patient.</p></div></section>`;
+}
 async function whatIf(patientId, barrier) {
   showDialog(
     "What if help is arranged?",
@@ -578,18 +591,15 @@ async function whatIf(patientId, barrier) {
       method: "POST",
       body: { patientId, barrier, filters: state.result?.filters || undefined },
     });
-    const beforeType = data.before.primaryBarrier;
-    const afterType = data.after.primaryBarrier;
-    const remaining = barriers(data.patient).map((item) => label(item.type));
-    const unchanged = data.before.count === data.after.count;
-    const countExplanation = unchanged
-      ? remaining.length
-        ? `The count stays at ${num(data.after.count)}. ${remaining.join(" and ")} ${remaining.length === 1 ? "remains" : "remain"} documented, so this person still matches the question.`
-        : `The count stays at ${num(data.after.count)} because this question’s filters still include the patient. Resolving a barrier does not remove the recorded missed next step.`
-      : `The same question now matches ${num(data.after.count)} patients. This changes the matching list; it does not mean a follow-up visit has happened or a health outcome has improved.`;
     showDialog(
       "What if help is arranged?",
-      `<span class="source-tag">SIMULATION · ORIGINAL RECORDS UNCHANGED</span><h3>Suppose ${esc(label(barrier).toLowerCase())} is resolved for ${esc(patientId)}</h3><div class="what-if-counts"><div><span>Matching patients now</span><strong>${num(data.before.count)}</strong></div><i>→</i><div><span>With this barrier resolved</span><strong>${num(data.after.count)}</strong></div></div><p class="what-if-reason">${esc(countExplanation)}</p><div class="what-if-routing"><div><small>CURRENT PRIORITY</small><strong>${esc(label(beforeType))}</strong><span>${esc(spec(beforeType).owner)}</span><p>${esc(spec(beforeType).action)}</p></div><i aria-hidden="true">→</i><div><small>PRIORITY IN THE SIMULATION</small><strong>${esc(afterType ? label(afterType) : "No active barrier remains")}</strong><span>${esc(spec(afterType).owner)}</span><p>${esc(spec(afterType).action)}</p></div></div><p>${esc(data.explanation || "The graph query was rerun with the selected barrier marked resolved in a temporary copy.")}</p><div class="review-notice"><span>◈</span><p>The original evidence and patient record are unchanged. Preparing a task below drafts support for the original ${esc(label(barrier).toLowerCase())} barrier.</p></div>${btn("Prepare support for " + esc(label(barrier).toLowerCase()), "prepare-task", `data-id="${esc(patientId)}" data-barrier="${esc(barrier)}"`, "primary")}`,
+      simulationSummary(data) +
+        btn(
+          "Prepare support for " + esc(label(barrier).toLowerCase()),
+          "prepare-task",
+          `data-id="${esc(patientId)}" data-barrier="${esc(barrier)}"`,
+          "primary",
+        ),
       true,
     );
   } catch (error) {
