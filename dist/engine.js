@@ -22,10 +22,31 @@ export const ontology = Object.freeze({
 
 const TERMS = {
   transportation: /\b(transport(?:ation)?|rides?|bus|vehicle|car|getting to (?:the )?(?:clinic|appointment))\b/i,
-  cost: /\b(afford|affordability|copay|co-pay|expensive|cost|money|pay for|financial)\b/i,
+  cost: /\b(afford|affordability|unaffordable|copay|co-pay|expensive|cost|money|pay for|financial)\b/i,
   food: /\b(food|groceries|meals?|hungry|pantry)\b/i,
   health_literacy: /\b(understand|confus(?:ed|ing|ion)|instructions|read|medical words|health literacy|teach-back)\b/i,
 };
+const MEDICATION_CONTEXT = /\b(?:medications?|medicines?|prescriptions?|drugs?|refills?|copay|co-pay|insulin)\b/i;
+const FAMILY_SUBJECT = /\b(?:mother|father|sister|brother|daughter|son|spouse|husband|wife)\b/i;
+const CLAUSE_PREDICATE = /\b(?:cannot|can't|unable|denies|denied|has|have|is|are|was|were|resolved|unaffordable|lacks?|ran out|running out|no longer|not enough|understands?|confused|unreliable)\b/i;
+
+function assertionClauses(text) {
+  // Separate independent assertions while retaining literal contiguous source
+  // excerpts. A denial or resolution in one clause must not govern another.
+  const split = raw => {
+    for (const boundary of raw.matchAll(/,\s*|\s+(?:and|while|whereas|yet|although)\s+/gi)) {
+      const left = raw.slice(0, boundary.index), right = raw.slice(boundary.index + boundary[0].length);
+      const leftTypes = Object.keys(TERMS).filter(type => TERMS[type].test(left));
+      const rightTypes = Object.keys(TERMS).filter(type => TERMS[type].test(right));
+      if (!leftTypes.length || !rightTypes.length || !CLAUSE_PREDICATE.test(left) || !CLAUSE_PREDICATE.test(right)) continue;
+      // Do not detach a second predicate from its family/conditional subject.
+      if ((FAMILY_SUBJECT.test(left) || /\b(?:if|might|may)\b/i.test(left)) && !/^\s*(?:the )?patient\b/i.test(right)) continue;
+      if (leftTypes.some(type => !rightTypes.includes(type)) || rightTypes.some(type => !leftTypes.includes(type))) return [...split(left), ...split(right)];
+    }
+    return [raw];
+  };
+  return text.split(/(?<=[.!?])\s+|\s+(?:but|however)\s+/i).flatMap(split);
+}
 const ACTIVE = {
   transportation: /\b(cannot|can't|unable|no (?:reliable )?(?:ride|car|bus|transport(?:ation)?)|lack|missed|broke|stranded|barrier|difficult|unreliable)\b/i,
   cost: /\b(cannot|can't|unable|unaffordable|too expensive|skipp?ed|skipping|barrier|struggl|lack|no money|financial hardship)\b/i,
@@ -74,7 +95,7 @@ export function extractBarriers(doc) {
 function extractAssertions(doc) {
   const output = [];
   const text = typeof doc === 'string' ? doc : doc.text || '';
-  const segments = text.split(/(?<=[.!?])\s+|\s+(?:but|however)\s+/i);
+  const segments = assertionClauses(text);
   for (const raw of segments) {
     const quote = raw.trim();
     if (!quote) continue;
@@ -84,6 +105,9 @@ function extractAssertions(doc) {
     if (/\b(?:if (?:the )?patient|might (?:need|have)|may (?:need|develop)|screen(?:ed|ing)? for|discussed possible|at risk for)\b/.test(lower)) continue;
     for (const type of Object.keys(BARRIERS)) {
       if (!TERMS[type].test(lower)) continue;
+      // The ontology label is medication cost, not general financial hardship.
+      // Food or ride affordability alone does not establish medication need.
+      if (type === 'cost' && !MEDICATION_CONTEXT.test(lower)) continue;
       const temporal = temporalStatusFor(type, lower);
       if (temporal === 'ambiguous') continue;
       const resolved = temporal === 'resolved';
@@ -267,9 +291,18 @@ export function parseQuestion(text, previousPlan) {
     const barrierPhrase = q.match(/(?:transportation|transport|cost|food|literacy|ride|copay|confused|instructions)[\s\S]*/)?.[0] || '';
     if (found.length > 1 && /\band\b/.test(barrierPhrase) && /\bor\b/.test(barrierPhrase)) return fail('Mixed AND/OR barrier expressions are not supported. Use only AND, or only OR.');
     if (found.length > 1 && /\b(?:active|current|unresolved)\b/.test(q) && /\b(?:resolved|previously)\b/.test(q) && !/\b(?:active and resolved|resolved and active|including resolved)\b/.test(q)) return fail('A cohort can use one shared barrier status. Ask about active barriers or resolved barriers separately.');
-    if (followup && /\b(?:also|as well|in addition)\b/.test(q)) plan.barriers = [...new Set([...plan.barriers, ...found])];
-    else plan.barriers = found;
-    plan.barrierMode = found.length > 1 && /\b(?:and|both|all)\b/.test(q) && !/\b(?:or|either)\b/.test(q) ? 'all' : 'any';
+    const additive = followup && /\b(?:also|as well|in addition)\b/.test(q);
+    if (additive) {
+      const added = found.filter(type => !plan.barriers.includes(type));
+      // (A OR B) AND C cannot be flattened into this plan's single AND/OR group.
+      if (plan.barriers.length > 1 && plan.barrierMode === 'any') return fail('Adding a barrier to an OR cohort needs an explicit filter. Name the exact barriers with AND or OR instead; nested filters are not supported.');
+      if (found.length > 1 && /\b(?:or|either)\b/.test(q) && plan.barriers.length) return fail('This follow-up needs a nested AND/OR filter. Name the exact barriers with AND or OR instead.');
+      plan.barriers = [...new Set([...plan.barriers, ...found])];
+      if (added.length) plan.barrierMode = 'all';
+    } else {
+      plan.barriers = found;
+      plan.barrierMode = found.length > 1 && /\b(?:and|both|all)\b/.test(q) && !/\b(?:or|either)\b/.test(q) ? 'all' : 'any';
+    }
   }
   if (/\b(?:any|all) barriers\b/.test(q)) { plan.barriers = Object.keys(BARRIERS); plan.barrierMode = /\ball barriers\b/.test(q) ? 'all' : 'any'; }
   if (!found.length && /\b(?:with|has|have|any|a)\s+(?:(?:active|resolved|current|unresolved|any|a)\s+)*barriers?\b/.test(q) && !/\ball barriers\b/.test(q)) { plan.barriers = Object.keys(BARRIERS); plan.barrierMode = 'any'; }

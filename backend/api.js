@@ -2,6 +2,8 @@ import { AS_OF, ontology, parseQuestion, extractBarriers, evaluateExtraction } f
 import { planWithModel, validatePlan } from '../planner.js';
 import { runAgent } from './agent.js';
 import { predictText, getMlMetrics, extractWithModel } from './ml.js';
+import { getSimulationDefaults, simulateFromRepository } from './insights.js';
+import { runProof } from './proof.js';
 
 const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers });
@@ -57,13 +59,16 @@ export function createApi({ getRepository, config = () => ({}), storage = 'sqlit
       }
       // No database initialization is needed for health, extraction, or planner endpoints.
       const repo = await getRepository();
+      if (path === '/api/simulate/defaults' && method === 'GET') return json(getSimulationDefaults());
+      if (path === '/api/simulate' && method === 'POST') return json(await simulateFromRepository(repo, await input(request)));
+      if (path === '/api/proof' && method === 'POST') return json(await runProof(repo, await input(request)));
       if (path === '/api/bootstrap' && method === 'GET') {
         const [metrics, page, tasks, runs] = await Promise.all([repo.metrics(), repo.listPatients({ limit: 1000 }), repo.listTasks(), repo.listRuns()]);
         return json({ metrics, patients: page.patients, ontology, tasks, runs, model: Boolean(settings.apiKey), modelName: settings.apiKey ? settings.model : null, storage, snapshot: AS_OF, synthetic: true });
       }
       if (path === '/api/seed' && method === 'POST') {
         const body = await input(request);
-        return json(await repo.seedPatientBatch({ offset: Number(body.offset || 0), limit: 10 }));
+        return json(await repo.seedPatientBatch({ offset: Number(body.offset || 0), limit: 25 }));
       }
       if (path === '/api/seed' && method === 'GET') return json(await repo.seedStatus());
       if (path === '/api/graph' && method === 'GET') return json(await repo.getGraph({ mode: url.searchParams.get('mode') || 'population', patientId: url.searchParams.get('patientId'), patientIds: url.searchParams.has('patientIds') ? url.searchParams.get('patientIds').split(',').filter(Boolean) : undefined, limit: Number(url.searchParams.get('limit') || 420) }));
@@ -122,6 +127,9 @@ export function createApi({ getRepository, config = () => ({}), storage = 'sqlit
       }
       return json({ ok: false, error: 'Unknown endpoint.' }, 404);
     } catch (error) {
+      // Diagnostics contain only route and error class, never request bodies,
+      // clinical notes, provider responses, credentials, or database parameters.
+      if (!error.status) console.error(JSON.stringify({ event: 'api.failure', route: path, method, kind: /too many|limit/i.test(error.message) ? 'database_limit' : /constraint|foreign key/i.test(error.message) ? 'database_constraint' : /no such table/i.test(error.message) ? 'database_schema' : 'unexpected', name: error.name }));
       return json({ ok: false, error: error.status ? error.message : 'The backend could not complete this request.' }, error.status || 500);
     }
   };

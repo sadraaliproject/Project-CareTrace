@@ -14,6 +14,23 @@ const changes = result => Number(result?.changes ?? result?.meta?.changes ?? 0);
 const hash = value => { let h = 2166136261; for (const c of value) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16).padStart(8, '0').toUpperCase(); };
 const auditStatement = (action, entityId, details = {}) => statement('INSERT INTO audit(id,action,entity_id,json,created_at) VALUES(?,?,?,?,?)', [uid('audit'), action, entityId, json(details), now()]);
 
+// A D1 batch still counts every statement against the request's query budget.
+// Bind rows as JSON instead of issuing a query per graph node or exceeding the
+// 100-parameter limit. The caller's batch remains one atomic transaction.
+function compactInserts(statements, insertOnly = false) {
+  const groups = new Map();
+  for (const item of statements) {
+    const match = item.sql.match(/^INSERT(?: OR (?:IGNORE|REPLACE))? INTO (\w+)\(([^)]+)\) VALUES\(/);
+    if (!match) throw new Error('Only row inserts can be compacted.');
+    const [, table, columns] = match;
+    const key = `${table}(${columns})`;
+    if (!groups.has(key)) groups.set(key, { table, columns, rows: [] });
+    groups.get(key).rows.push(item.params);
+  }
+  return [...groups.values()].map(({ table, columns, rows }) => statement(
+    `INSERT ${insertOnly ? 'OR IGNORE ' : 'OR REPLACE '}INTO ${table}(${columns}) SELECT ${columns.split(',').map((_, index) => `json_extract(value,'$[${index}]')`).join(',')} FROM json_each(?)`, [json(rows)]));
+}
+
 function nodeStatement(node, patientId = null) {
   return statement('INSERT OR REPLACE INTO graph_nodes(id,type,patient_id,json) VALUES(?,?,?,?)', [node.id, node.type, patientId, json(node)]);
 }
@@ -115,12 +132,12 @@ export function createRepository(adapter) {
       const selected = seedPatients.slice(start, start + size);
       if (!selected.length) return { ...(await repository.seedStatus()), offset: start, nextOffset: start, inserted: 0 };
       const existing = new Set((await all(`SELECT id FROM patients WHERE id IN (${placeholders(selected)})`, selected.map(p => p.id))).map(p => p.id));
-      await batch(sharedGraphStatements());
-      for (const patient of selected.filter(p => !existing.has(p.id))) {
-        // A patient and every related record commit together. Retrying a interrupted
-        // hosted seed can safely skip existing patients without losing their graph.
-        await batch([patientRow(patient, true), ...patient.documents.map(d => documentStatement(d, patient.id)), ...assertionStatements(patient), ...patientGraphStatements(patient)]);
-      }
+      const fresh = selected.filter(p => !existing.has(p.id));
+      const rows = fresh.flatMap(patient => [patientRow(patient, true), ...patient.documents.map(d => documentStatement(d, patient.id)), ...assertionStatements(patient)]);
+      // Parents precede foreign-key dependants. Shared graph records are insert-only:
+      // replacing a referenced node would temporarily delete it under SQLite rules.
+      const graphRows = [...sharedGraphStatements(), ...fresh.flatMap(patientGraphStatements)];
+      await batch([...compactInserts(rows, true), ...compactInserts(graphRows.filter(s => s.sql.includes('graph_nodes')), true), ...compactInserts(graphRows.filter(s => s.sql.includes('graph_edges')), true)]);
       const count = (await get('SELECT COUNT(*) AS count FROM patients')).count;
       if (count === seedPatients.length) await run("INSERT OR REPLACE INTO metadata(key,value) VALUES('seed_complete',?)", [String(SCHEMA_VERSION)]);
       await run("INSERT OR REPLACE INTO metadata(key,value) VALUES('schema_version',?)", [String(SCHEMA_VERSION)]);
@@ -155,6 +172,10 @@ export function createRepository(adapter) {
       const row = await get('SELECT json FROM documents WHERE id=?', [id]);
       if (!row) throw error('Source document not found.', 404);
       return JSON.parse(row.json);
+    },
+    async getDocuments(ids) {
+      if (!Array.isArray(ids) || ids.length > 1000 || ids.some(id => typeof id !== 'string')) throw error('Provide at most 1,000 source document IDs.');
+      return (await all('SELECT json FROM documents WHERE id IN (SELECT value FROM json_each(?))', [json(ids)])).map(row => JSON.parse(row.json));
     },
     async query(input = {}) {
       const plan = { ...defaults(), ...input, barriers: [...(input.barriers || [])] };
@@ -259,10 +280,13 @@ export function createRepository(adapter) {
       if (title !== undefined && (typeof title !== 'string' || !title.trim() || title.length > 200)) throw error('Task title must contain 1–200 characters.');
       if (body !== undefined && (typeof body !== 'string' || !body.trim() || body.length > 12000)) throw error('Task draft must contain 1–12,000 characters.');
       const id = uid('task'), timestamp = now();
-      await batch([
-        statement('INSERT INTO tasks(id,patient_id,barrier,title,body,status,version,evidence_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)', [id, patientId, barrier, title?.trim() || verified.draft.title, body?.trim() || verified.draft.body, 'pending', 1, json(verified.evidence), timestamp, timestamp]),
+      try { await batch([
+        statement('INSERT INTO tasks(id,patient_id,barrier,title,body,status,version,evidence_json,created_at,updated_at) VALUES(?,?,?,CASE WHEN (SELECT json FROM patients WHERE id=?)=? THEN ? ELSE NULL END,?,?,?,?,?,?)', [id, patientId, barrier, patientId, json(patient), title?.trim() || verified.draft.title, body?.trim() || verified.draft.body, 'pending', 1, json(verified.evidence), timestamp, timestamp]),
         auditStatement('task.created', id, { patientId, barrier, documentId: verified.evidence.documentId, simulated: true }),
-      ]);
+      ]); } catch (cause) {
+        if (/NOT NULL constraint failed: tasks\.title|UNIQUE constraint failed: tasks\.patient_id/i.test(cause.message)) throw error('This patient or task changed while the draft was prepared. Refresh and try again.', 409);
+        throw cause;
+      }
       return repository.getTask(id);
     }); },
     updateTask(id, update = {}) { return serialize(async () => {
@@ -300,15 +324,25 @@ export function createRepository(adapter) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(`${date}T12:00:00Z`)) || new Date(`${date}T12:00:00Z`).toISOString().slice(0, 10) !== date || date > AS_OF || date < '1900-01-01') throw error(`Use a valid source date on or before the ${AS_OF} snapshot.`);
       if (typeof sourceType !== 'string' || !sourceType.trim() || sourceType.length > 100) throw error('Document type must contain 1–100 characters.');
       const patient = await repository.getPatient(patientId), previousBarriers = patient.barriers;
+      const originalJson = json(patient);
       const document = { id: `${patientId}-${uid('D')}`, type: sourceType.trim(), date, text: input.text.trim(), synthetic: true, patientId };
       patient.documents = [...patient.documents, document];
       patient.barriers = reconcileBarriers(patient.documents);
       patient.priority = Math.min(99, Math.round((patient.gapOpen ? 30 : 5) + patient.daysOverdue / 12 + Math.max(0, patient.a1c - 8) * 5 + patient.refillGap / 5 + patient.barriers.filter(b => b.status === 'active').length * 8));
       const changedTypes = Object.keys(BARRIERS).filter(type => json(previousBarriers.find(b => b.type === type)) !== json(patient.barriers.find(b => b.type === type)));
-      const statements = [patientRow(patient), documentStatement(document, patientId), statement('DELETE FROM assertions WHERE patient_id=?', [patientId]), ...assertionStatements(patient), statement('DELETE FROM graph_edges WHERE patient_id=?', [patientId]), statement('DELETE FROM graph_nodes WHERE patient_id=?', [patientId]), ...patientGraphStatements(patient)];
+      // The NOT NULL constraint aborts and rolls back the entire batch if another
+      // Worker changed this patient after our read. A process-local queue alone
+      // cannot protect deployments with multiple independent Worker instances.
+      const compareAndSwap = statement('UPDATE patients SET priority=?,json=CASE WHEN json=? THEN ? ELSE NULL END WHERE id=?', [patient.priority, originalJson, json(patient), patientId]);
+      const graphRows = patientGraphStatements(patient);
+      const statements = [compareAndSwap, documentStatement(document, patientId), statement('DELETE FROM assertions WHERE patient_id=?', [patientId]), ...compactInserts(assertionStatements(patient)), statement('DELETE FROM graph_edges WHERE patient_id=?', [patientId]), statement('DELETE FROM graph_nodes WHERE patient_id=?', [patientId]), ...compactInserts(graphRows.filter(s => s.sql.includes('graph_nodes'))), ...compactInserts(graphRows.filter(s => s.sql.includes('graph_edges')))];
       if (changedTypes.length) statements.push(statement(`UPDATE tasks SET status='needs_review',version=version+1,reason=?,updated_at=? WHERE patient_id=? AND barrier IN (${placeholders(changedTypes)}) AND status IN ('pending','approved','needs_review')`, ['New source evidence changed the current barrier assertion. Human review is required.', now(), patientId, ...changedTypes]));
       statements.push(auditStatement('document.ingested', document.id, { patientId, type: sourceType, date, changedBarriers: changedTypes, synthetic: true }));
-      await batch(statements);
+      try { await batch(statements); }
+      catch (cause) {
+        if (/NOT NULL constraint failed: patients\.json/i.test(cause.message)) throw error('Another source changed this patient during ingestion. Refresh and submit the note again; nothing from this attempt was saved.', 409);
+        throw cause;
+      }
       return { document, patient, barriers: patient.barriers, previousBarriers, changedBarriers: changedTypes, invalidatedTasks: (await repository.listTasks()).filter(t => t.patientId === patientId && t.status === 'needs_review'), asOf: AS_OF };
     }); },
     async saveRun(input) {

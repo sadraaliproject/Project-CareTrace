@@ -8,6 +8,14 @@ The memorable demo: find **82 patients** with overdue A1c tests and current tran
 
 Everything uses a fixed synthetic snapshot of **October 10, 2026**. No real patient information is needed or supported.
 
+## New judge-facing tools
+
+**Impact studio** answers the next question: what could the same limited resources support? Change the budget, outreach capacity, and available programs; compare a priority-first plan with a deterministic heuristic that favors complete support bundles. Each allocation links patient → source → barrier → intervention on an interactive graph. The comparison exposes the priority tradeoff: greater coverage can leave higher-priority patients waiting. Costs and capacities are illustrative, support is hypothetical, and the simulator neither changes records nor predicts health outcomes.
+
+**Proof challenge** executes 14 manually curated adversarial cases against the actual extractor, runs the SQL cohort twice, and verifies quotations, ownership, and dates against authoritative document rows. Judges can enter their own fictional sentence and see the actual output. Expected versus observed results, failures, fingerprints, and exports are visible; this is a developer regression bench, not clinical validation.
+
+The strongest demonstration combines these with the existing live-note workflow: add new evidence, watch the cohort and graph change, see an outdated approved task require renewed review, and rerun the resource plan using the changed data.
+
 ## Run locally
 
 Requires **Node.js 24 or newer** and npm. The local database uses Node's built-in `node:sqlite` module; no separate database service is required.
@@ -134,6 +142,9 @@ All routes use JSON except `/api/agent` with `stream: true`, which returns serve
 | `POST /api/seed` | Idempotent seed batch; body `{ "offset": 0 }` |
 | `POST /api/query` | Deterministic SQL query; `question`, optional `previousPlan` or explicit `plan` |
 | `POST /api/agent` | Bounded agent; `question`, optional `previousPlan`, `stream` |
+| `POST /api/proof` | Live adversarial cases, SQL repeatability, authoritative source checks; optional custom `text` |
+| `GET /api/simulate/defaults` | Illustrative support costs and capacities |
+| `POST /api/simulate` | `budget`, `outreachCapacity`, `barriers`, optional `capacities`, `costs`, `patientIds`; allocation comparison and source-linked graph |
 | `POST /api/plan` | Optional OpenAI structured question planning |
 | `GET /api/graph` | `mode`, optional `patientId`, comma-separated `patientIds`, `limit` |
 | `GET /api/graph/expand/:id` | One-hop traversal; optional `relationship` |
@@ -160,11 +171,14 @@ Supported cohort fields are four barrier types, any/all barrier matching, shared
 npm run check
 npm test
 npm run build
+node scripts/verify-worker.js
 ```
 
 The build bundles the frontend and shared API as `dist/server/index.js`, with the Worker entry in `worker/index.js`. The hosted runtime expects a D1 binding named **`DB`** and the generated SQLite migration in `drizzle/`. `db/schema.js` is the Drizzle schema; `backend/schema.sql` initializes native SQLite. Use `npm run db:generate` after a deliberate schema change and keep both definitions aligned.
 
-The D1 adapter preserves repository behavior and atomic mutation batches. Synthetic initialization commits each patient's documents, assertions, and graph together, so retrying setup is safe. The browser displays initialization progress when a new hosted database needs seeding.
+The D1 adapter preserves repository behavior and atomic mutation batches. Synthetic initialization uses bound JSON row batches to stay within database query and parameter limits. Each batch commits patients, documents, assertions, and graph records together; retries are idempotent. The browser displays initialization progress. Independent Worker instances cannot silently overwrite concurrent source ingestion: an atomic comparison rejects a stale write with HTTP 409. Task creation also rejects evidence that changed while the draft was prepared.
+
+The bundled-Worker verification enables foreign keys and enforces D1's 50-statement request budget, 100-parameter statement limit, and payload limits. It injects a seed failure to verify rollback, retries completed batches, checks both new judge tools, and exercises the 82 → 81 workflow with task invalidation. This is stronger local compatibility coverage, not a substitute for a live hosted check.
 
 Hosted runtime code and configuration are included. A successful local test or build is **not** proof that an external deployment, database binding, or model secret works. Verify `/api/status`, baseline graph totals, a query, and a persisted task on the judging URL before presenting it. See [DEMO.md](./DEMO.md) for the walkthrough.
 

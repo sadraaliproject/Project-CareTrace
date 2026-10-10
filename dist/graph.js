@@ -23,7 +23,10 @@ export function createGraph(container, graph, {onSelect, mode='population'}={}) 
     {selector:'.tool-hit',style:{'border-width':4,'border-color':'#fff2b9','line-color':'#f1c474','target-arrow-color':'#f1c474',opacity:1}},
     {selector:'.hidden-type',style:{display:'none'}}
   ]});
-  if(mode==='patient'||mode==='ontology')cy.layout({name:'breadthfirst',directed:false,roots:patients[0]?.id,spacingFactor:1.25,padding:60,animate:false}).run();
+  if(mode==='patient'||mode==='ontology'){
+    cy.style().selector('node').style({'font-size':12,'text-wrap':'wrap','text-max-width':145,'text-margin-y':12,'min-zoomed-font-size':0}).selector('node[type="Document"], node[type="CareGap"]').style({label:'data(label)',width:23,height:23}).selector('edge').style({opacity:.55,label:el=>String(el.data('type')).toLowerCase().replaceAll('_',' '),'font-size':9,color:'#a9c4d8','text-background-color':'#101d30','text-background-opacity':1,'text-background-padding':3,'text-rotation':'autorotate'}).update();
+    cy.layout({name:'breadthfirst',directed:false,roots:patients[0]?.id,spacingFactor:1.6,padding:75,animate:false}).run();
+  }
   const select=node=>{cy.elements().removeClass('faded path');if(node.isNode()){const neighborhood=node.closedNeighborhood();cy.elements().difference(neighborhood).addClass('faded');neighborhood.addClass('path');}onSelect?.(node.data(),node.isEdge());};
   cy.on('tap','node, edge',ev=>select(ev.target));
   cy.on('tap',ev=>{if(ev.target===cy){cy.elements().removeClass('faded path');cy.elements().unselect();onSelect?.(null);}});

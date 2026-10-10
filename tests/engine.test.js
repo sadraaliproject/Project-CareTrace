@@ -68,6 +68,26 @@ test('followups inherit clinical scope and can change the barrier or age without
   assert.equal(third.plan.ageMin, 66);
 });
 
+test('also followups narrow the prior cohort and reject unrepresentable nested filters', () => {
+  const first = query('Find diabetic patients missing A1c tests with transportation barriers');
+  for (const question of ['Now also medication cost barriers', 'Of those also with food insecurity']) {
+    const second = query(question, first.plan);
+    assert.equal(second.plan.barrierMode, 'all', question);
+    assert.equal(second.plan.gapType, 'overdue');
+    assert.ok(second.result.patients.every(patient => first.result.patients.some(prior => prior.id === patient.id)), question);
+    assert.ok(second.result.count < first.result.count, question);
+  }
+  const union = query('Find patients with transportation or food barriers');
+  const nested = parseQuestion('Now also medication cost barriers', union.plan);
+  assert.equal(nested.ok, false);
+  assert.match(nested.error, /nested/);
+  for (const question of ['Now also transportation barriers', 'Of those also with food insecurity']) {
+    const repeatedLabel = parseQuestion(question, union.plan);
+    assert.equal(repeatedLabel.ok, false, 'A repeated label still adds a narrowing predicate to an OR cohort');
+    assert.match(repeatedLabel.error, /explicit filter/);
+  }
+});
+
 test('empty barrier list means no barrier restriction and explicit generic barriers require evidence', () => {
   const all = query('Show all patients').result;
   assert.equal(all.count, 1000);
@@ -105,6 +125,36 @@ test('negation is scoped to the assertion and does not suppress another real bar
   const items = extractBarriers(doc('Patient denies transportation problems but cannot afford the medication copay.'));
   assert.deepEqual(items.map(b => [b.type, b.status]), [['cost', 'active']]);
   assert.equal(items[0].quote, 'cannot afford the medication copay.');
+});
+
+test('independent clauses keep barrier-specific negation and resolution', () => {
+  const cases = [
+    ['Transportation is resolved and I cannot afford the medication copay.', [['transportation', 'resolved'], ['cost', 'active']]],
+    ['Patient has reliable transportation and cannot afford the medication copay.', [['cost', 'active']]],
+    ['Patient denies transportation problems and cannot afford medication.', [['cost', 'active']]],
+    ['Transportation is resolved, medication is unaffordable.', [['transportation', 'resolved'], ['cost', 'active']]],
+    ['Patient cannot afford medication while food insecurity is resolved.', [['cost', 'active'], ['food', 'resolved']]],
+    ['Her mother cannot get a ride and cannot afford the medication copay.', []],
+    ['If the patient cannot get transportation and cannot afford medication, discuss resources.', []],
+    ['Her mother cannot get transportation and the patient cannot afford medication.', [['cost', 'active']]],
+  ];
+  for (const [text, expected] of cases) {
+    const actual = extractBarriers(doc(text));
+    assert.deepEqual(actual.map(b => [b.type, b.status]), expected, text);
+    assert.ok(actual.every(b => text.includes(b.quote)), 'Every clause must retain a verbatim source quote');
+  }
+  const history = reconcileBarriers([
+    doc('Patient cannot afford the medication copay.', '2026-09-01', 'old-cost'),
+    doc('Patient has reliable transportation and cannot afford the medication copay.', AS_OF, 'new-cost')
+  ]);
+  assert.equal(history.find(b => b.type === 'cost').status, 'active');
+  assert.equal(history.find(b => b.type === 'cost').documentId, 'new-cost');
+});
+
+test('food and ride affordability are not misclassified as medication cost', () => {
+  assert.deepEqual(extractBarriers(doc('Patient cannot afford food.')).map(b => [b.type, b.status]), [['food', 'active']]);
+  assert.deepEqual(extractBarriers(doc('Patient cannot afford a ride to the clinic.')).map(b => [b.type, b.status]), [['transportation', 'active']]);
+  assert.deepEqual(extractBarriers(doc('Patient cannot afford the medication copay.')).map(b => [b.type, b.status]), [['cost', 'active']]);
 });
 
 test('temporal negation distinguishes loss of a ride from resolution of transportation need', () => {

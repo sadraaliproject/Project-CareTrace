@@ -94,6 +94,22 @@ Read the interpreted filters before discussing the answer. The model can vary to
 
 End with: “The result is a connected unit of work: patient, care gap, current evidence, and a next step that a person can review. When the evidence changes, the work changes with it.”
 
+## Judge extension: make the graph earn its place
+
+Open **Impact studio** and select **Try a tight $350 budget**. On a fresh dataset, the priority-first baseline fully covers five patients' documented support needs; the bundle-aware heuristic covers 20. Switch the graph between the two strategies, select a patient, and inspect the exact evidence supporting that allocation.
+
+Explain the tradeoff aloud: “This strategy buys more complete support coverage, but it selects a lower average synthetic priority. The warning shows who remains without support. These are illustrative program costs, not predicted medical outcomes or proven savings.” The algorithm reads current database evidence and has no authority to enroll anyone or resolve a barrier.
+
+Open **Proof challenge** and run the live checks. Show the 14 expected-versus-observed cases, two database query fingerprints, and source verification. Ask a judge for a fictional sentence, or try:
+
+> Transportation is resolved and I cannot afford the medication copay.
+
+Transportation should be resolved while medication cost remains active. Then try:
+
+> My sister cannot afford her medication, but I have no transportation to my appointments.
+
+The family member's medication cost should not become the patient's barrier. The custom preview has no predefined expected label and never writes a note. The fixed challenge set is deliberately small; unfamiliar language can still fail. Export the proof packet for the technical discussion.
+
 ## Optional one-minute extension: show the real ML
 
 Open **Evidence lab** and its local model evaluation. The included multinomial Naive Bayes artifact learns unigram and bigram features from **100 training examples** and is evaluated on **40 held-out examples**.
