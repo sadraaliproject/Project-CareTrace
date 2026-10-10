@@ -1,0 +1,14 @@
+{
+  "name": "careweave",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic-data care barrier intelligence and coordination demo",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "export-data": "node scripts/export-data.js",
+    "check": "node --check server.js && node --check planner.js && node --check dist/engine.js && node --check dist/app.js"
+  },
+  "engines": { "node": ">=22" }
+}
