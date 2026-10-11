@@ -1,4 +1,4 @@
-export const LIVE_PROMPT_VERSION = "careweave-investigator-2026-10-10.1";
+export const LIVE_PROMPT_VERSION = "caretrace-investigator-2026-10-10.2";
 
 // This prompt is intentionally inspectable through the application. No credentials
 // or hidden clinical policy belong here. Note text is always tool-returned data.
