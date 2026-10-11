@@ -527,11 +527,9 @@ async function investigate(question, mode = "auto") {
     state.runId = finalResult.runId;
     const id = finalResult.patientId || finalResult.result?.patients?.[0]?.id;
     if (id) {
-      const detail = await api("/patients/" + encodeURIComponent(id));
-      state.patient = detail.patient;
-      // The patient workspace always shows the recorded facts. Temporary
-      // simulation outcomes have their own clearly labeled comparison panel.
-      state.graph = detail.graph;
+      // The shared selection path preserves a newer patient/date choice when
+      // this investigation's patient request finishes later.
+      await selectPatient(id);
     }
     state.runs = (await api("/runs")).runs || [];
     if (!finalResult.ok || finalResult.error)
@@ -903,6 +901,12 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (action === "run") {
+    if (state.busy) {
+      toast(
+        "Stop the current investigation before opening a saved investigation.",
+      );
+      return;
+    }
     const sequence = ++runRequestSequence;
     patientRequestSequence++;
     try {

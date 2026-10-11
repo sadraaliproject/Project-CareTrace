@@ -68,7 +68,7 @@ The older unversioned mutation APIs remain disabled so the archived implementati
 
 ## Verification boundaries
 
-The CareTrace audit passes 193 automated tests, including new regressions for stale browser responses, historical source visibility, wrong-barrier simulations and unsupported inverse questions. Current browser and deployment checks are recorded in [the release checklist](RELEASE_CHECKLIST.md).
+The CareTrace audit passes 195 automated tests, including new regressions for stale browser responses, historical source visibility, wrong-barrier simulations and unsupported inverse questions. Current browser and deployment checks are recorded in [the release checklist](RELEASE_CHECKLIST.md).
 
 Unit and integration checks use real synthetic data, real SQLite persistence, the actual D1 SQL adapter, and a mocked OpenAI HTTP transport. The bundle check serves every allowed asset, executes a streamed graph investigation, saves and approves a task, and checks visitor separation. Browser review covers the story and public-facing controls at desktop and mobile sizes.
 

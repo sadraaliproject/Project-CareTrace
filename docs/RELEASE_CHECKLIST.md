@@ -2,7 +2,7 @@
 
 Audit date: October 10, 2026. Scope: the live workspace, its backend, production Worker, synthetic graph, AI connections, persistence and preserved guided story.
 
-The audited build is ready for a hackathon demonstration: **193 automated tests pass**, the production bundle passes its database and HTTP checks, and bounded live OpenAI, Gemini and ElevenLabs requests succeed. Known extraction mistakes remain visible. These results establish the tested behavior of this build; they do not establish clinical readiness or guarantee every possible input will work.
+The audited build is ready for a hackathon demonstration: **195 automated tests pass**, the production bundle passes its database and HTTP checks, and bounded live OpenAI, Gemini and ElevenLabs requests succeed. Known extraction mistakes remain visible. These results establish the tested behavior of this build; they do not establish clinical readiness or guarantee every possible input will work.
 
 Public address: [CareTrace](https://caretrace.us/). Source: [GitHub](https://github.com/sadraaliproject/Hackathon-26). Publication and the final production smoke result accompany the delivery.
 
@@ -11,7 +11,7 @@ Public address: [CareTrace](https://caretrace.us/). Source: [GitHub](https://git
 | Check                        | Result                   | Evidence and scope                                                                                                                                                                                                                         |
 | ---------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Branding                     | Pass                     | CareTrace titles, wordmarks, dialogs, narration, export names, project documentation and Sites title. Existing database/cookie identifiers remain stable so saved work survives.                                                           |
-| Automated regressions        | Pass                     | 193 tests, zero failures, skips or cancellations; includes retained earlier implementations and the active app.                                                                                                                            |
+| Automated regressions        | Pass                     | 195 tests, zero failures, skips or cancellations; includes retained earlier implementations and the active app.                                                                                                                            |
 | Syntax and source wording    | Pass                     | 75 JavaScript modules checked. Applied migration history remains immutable; three historical wording exceptions in two pinned files are reported separately.                                                                               |
 | Production package           | Pass                     | 17 allowed browser assets; production Worker executes a streamed 26-person query, D1 migrations, durable approval and visitor isolation.                                                                                                   |
 | Graph and query calculations | Pass                     | 1,000 discharges → 150 diabetes admissions → 60 open gaps → 26 with a detected barrier; 19 within 30 days. Primary groups sum to 26.                                                                                                       |
@@ -21,7 +21,7 @@ Public address: [CareTrace](https://caretrace.us/). Source: [GitHub](https://git
 | ElevenLabs audio             | Pass                     | Live MP3 loaded with readyState 4, duration 34.88 seconds and no media error. Preview starts with CareTrace and matches the approved server-owned task. Review, session ownership, timeout and response limits tested.                     |
 | Draft and review queue       | Pass                     | Prepare → approve → complete verified in the browser; completion survived reload. Duplicate preparation, invalid transitions, concurrency and session isolation tested.                                                                    |
 | Local durability             | Pass                     | Actual SQLite server restart tests preserve tasks and investigations. Database checks use the real D1 SQL adapter and migrations.                                                                                                          |
-| Browser timing and errors    | Pass                     | 23 tests execute the actual workspace handlers: reversed responses, modal dismissal, stale history, filtering, timeout/cancel recovery and export payload.                                                                                 |
+| Browser timing and errors    | Pass                     | 25 tests execute the actual workspace handlers: reversed responses, modal dismissal, stale history, filtering, timeout/cancel recovery and export payload.                                                                                 |
 | Guided story and keyboard    | Pass                     | All nine screens rendered without captured JavaScript errors. Tab containment, Escape, focus restoration across animation and native Space behavior checked.                                                                               |
 | Mobile layout                | Pass                     | Overview and queue checked at a 390-pixel viewport; document width equals available width, with no horizontal overflow. Navigation and dialog dismissal work.                                                                              |
 | Secrets and request controls | Pass                     | Keys stay on the server. Private files return 404; mutation origin checks, cookie isolation, input limits and durable AI budgets covered. No new audience or permissions.                                                                  |
@@ -30,7 +30,7 @@ Public address: [CareTrace](https://caretrace.us/). Source: [GitHub](https://git
 
 ## Bugs corrected in this release
 
-- Patient, date and history requests now discard obsolete responses. Delayed results cannot replace a newer selection or investigation.
+- Patient, date and history requests now discard obsolete responses, including patient loading after an investigation. Saved investigations open after the current question finishes or is stopped, preventing one question from appearing beside another question's answer.
 - Closing or replacing a source, comparison or audio dialog keeps it closed. Background task updates still refresh the queue without taking over the current dialog.
 - Investigation timeout reports a usable retry message; cancellation remains distinct.
 - Group filtering selects a patient from the visible group, clears unrelated actionable details and resets when reopening an investigation.

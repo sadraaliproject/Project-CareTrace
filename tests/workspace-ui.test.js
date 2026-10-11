@@ -109,6 +109,24 @@ function harness() {
     reply(index, data, ok = true) {
       pending[index].resolve({ ok, json: async () => data });
     },
+    replyInvestigation(index, result) {
+      const payload = new TextEncoder().encode(
+        `event: result\ndata: ${JSON.stringify(result)}\n\n`,
+      );
+      let read = false;
+      pending[index].resolve({
+        ok: true,
+        body: {
+          getReader: () => ({
+            async read() {
+              if (read) return { done: true };
+              read = true;
+              return { done: false, value: payload };
+            },
+          }),
+        },
+      });
+    },
     click(dataset) {
       return clicks[0]({ target: { closest: () => ({ dataset }) } });
     },
@@ -503,4 +521,52 @@ test("the evidence export preserves the exact result, filters, and citations wit
   assert.equal(h.revokedUrls.length, 0);
   h.timers[0]();
   assert.deepEqual(h.revokedUrls, [download.href]);
+});
+
+test("opening history during a live investigation cannot mix a saved question with the live answer", async () => {
+  const h = harness();
+  const investigation = h.app.investigate("Live question with 26 matches");
+  await h.click({ action: "run", id: "saved-9-match-run" });
+  assert.equal(h.pending.length, 1);
+  assert.match(
+    h.elements.get("#toast").textContent,
+    /Stop the current investigation/,
+  );
+  h.replyInvestigation(0, {
+    ok: true,
+    runId: "live-26-match-run",
+    question: "Live question with 26 matches",
+    result: { count: 26, groups: [], patients: [{ id: "P0009" }] },
+  });
+  await settle();
+  h.reply(1, detail("P0009"));
+  await settle();
+  h.reply(2, { runs: [] });
+  await investigation;
+  assert.equal(h.app.state.lastQuestion, "Live question with 26 matches");
+  assert.equal(h.app.state.result.question, h.app.state.lastQuestion);
+  assert.equal(h.app.state.result.result.count, 26);
+  assert.equal(h.app.state.runId, "live-26-match-run");
+});
+
+test("a delayed investigation patient fetch cannot overwrite a newer patient and date choice", async () => {
+  const h = harness();
+  const investigation = h.app.investigate("Live question");
+  h.replyInvestigation(0, {
+    ok: true,
+    runId: "live-run",
+    question: "Live question",
+    result: { count: 26, groups: [], patients: [{ id: "P0009" }] },
+  });
+  await settle();
+  const selected = h.app.selectPatient("P0001", "2026-09-24");
+  h.reply(2, detail("P0001"));
+  await selected;
+  h.reply(1, detail("P0009"));
+  await settle();
+  h.reply(3, { runs: [] });
+  await investigation;
+  assert.equal(h.app.state.patient.id, "P0001");
+  assert.equal(h.app.state.asOf, "2026-09-24");
+  assert.equal(h.app.state.result.result.count, 26);
 });
