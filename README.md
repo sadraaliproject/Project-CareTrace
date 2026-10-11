@@ -1,10 +1,10 @@
-# Careweave
+# CareTrace
 
 **Find the missed care. Understand the reason. Prepare the next step.**
 
-Careweave connects dated hospital records and nursing notes in an inspectable patient graph. The workspace turns a question into a counted group of patients, exact evidence, and a care-team task ready for human review.
+CareTrace connects dated hospital records and nursing notes in an inspectable patient graph. The workspace turns a question into a counted group of patients, exact evidence, and a care-team task ready for human review.
 
-[Open Careweave](https://careweave-barrier-intelligence.muddyape9.chatgpt.site/) · [GitHub](https://github.com/sadraaliproject/Hackathon-26)
+[Open CareTrace](https://caretrace.us/) · [GitHub](https://github.com/sadraaliproject/Hackathon-26)
 
 ## Start locally
 
@@ -15,7 +15,7 @@ npm ci
 npm start
 ```
 
-Open [localhost:4173](http://localhost:4173). VS Code's **Careweave: Run and debug** configuration also starts the workspace. A local SQLite database is initialized at `data/careweave-live.sqlite`; it is ignored by Git.
+Open [localhost:4173](http://localhost:4173). VS Code's **CareTrace: Run and debug** configuration also starts the workspace. A local SQLite database is initialized at `data/careweave-live.sqlite`; it is ignored by Git.
 
 The app works immediately in **rules mode**. For real model-driven investigations, copy `.env.example` to `.env`, add `OPENAI_API_KEY`, and keep the key local. Restart the local server after adding or changing the key. `OPENAI_MODEL` selects the model; the default is `gpt-4.1-mini`. The public Site has separate server secrets and does not receive local `.env` values automatically.
 
@@ -27,7 +27,7 @@ The app works immediately in **rules mode**. For real model-driven investigation
 4. Try a different question or narrow the result by age or hospital unit. Inspect the actual agent prompt and available tools.
 5. Prepare a care task, review its evidence, and approve it in the demo queue. Reload: the task and investigation remain in this browser's server session.
 
-The earlier nine-screen presentation is preserved at [Guided story](https://careweave-barrier-intelligence.muddyape9.chatgpt.site/story.html). It is labeled as a prepared presentation; its browser-local simulations do not change the live workspace.
+The earlier nine-screen presentation is preserved at [Guided story](https://caretrace.us/story.html). It is labeled as a prepared presentation; its browser-local simulations do not change the live workspace.
 
 ## What runs on the backend
 
@@ -39,7 +39,7 @@ The earlier nine-screen presentation is preserved at [Guided story](https://care
 - **Visitor isolation:** an opaque HttpOnly session cookie separates each visitor's saved work. Viewing or trying the public demo does not edit the source or another visitor's queue. This is browser-session persistence, not cross-device staff identity.
 - **Review workflow:** draft → approved → completed. These are demonstration task states; no message is sent, no ride is booked, and no clinical record is changed.
 
-The note reader remains the frozen, measured text-pattern reader. A live model investigation does not turn that reader into a clinically validated extractor. The fixed reference date is October 10, 2026; all 1,000 people and 600 notes are fictional.
+The live workspace uses a versioned text-pattern reader with regression fixes for explicit resolutions and separate clauses. The guided story retains its original frozen reader. Both measure 89.09% precision and 90.74% recall on the independent synthetic note labels; a model investigation does not make extraction clinically validated. The fixed reference date is October 10, 2026; all 1,000 people and 600 notes are fictional.
 
 ## Verify
 
@@ -67,12 +67,11 @@ The new migration is additive. Older migration history and earlier integration r
 | Guided story                       | `dist/story.html`, `pilot-app.js`, `pilot.css`, `pilot-engine.js`                                    |
 | Synthetic data and measured reader | `dist/pilot-data.js`, `pilot-reader.js`, `pilot-labels.js`                                           |
 
-Read [the presenter guide](DEMO.md), [the agent architecture](docs/LIVE_WORKSPACE.md), and [the extraction measurements](docs/ENHANCEMENT_REPORT.md). Earlier integrations under `backend/agent.js`, `backend/api.js`, and the archived server are retained for reference and regression checks, but are not the active workspace API.
+Read [the presenter guide](DEMO.md), [the release checklist](docs/RELEASE_CHECKLIST.md), [the agent architecture](docs/LIVE_WORKSPACE.md), and [the guided story extraction measurements](docs/ENHANCEMENT_REPORT.md). Earlier integrations under `backend/agent.js`, `backend/api.js`, and the archived server are retained for reference and regression checks, but are not the active workspace API.
 
 ## Reviewed task audio
 
 Approved or completed tasks offer an exact-text preview and ElevenLabs MP3 generation. Configure ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID and optional ELEVENLABS_MODEL (default eleven_flash_v2_5) in the ignored local .env or protected Sites runtime settings. Restart locally or redeploy after changes. Audio reads the server-owned care-team task verbatim; it is not a patient instruction, clinical translation, booking or patient contact. Only session-owned reviewed tasks are eligible. Requests share the durable AI budget (12 per session/hour and 50 globally/day), have a 25-second service timeout and a 2 MB audio cap. Playback/download is browser-local and closing the dialog releases the audio. The earlier care studio remains archived.
-
 
 ## Evidence-linked Gemini care brief
 

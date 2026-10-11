@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Careweave: Run and debug",
+      "name": "CareTrace: Run and debug",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/server.js",
@@ -11,7 +11,7 @@
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
       "serverReadyAction": {
-        "pattern": "Careweave ready: (https?://\\S+)",
+        "pattern": "CareTrace ready: (https?://\\S+)",
         "uriFormat": "%s",
         "action": "openExternally"
       }

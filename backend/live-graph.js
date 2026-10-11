@@ -1,6 +1,7 @@
 import { rawPatients } from "../dist/pilot-data.js";
 import { createPilotGraph, AS_OF, daysBetween } from "../dist/pilot-engine.js";
 import { BARRIERS, ontology } from "../dist/ontology.js";
+import { readLiveNote, LIVE_READER_VERSION } from "./live-reader.js";
 
 const copy = (value) => structuredClone(value);
 const barrierTypes = Object.keys(BARRIERS);
@@ -182,7 +183,7 @@ function summaryFor(patient) {
 export function createLiveGraph(inputPatients = rawPatients) {
   // Every caller receives immutable views; the underlying mutable pilot is private.
   const originals = copy(inputPatients);
-  const pilot = createPilotGraph(originals);
+  const pilot = createPilotGraph(originals, { readNote: readLiveNote });
   const units = unique(
     pilot.patients.map((patient) => patient.admission.unit),
   ).sort();
@@ -398,12 +399,55 @@ export function createLiveGraph(inputPatients = rawPatients) {
     };
   }
 
-  function source(id) {
+  function datedPatientGraph(id, options = {}) {
+    const asOf = validateDate(options.asOf || AS_OF);
+    const snapshot = pilot.patientGraph(id, { ...options, asOf });
+    if (snapshot.patient?.admission.admitDate > asOf)
+      return { nodes: [], edges: [], patient: null, asOf };
+    const admission = snapshot.nodes.find((node) => node.type === "Admission");
+    if (admission && snapshot.patient) {
+      const { patientId, ...row } = admission.properties;
+      snapshot.patient.admission = row;
+    }
+    return snapshot;
+  }
+
+  function source(id, { asOf = AS_OF } = {}) {
+    validateDate(asOf);
     const found = sources.get(id);
     if (!found) return null;
-    const patient = pilot.getPatient(found.patientId);
+    const snapshot = datedPatientGraph(found.patientId, { asOf });
+    const patient = snapshot.patient;
+    if (!patient) return null;
+    let row;
+    if (found.table === "patients")
+      row = {
+        id: patient.id,
+        name: patient.name,
+        age: patient.age,
+        sex: patient.sex,
+      };
+    else if (found.table === "admissions")
+      row = snapshot.nodes.find((node) => node.id === id)?.properties;
+    else if (found.table === "conditions") row = patient.condition;
+    else {
+      const records = {
+        clinical_notes: patient.notes,
+        coded_social_needs: patient.socialNeeds,
+        lab_results: patient.labs,
+        outpatient_pharmacy: patient.medications,
+        appointments: patient.appointments,
+        emergency_department_visits: patient.emergencyVisits,
+      };
+      row = records[found.table]?.find((item) => item.id === id);
+    }
+    if (!row) return null;
     return copy({
       ...found,
+      row,
+      text: row.text || row.display || null,
+      asOf,
+      historical: asOf !== AS_OF,
       assertions: patient.barrierAssertions.filter(
         (item) => (item.note_id || item.documentId) === id,
       ),
@@ -418,7 +462,7 @@ export function createLiveGraph(inputPatients = rawPatients) {
       !patient.barriers.some((item) => item.type === barrier)
     )
       throw new Error("Choose a current barrier recorded for this patient.");
-    const isolated = createPilotGraph(originals);
+    const isolated = createPilotGraph(originals, { readNote: readLiveNote });
     isolated.setResolved(patientId, barrier, true);
     const before = queryAgainst(pilot, filters);
     const after = queryAgainst(isolated, filters);
@@ -452,6 +496,7 @@ export function createLiveGraph(inputPatients = rawPatients) {
     overview: () =>
       copy({
         asOf: AS_OF,
+        readerVersion: LIVE_READER_VERSION,
         ...pilot.funnel(),
         totals: pilot.totals(),
         featuredId: pilot.featuredId,
@@ -462,6 +507,7 @@ export function createLiveGraph(inputPatients = rawPatients) {
     describe: () =>
       copy({
         asOf: AS_OF,
+        readerVersion: LIVE_READER_VERSION,
         ontology,
         defaultFilters,
         units,
@@ -475,22 +521,17 @@ export function createLiveGraph(inputPatients = rawPatients) {
           edReturn:
             "An emergency department visit occurred on or after a missed follow-up visit and on or after discharge.",
           barrierReading:
-            "Current edges come from the frozen local text reader. Negation and context handling are measured but imperfect; every finding requires source review.",
+            "Current edges come from the versioned local text reader. Negation and context handling are measured but imperfect; every finding requires source review.",
         },
       }),
     query: (filters = defaultFilters, options) =>
       queryAgainst(pilot, filters, options),
     getPatient: (id, options = {}) =>
       options.asOf
-        ? copy(
-            pilot.patientGraph(id, { asOf: validateDate(options.asOf) })
-              .patient,
-          )
+        ? copy(datedPatientGraph(id, options).patient)
         : copy(pilot.getPatient(id)),
     patientGraph(id, options = {}) {
-      const asOf = options.asOf || AS_OF;
-      validateDate(asOf);
-      return copy(pilot.patientGraph(id, { ...options, asOf }));
+      return copy(datedPatientGraph(id, options));
     },
     source,
     whatIf,

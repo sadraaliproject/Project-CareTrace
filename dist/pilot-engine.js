@@ -244,12 +244,15 @@ function groupsFor(patients) {
   }));
 }
 
-export function createPilotGraph(rawPatients) {
+export function createPilotGraph(
+  rawPatients,
+  { readNote: noteReader = readNote } = {},
+) {
   const originals = clone(rawPatients);
   const resolved = new Set();
   const readings = new Map(
     originals.flatMap((patient) =>
-      (patient.notes || []).map((note) => [note.id, readNote(note)]),
+      (patient.notes || []).map((note) => [note.id, noteReader(note)]),
     ),
   );
   let patients, nodes, edges, tables, nodeById, outgoing;

@@ -2,13 +2,13 @@
 
 > Archived setup for the earlier care-brief implementation. The current workspace uses the OpenAI investigation agent described in [README](../README.md) and [LIVE_WORKSPACE](LIVE_WORKSPACE.md). The current workspace now supports Gemini to order verified care-team steps through the patient’s **Prepare Gemini care brief** button. The earlier staff-sign-in flow remains archived. The current workspace now supports ElevenLabs for reading approved care-team tasks, with exact text preview and explicit generation. Follow the current README for that feature; the sections below describe the earlier care studio.
 
-Careweave's graph, exact SQL counts, source evidence and English/Spanish care briefs work with the synthetic local dataset. Device speech is available when the browser has a compatible voice. Gemini and ElevenLabs are optional live services; an API key or a green configuration indicator alone does not establish a successful live call.
+CareTrace's graph, exact SQL counts, source evidence and English/Spanish care briefs work with the synthetic local dataset. Device speech is available when the browser has a compatible voice. Gemini and ElevenLabs are optional live services; an API key or a green configuration indicator alone does not establish a successful live call.
 
 ## What fits the project
 
 The [Hacklanta prize page](https://www.mlh.com/events/hacklanta-db/prizes) lists the following opportunities. These are project mappings, not confirmed contest eligibility. Check the event's current submission rules and demonstrate actual service use before selecting a category.
 
-| Category                                    | Careweave use                                                     | Current boundary                                                                                            |
+| Category                                    | CareTrace use                                                     | Current boundary                                                                                            |
 | ------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | Best Use of Gemini API                      | Order existing care actions using the patient's verified evidence | Optional integration; live verification requires a configured key and a successful request                  |
 | Best Use of ElevenLabs                      | Read the exact reviewed care brief aloud                          | Optional integration; live verification requires a configured key, permitted voice and a successful request |

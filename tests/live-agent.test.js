@@ -181,6 +181,67 @@ test("clinical look-alikes, resolved barriers and negated diabetes never become 
   assert.equal(graph.query().fingerprint, original);
 });
 
+test("unsupported completed-care and negated numeric filters never become opposite cohorts", async () => {
+  for (const question of [
+    "patients with no follow-up gap",
+    "patients without an open follow-up gap",
+    "patients without missed follow-up",
+    "patients with a completed follow-up visit",
+    "diabetes admissions who attended their follow-up",
+    "patients with transportation barriers but not insulin pickup problems",
+    "only those not over 65",
+    "Find patients who did not return to ED",
+    "Find patients without an emergency visit",
+    "Find patients not likely to return",
+    "Find patients with no return risk flag",
+    "Find patients who can afford insulin",
+    "Find patients with no need for transportation",
+    "Find patients who have reliable transportation",
+    "transportation barriers with insulin picked up",
+    "transportation barriers for patients who picked up their new insulin",
+  ]) {
+    const value = await runLiveAgent({ question, graph });
+    assert.equal(value.ok, false, question);
+    assert.equal(value.error, "UNSUPPORTED_QUESTION", question);
+    assert.equal(value.result, null, question);
+    assert.equal(value.events.length, 0, question);
+  }
+  assert.equal(
+    parseRulesQuestion("patients with no reliable ride").filters.barriers[0],
+    "transportation",
+  );
+  assert.equal(
+    parseRulesQuestion("new insulin not picked up").filters.insulinNotPickedUp,
+    true,
+  );
+  assert.equal(
+    parseRulesQuestion("patients who have not picked up insulin").filters
+      .insulinNotPickedUp,
+    true,
+  );
+  assert.equal(
+    parseRulesQuestion("patients who cannot afford insulin").filters
+      .barriers[0],
+    "cost",
+  );
+  assert.equal(
+    parseRulesQuestion("patients who returned to ED").filters.edReturn,
+    true,
+  );
+  assert.equal(
+    parseRulesQuestion("patients likely to return").filters.likelyToReturn,
+    true,
+  );
+  assert.equal(
+    parseRulesQuestion("transport barriers under 30 days").filters.within30,
+    true,
+  );
+  assert.equal(
+    parseRulesQuestion("transport barriers younger than 66").filters.ageMax,
+    65,
+  );
+});
+
 test("a rules simulation needs an explicit intent, one named patient and one barrier", async () => {
   for (const question of [
     "What if transportation were resolved?",
@@ -232,6 +293,64 @@ test("the live tool cannot simulate for an arbitrary patient or turn a past-tens
           event.tool === "simulate_resolution" && event.status === "complete",
       ),
     );
+  }
+});
+
+test("the live tool cannot substitute a different barrier or choose from an ambiguous resolution request", async () => {
+  const filters = { ...defaultFilters, barriers: ["transportation"] };
+  const prelude = (barrier) => [
+    call("describe_graph", {}),
+    call("query_patients", { filters }),
+    call("inspect_patient", { patientId: "P0009" }),
+    call("read_source", { sourceId: "P0009-N02" }),
+    call("simulate_resolution", { patientId: "P0009", barrier }),
+    answer(selection("P0009", ["P0009-N02"])),
+  ];
+  for (const question of [
+    "What if transportation were resolved for P0009?",
+    "What if cost and transportation were resolved for P0009?",
+  ]) {
+    const value = await liveRun(prelude("cost"), { question });
+    assert.equal(value.ok, false, question);
+    assert.match(value.answer, /exactly the barrier named/);
+    assert.equal(value.simulation, undefined);
+    assert.ok(
+      !value.events.some(
+        (event) =>
+          event.tool === "simulate_resolution" && event.status === "complete",
+      ),
+    );
+  }
+  const valid = await liveRun(prelude("transportation"), {
+    question: "What if transportation were resolved for P0009?",
+  });
+  assert.equal(valid.ok, true);
+  assert.equal(valid.simulation.barrier, "transportation");
+});
+
+test("citations select the queried barrier when one note documents several barriers", async () => {
+  for (const barriers of [["transportation"], ["cost", "transportation"]]) {
+    const filters = { ...defaultFilters, barriers, barrierMode: "all" };
+    const value = await liveRun([
+      call("describe_graph", {}),
+      call("query_patients", { filters }),
+      call("inspect_patient", { patientId: "P0009" }),
+      call("read_source", { sourceId: "P0009-N02" }),
+      answer(selection("P0009", ["P0009-N02"])),
+    ]);
+    assert.equal(value.ok, true);
+    const citation = value.citations[0];
+    assert.match(citation.quote, /daughter works days/);
+    if (barriers.length === 1) {
+      assert.doesNotMatch(citation.quote, /cannot afford/);
+      assert.equal(
+        graph.source(citation.sourceId).text.slice(...citation.charSpan),
+        citation.quote,
+      );
+    } else {
+      assert.match(citation.quote, /cannot afford/);
+      assert.equal(citation.charSpan, null);
+    }
   }
 });
 

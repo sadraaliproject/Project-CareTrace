@@ -38,6 +38,22 @@ function assertId(value, pattern, label) {
     fail(400, "invalid_id", `Choose a valid ${label}.`);
   return value;
 }
+function referenceDate(url) {
+  const asOf = url.searchParams.get("asOf") || AS_OF;
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(asOf) ||
+    !Number.isFinite(Date.parse(asOf)) ||
+    new Date(asOf).toISOString().slice(0, 10) !== asOf ||
+    asOf > AS_OF ||
+    asOf < "2025-01-01"
+  )
+    fail(
+      400,
+      "invalid_date",
+      "Choose a valid date on or before the demo's reference date.",
+    );
+  return asOf;
+}
 async function readBody(request, limit) {
   if (
     request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !==
@@ -86,7 +102,7 @@ function sameOrigin(request, hosted) {
     fail(
       403,
       "origin",
-      "Open Careweave directly to make changes in your demo session.",
+      "Open CareTrace directly to make changes in your demo session.",
     );
 }
 
@@ -267,24 +283,18 @@ export function createLiveApi({
       const patientMatch = route.match(/^\/patients\/([^/]+)$/);
       if (patientMatch && method === "GET") {
         const id = assertId(patientMatch[1], patientIdPattern, "patient");
-        const asOf = url.searchParams.get("asOf") || AS_OF;
-        if (
-          !/^\d{4}-\d{2}-\d{2}$/.test(asOf) ||
-          !Number.isFinite(Date.parse(asOf)) ||
-          new Date(asOf).toISOString().slice(0, 10) !== asOf ||
-          asOf > AS_OF ||
-          asOf < "2025-01-01"
-        )
-          fail(
-            400,
-            "invalid_date",
-            "Choose a valid date on or before the demo's reference date.",
-          );
+        const asOf = referenceDate(url);
         if (!graph.getPatient(id))
           fail(404, "not_found", "This patient was not found.");
         const patientGraph = graph.patientGraph(id, { asOf });
+        if (!patientGraph.patient)
+          fail(
+            404,
+            "not_found",
+            "This patient was not yet admitted on the selected date.",
+          );
         return respond({
-          patient: patientGraph.patient || graph.getPatient(id, { asOf }),
+          patient: patientGraph.patient,
           graph: patientGraph,
           asOf,
         });
@@ -298,9 +308,10 @@ export function createLiveApi({
           fail(400, "invalid_id", "Choose a valid source.");
         }
         const id = assertId(decoded, /^[A-Za-z0-9:._-]{1,100}$/, "source");
-        const source = graph.source(id);
+        const asOf = referenceDate(url);
+        const source = graph.source(id, { asOf });
         if (!source) fail(404, "not_found", "This source was not found.");
-        return respond(source);
+        return respond({ ...source, asOf });
       }
       if (route === "/tasks" && method === "GET")
         return respond({ tasks: await store.listTasks(sessionId) });
@@ -375,7 +386,7 @@ export function createLiveApi({
           headers.set("content-type", "audio/mpeg");
           headers.set(
             "content-disposition",
-            'inline; filename="careweave-reviewed-task.mp3"',
+            'inline; filename="caretrace-reviewed-task.mp3"',
           );
           return new Response(audio, { headers });
         } catch (error) {

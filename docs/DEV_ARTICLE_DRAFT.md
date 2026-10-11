@@ -1,4 +1,4 @@
-# Careweave: the reason for a missed visit was already in the hospital's notes
+# CareTrace: the reason for a missed visit was already in the hospital's notes
 
 **Unpublished draft.** This file has not been posted to DEV or submitted to a challenge. Before publishing, replace the verification checklist at the end with observations from the final build, include screenshots from that build, and confirm the event's current submission rules. Do not insert API keys or personal account details.
 
@@ -6,7 +6,7 @@
 
 A missed follow-up appointment tells a hospital that something went wrong. It rarely explains why. That explanation may be in a bedside nursing note: the patient's daughter drove her to the hospital, but she has no way to return to the clinic.
 
-Careweave connects the hospital's own records to those notes. The question is practical: after a diabetes-related admission, who has an open follow-up gap, what documented obstacle can the hospital help with, and who should take the next step?
+CareTrace connects the hospital's own records to those notes. The question is practical: after a diabetes-related admission, who has an open follow-up gap, what documented obstacle can the hospital help with, and who should take the next step?
 
 The prototype uses only synthetic data: 1,000 discharged adults, including 150 diabetes-related admissions, and 600 clinical notes. Public Synthea identities anchor the dataset; purpose-built hospital scenarios add the discharge dates, appointments, pharmacy pickup records and notes. The fixed demonstration date is October 10, 2026.
 
@@ -14,7 +14,7 @@ The prototype uses only synthetic data: 1,000 discharged adults, including 150 d
 
 We keep two visible source layers: hospital tables and clinical notes. Ten graph node types connect a patient to their admission, test results, discharge prescriptions, appointments, follow-up gap, notes, documented barriers and possible actions.
 
-A search retrieves words. Careweave also joins facts. A patient enters the main answer only when the stored dates and statuses satisfy the follow-up rule and a current documented barrier is present. A bound SQL query supplies the count; a language model does not estimate it. The unmodified synthetic baseline yields 78 patients for the main question.
+A search retrieves words. CareTrace also joins facts. A patient enters the main answer only when the stored dates and statuses satisfy the follow-up rule and a current documented barrier is present. A bound SQL query supplies the count; a language model does not estimate it. The unmodified synthetic baseline yields 78 patients for the main question.
 
 Every accepted barrier points back to an exact sentence or coded social-need row. The graph lets a judge select a patient and inspect that path. The canvas is limited to 50 nodes at a time so the explanation remains readable.
 
@@ -22,7 +22,7 @@ Every accepted barrier points back to an exact sentence or coded social-need row
 
 P0412 is a fictional 67-year-old woman discharged after diabetic ketoacidosis. Her appointment on day 10 is a no-show, and the hospital's outpatient pharmacy has no pickup for her new insulin. There is no coded social need. A bedside nursing note from two days before discharge records the transportation problem.
 
-The proposed action is for the care transitions nurse to arrange hospital transport and offer a video visit. Careweave prepares the next step for human review. It does not make the booking or contact the patient.
+The proposed action is for the care transitions nurse to arrange hospital transport and offer a video visit. CareTrace prepares the next step for human review. It does not make the booking or contact the patient.
 
 ## Making the next step understandable
 

@@ -1,6 +1,6 @@
 /** Read reviewed server-owned text; never accept arbitrary speech from visitors. */
 export function taskAudioText(task) {
-  return `Careweave demonstration. This is an approved care-team task for fictional patient ${task.patientId}. ${task.body} Assigned care-team role: ${task.owner}. Approval does not mean that this task has been carried out.`;
+  return `CareTrace demonstration. This is an approved care-team task for fictional patient ${task.patientId}. ${task.body} Assigned care-team role: ${task.owner}. Approval does not mean that this task has been carried out.`;
 }
 
 export async function generateTaskAudio(text, settings, signal) {

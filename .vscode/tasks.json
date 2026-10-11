@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Careweave: Start server",
+      "label": "CareTrace: Start server",
       "type": "npm",
       "script": "start",
       "isBackground": true,
@@ -13,7 +13,7 @@
       }
     },
     {
-      "label": "Careweave: Run tests",
+      "label": "CareTrace: Run tests",
       "type": "npm",
       "script": "test",
       "group": {
@@ -23,7 +23,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Careweave: Check JavaScript",
+      "label": "CareTrace: Check JavaScript",
       "type": "npm",
       "script": "check",
       "group": {
@@ -33,19 +33,19 @@
       "problemMatcher": []
     },
     {
-      "label": "Careweave: Verify demonstration",
+      "label": "CareTrace: Verify demonstration",
       "type": "npm",
       "script": "verify:pilot",
       "problemMatcher": []
     },
     {
-      "label": "Careweave: Build hosted app",
+      "label": "CareTrace: Build hosted app",
       "type": "npm",
       "script": "build",
       "problemMatcher": []
     },
     {
-      "label": "Careweave: Export synthetic data",
+      "label": "CareTrace: Export synthetic data",
       "type": "npm",
       "script": "export-data",
       "problemMatcher": []

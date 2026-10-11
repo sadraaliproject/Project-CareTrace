@@ -1,8 +1,8 @@
-# Careweave: hospital transitions
+# CareTrace: hospital transitions
 
 **We are a hospital system. We discharged these patients, and we wrote down why some of them will struggle at home.**
 
-Careweave connects a hospital's own admissions, laboratory results, discharge prescriptions, pharmacy pickup records and appointments to its clinical notes. It finds discharged patients who are off track at home, shows the evidence, and prepares a transitions-of-care action for a person to review.
+CareTrace connects a hospital's own admissions, laboratory results, discharge prescriptions, pharmacy pickup records and appointments to its clinical notes. It finds discharged patients who are off track at home, shows the evidence, and prepares a transitions-of-care action for a person to review.
 
 All records are synthetic. The fixed judging date is **October 10, 2026**. There are **1,000 adults discharged in the preceding 90 days**, including **150 diabetes-related admissions**. Patient identities come from the public Synthea sample; the hospital admission scenarios, dates, notes and operational records are purpose-built synthetic fixtures. The source manifest records the exact inputs and transformations.
 
@@ -23,7 +23,7 @@ npm start
 
 Open [http://localhost:4173](http://localhost:4173). The local server uses Node's built-in SQLite database. Its first database request loads the synthetic hospital dataset. Later runs retain notes, reviewed tasks and saved analyses. The hosted build uses the same API with a D1 database.
 
-[GitHub repository](https://github.com/sadraaliproject/Hackathon-26). Open `Careweave.code-workspace` in Visual Studio Code and press **F5** to start the debugger. The configured tasks also run tests, syntax checks, model training and builds.
+[GitHub repository](https://github.com/sadraaliproject/Hackathon-26). Open `CareTrace.code-workspace` in Visual Studio Code and press **F5** to start the debugger. The configured tasks also run tests, syntax checks, model training and builds.
 
 ### Optional live OpenAI agent
 

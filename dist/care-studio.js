@@ -485,7 +485,7 @@ export function createCareStudio({ api, toast, onGraph, onPatient, rerender }) {
     if (!(await verifyCurrentBrief())) return;
     const brief = state.brief;
     const contents = [
-      "CAREWEAVE — REVIEWED DEMO HANDOFF",
+      "CARETRACE — REVIEWED DEMO HANDOFF",
       "Fictional patient. Prepared for a care-team conversation.",
       `${brief.patientName} (${brief.patientId})`,
       `Language: ${brief.language}`,
@@ -506,7 +506,7 @@ export function createCareStudio({ api, toast, onGraph, onPatient, rerender }) {
     );
     download(
       url,
-      `careweave-${brief.patientId}-${brief.language}-reviewed.txt`,
+      `caretrace-${brief.patientId}-${brief.language}-reviewed.txt`,
     );
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -538,7 +538,7 @@ export function createCareStudio({ api, toast, onGraph, onPatient, rerender }) {
         )
           download(
             state.audioUrl,
-            `careweave-${state.brief.patientId}-${state.brief.language}.mp3`,
+            `caretrace-${state.brief.patientId}-${state.brief.language}.mp3`,
           );
         break;
       case "studio-graph":

@@ -186,3 +186,46 @@ test("filter validation rejects contradictory, misspelled, unbounded and injecte
   assert.throws(() => graph.query({}, { limit: 1000 }));
   assert.deepEqual(validateFilters({}), { ...defaultFilters, barriers: [] });
 });
+
+test("historical source records use the same visible facts as the historical graph", () => {
+  const patient = graph.getPatient("P0001");
+  const asOf = patient.admission.dischargeDate;
+  const view = graph.patientGraph(patient.id, { asOf });
+  const visit = view.patient.appointments[0];
+  assert.equal(graph.source(visit.id, { asOf }).row.status, "scheduled");
+  assert.equal(graph.source(visit.id).row.status, "no_show");
+  assert.equal(graph.source(visit.id, { asOf }).asOf, asOf);
+  assert.equal(graph.source(visit.id, { asOf }).historical, true);
+  for (const medication of view.patient.medications) {
+    const source = graph.source(medication.id, { asOf });
+    assert.equal(source.row.pickedUp, medication.pickedUp);
+    assert.equal(source.row.pickupDate, medication.pickupDate);
+  }
+  const futureNote = patient.notes.find((note) => note.date > asOf);
+  assert.ok(futureNote);
+  assert.equal(graph.source(futureNote.id, { asOf }), null);
+  assert.equal(
+    graph.source(patient.admission.id, { asOf: "2026-09-24" }).row.disposition,
+    "In hospital",
+  );
+  assert.equal(
+    graph.source(patient.admission.id, { asOf: "2026-09-24" }).row
+      .dischargeDate,
+    null,
+  );
+  assert.equal(
+    graph.source(patient.admission.id, { asOf: "2026-09-22" }),
+    null,
+  );
+  assert.throws(() => graph.source(visit.id, { asOf: "2026-02-31" }));
+  assert.equal(
+    graph.getPatient(patient.id, { asOf: "2026-09-24" }).admission
+      .dischargeDate,
+    null,
+  );
+  assert.equal(graph.getPatient(patient.id, { asOf: "2026-09-22" }), null);
+  assert.equal(
+    graph.patientGraph(patient.id, { asOf: "2026-09-22" }).nodes.length,
+    0,
+  );
+});

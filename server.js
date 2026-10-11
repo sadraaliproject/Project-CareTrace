@@ -167,11 +167,11 @@ if (
   await server.ready;
   server.listen(port, "127.0.0.1", () =>
     console.log(
-      `Careweave ready: http://127.0.0.1:${port}\nLive workspace · SQLite persistence · synthetic patients`,
+      `CareTrace ready: http://127.0.0.1:${port}\nLive workspace · SQLite persistence · synthetic patients`,
     ),
   );
   server.on("error", (error) => {
-    console.error(`Unable to start Careweave: ${error.message}`);
+    console.error(`Unable to start CareTrace: ${error.message}`);
     process.exitCode = 1;
   });
 }

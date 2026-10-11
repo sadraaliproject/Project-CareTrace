@@ -620,3 +620,36 @@ test("Gemini brief API validates body, evidence, service output and budget witho
     context.store.close();
   }
 });
+
+test("source API applies the same historical date as the patient graph", async () => {
+  const context = await setup();
+  try {
+    const source = await context.request("/sources/P0001-V01?asOf=2026-09-26", {
+      cookie: context.cookie,
+    });
+    assert.equal(source.status, 200);
+    const body = await source.json();
+    assert.equal(body.asOf, "2026-09-26");
+    assert.equal(body.row.status, "scheduled");
+    assert.equal(
+      (await context.request("/sources/P0001-N05?asOf=2026-09-26")).status,
+      404,
+    );
+    assert.equal(
+      (await context.request("/sources/P0001-V01?asOf=2026-02-31")).status,
+      400,
+    );
+    assert.equal(
+      (await context.request("/sources/P0001-V01?asOf=2027-01-01")).status,
+      400,
+    );
+    const current = await (await context.request("/sources/P0001-V01")).json();
+    assert.equal(current.row.status, "no_show");
+    assert.equal(
+      (await context.request("/patients/P0001?asOf=2025-01-01")).status,
+      404,
+    );
+  } finally {
+    await context.store.close();
+  }
+});

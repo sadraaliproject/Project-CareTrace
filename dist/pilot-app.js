@@ -77,7 +77,7 @@ const SCREENS = [
     id: "investigation",
     short: "The investigation",
     title: "Follow the evidence, one step at a time",
-    eyebrow: "05 / The Careweave investigator",
+    eyebrow: "05 / The CareTrace investigator",
     sub: "Start with what happened. Keep going until there is something the care team can do.",
   },
   {
@@ -115,7 +115,7 @@ const notes = rawPatients.flatMap((p) =>
 );
 const prepared = await support.loadPrepared().catch((error) => {
   document.querySelector("#app").innerHTML =
-    '<div class="pilot-load-error" role="alert"><h1>The workspace could not finish loading.</h1><p>A prepared route file is unavailable. Reload the page to try again.</p><button class="control primary" id="reload-workspace">Reload Careweave</button></div>';
+    '<div class="pilot-load-error" role="alert"><h1>The workspace could not finish loading.</h1><p>A prepared route file is unavailable. Reload the page to try again.</p><button class="control primary" id="reload-workspace">Reload CareTrace</button></div>';
   document
     .querySelector("#reload-workspace")
     .addEventListener("click", () => location.reload());
@@ -589,7 +589,7 @@ function render() {
   const screen = SCREENS[state.screen],
     totals = graph.totals();
   $("#app").innerHTML =
-    `<div class="pilot ${state.engine ? "engine-mode" : "product-mode"} ${state.collapsed ? "console-collapsed" : ""} ${state.sheet ? "sheet-open" : ""}" style="--console-height:${state.consoleHeight}px"><aside class="workspace-nav ${state.menu ? "open" : ""}"><a class="brand" href="#systems" data-action="nav" data-index="0"><span class="brand-mark">✳</span><span>careweave<span class="brand-sub">HOSPITAL INTELLIGENCE</span></span></a><div class="workspace-label">NORTHSTAR <span>CARE TRANSITIONS</span></div><nav aria-label="Guided flow">${SCREENS.map((s, i) => `<button class="nav-item ${i === state.screen ? "selected" : ""}" data-action="nav" data-index="${i}" ${i === state.screen ? 'aria-current="page"' : ""}><span>${String(i + 1).padStart(2, "0")}</span>${s.short}${i < state.screen ? "<i>✓</i>" : ""}</button>`).join("")}</nav><div class="nav-bottom"><span class="status-dot"></span> Connected evidence<div><strong>${number(totals.nodes)}</strong> nodes <span>·</span> <strong>${number(totals.edges)}</strong> edges</div><small>${number(totals.notesRead)} notes read</small></div></aside><div class="workspace"><header class="topbar">${button("☰", "menu", 'aria-label="Open navigation"', "menu-button")}<div class="hospital"><strong>Northstar Hospital System</strong><span>Care transitions workspace <i>·</i> ${date(AS_OF)}</span></div><div class="header-tools"><button class="prototype-chip" data-action="about"><i></i>Prototype · synthetic patients</button><div class="view-switch" role="group" aria-label="Workspace view"><button data-action="product" class="${!state.engine ? "active" : ""}" aria-pressed="${!state.engine}">Product<span> view</span></button><button data-action="engine" class="${state.engine ? "active" : ""}" aria-pressed="${state.engine}">Engine<span> view</span><kbd>E</kbd></button></div></div></header><main><div class="page-heading"><div><div class="eyebrow">${screen.eyebrow}</div><h1>${screen.title}</h1><p>${screen.sub}</p></div><div class="heading-count"><span>${String(state.screen + 1).padStart(2, "0")}</span> / ${String(SCREENS.length).padStart(2, "0")}</div></div><div class="scene"><section class="visual-panel">${visualHTML()}</section><section class="story-panel" aria-label="Patient story">${storyHTML()}</section></div><section class="engine-console" aria-label="Engine console"><div class="console-resize" role="separator" aria-label="Resize engine console" aria-orientation="horizontal" tabindex="0"></div><div class="pipeline" id="pipeline">${pipelineHTML()}</div><div class="console-tabs" role="tablist">${["trace", "query", "tables", "reader", "events"].map((t) => `<button role="tab" data-action="tab" data-tab="${t}" aria-selected="${state.tab === t}" class="${state.tab === t ? "active" : ""}">${{ trace: "Reasoning trace", query: "Query inspector", tables: "Hospital tables", reader: "Note reader", events: "Raw events" }[t]}</button>`).join("")}<span class="console-spacer"></span>${button(state.collapsed ? "Expand ↑" : "Collapse ↓", "collapse", "", "subtle")}</div><div class="console-content" id="console-content">${consoleHTML()}</div></section></main><footer class="flow-controls" id="flow-controls">${controlsHTML()}</footer></div></div>`;
+    `<div class="pilot ${state.engine ? "engine-mode" : "product-mode"} ${state.collapsed ? "console-collapsed" : ""} ${state.sheet ? "sheet-open" : ""}" style="--console-height:${state.consoleHeight}px"><aside class="workspace-nav ${state.menu ? "open" : ""}"><a class="brand" href="#systems" data-action="nav" data-index="0"><span class="brand-mark">✳</span><span>caretrace<span class="brand-sub">HOSPITAL INTELLIGENCE</span></span></a><div class="workspace-label">NORTHSTAR <span>CARE TRANSITIONS</span></div><nav aria-label="Guided flow">${SCREENS.map((s, i) => `<button class="nav-item ${i === state.screen ? "selected" : ""}" data-action="nav" data-index="${i}" ${i === state.screen ? 'aria-current="page"' : ""}><span>${String(i + 1).padStart(2, "0")}</span>${s.short}${i < state.screen ? "<i>✓</i>" : ""}</button>`).join("")}</nav><div class="nav-bottom"><span class="status-dot"></span> Connected evidence<div><strong>${number(totals.nodes)}</strong> nodes <span>·</span> <strong>${number(totals.edges)}</strong> edges</div><small>${number(totals.notesRead)} notes read</small></div></aside><div class="workspace"><header class="topbar">${button("☰", "menu", 'aria-label="Open navigation"', "menu-button")}<div class="hospital"><strong>Northstar Hospital System</strong><span>Care transitions workspace <i>·</i> ${date(AS_OF)}</span></div><div class="header-tools"><button class="prototype-chip" data-action="about"><i></i>Prototype · synthetic patients</button><div class="view-switch" role="group" aria-label="Workspace view"><button data-action="product" class="${!state.engine ? "active" : ""}" aria-pressed="${!state.engine}">Product<span> view</span></button><button data-action="engine" class="${state.engine ? "active" : ""}" aria-pressed="${state.engine}">Engine<span> view</span><kbd>E</kbd></button></div></div></header><main><div class="page-heading"><div><div class="eyebrow">${screen.eyebrow}</div><h1>${screen.title}</h1><p>${screen.sub}</p></div><div class="heading-count"><span>${String(state.screen + 1).padStart(2, "0")}</span> / ${String(SCREENS.length).padStart(2, "0")}</div></div><div class="scene"><section class="visual-panel">${visualHTML()}</section><section class="story-panel" aria-label="Patient story">${storyHTML()}</section></div><section class="engine-console" aria-label="Engine console"><div class="console-resize" role="separator" aria-label="Resize engine console" aria-orientation="horizontal" tabindex="0"></div><div class="pipeline" id="pipeline">${pipelineHTML()}</div><div class="console-tabs" role="tablist">${["trace", "query", "tables", "reader", "events"].map((t) => `<button role="tab" data-action="tab" data-tab="${t}" aria-selected="${state.tab === t}" class="${state.tab === t ? "active" : ""}">${{ trace: "Reasoning trace", query: "Query inspector", tables: "Hospital tables", reader: "Note reader", events: "Raw events" }[t]}</button>`).join("")}<span class="console-spacer"></span>${button(state.collapsed ? "Expand ↑" : "Collapse ↓", "collapse", "", "subtle")}</div><div class="console-content" id="console-content">${consoleHTML()}</div></section></main><footer class="flow-controls" id="flow-controls">${controlsHTML()}</footer></div></div>`;
   const target = $("#knowledge-canvas");
   if (target) {
     const data = currentGraph(),
@@ -728,7 +728,7 @@ function funnelHTML(f) {
     .join("")}</div>`;
 }
 function questionBox() {
-  return `<div class="question-box">${state.closest ? '<div class="closest-notice">Showing the closest prepared question</div>' : ""}<label for="question-input">Ask the Careweave investigator</label><div><input id="question-input" value="${escape(state.queryText || planQuestion(state.plan))}" placeholder="Search the prepared questions…" autocomplete="off"/><button class="control primary" data-action="ask">Go ↗</button></div><div id="question-suggestions" class="question-suggestions" hidden></div><small>${plans.length} prepared routes · every answer recomputed from the graph</small></div>`;
+  return `<div class="question-box">${state.closest ? '<div class="closest-notice">Showing the closest prepared question</div>' : ""}<label for="question-input">Ask the CareTrace investigator</label><div><input id="question-input" value="${escape(state.queryText || planQuestion(state.plan))}" placeholder="Search the prepared questions…" autocomplete="off"/><button class="control primary" data-action="ask">Go ↗</button></div><div id="question-suggestions" class="question-suggestions" hidden></div><small>${plans.length} prepared routes · every answer recomputed from the graph</small></div>`;
 }
 function accuracyStrip() {
   const m = evaluation.overall || evaluation;
@@ -1036,15 +1036,36 @@ function bindResize() {
     }
   });
 }
+let modalReturnFocus = null;
+let modalReturnAction = null;
 function modal(title, body, wide = false) {
+  if (!state.modal) {
+    modalReturnFocus = document.activeElement;
+    modalReturnAction = modalReturnFocus?.dataset?.action
+      ? { ...modalReturnFocus.dataset }
+      : null;
+  }
   state.modal = title;
   $("#overlay-root").innerHTML =
-    `<div class="modal-backdrop"><section class="pilot-modal ${wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-label="${escape(title)}"><header><div><span class="eyebrow">CAREWEAVE / EVIDENCE</span><h2>${escape(title)}</h2></div>${button("×", "close-modal", 'aria-label="Close dialog"', "modal-close")}</header><div class="modal-body">${body}</div></section></div>`;
+    `<div class="modal-backdrop"><section class="pilot-modal ${wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-label="${escape(title)}"><header><div><span class="eyebrow">CARETRACE / EVIDENCE</span><h2>${escape(title)}</h2></div>${button("×", "close-modal", 'aria-label="Close dialog"', "modal-close")}</header><div class="modal-body">${body}</div></section></div>`;
   $("#overlay-root .modal-close")?.focus();
 }
 function closeModal() {
+  if (!state.modal) return;
   state.modal = null;
   $("#overlay-root").innerHTML = "";
+  if (modalReturnFocus?.isConnected) modalReturnFocus.focus();
+  else if (modalReturnAction) {
+    const replacement = [...document.querySelectorAll("[data-action]")].find(
+      (element) =>
+        Object.entries(modalReturnAction).every(
+          ([key, value]) => element.dataset[key] === value,
+        ),
+    );
+    (replacement || $("[data-action=about]"))?.focus();
+  }
+  modalReturnFocus = null;
+  modalReturnAction = null;
 }
 function showSource(node) {
   if (!node) return;
@@ -1140,7 +1161,7 @@ function showComparison() {
 function showAbout() {
   modal(
     "About this prototype",
-    `<p class="about-lead">Careweave connects hospital facts with the reasons hidden in clinical notes so a care transitions team can choose a useful next step.</p><h3>What runs when you use it</h3><p>Patient membership, counts, primary groups, dates, graph paths, query rows, search rankings, timings and what-if changes are computed in your browser from synthetic records. No calls, messages, bookings or orders leave this prototype.</p><h3>What was prepared</h3><p>Question routes and step explanations were prepared in advance with a language model and are replayed here. Note reading in this prototype uses a pattern-based reader. All counts are computed live from the graph. A production build would run the model at request time.</p><h3>How search is compared</h3><p>The retrieval baseline uses TF-IDF, expanded barrier terms and cosine similarity. PCA projects note vectors into two dimensions. A production build would use an embedding model. Search reads notes; the graph also reads hospital rows.</p><h3>How to read the measurements</h3><p>Precision and recall are note-level measurements against a separate answer key. The graph contains reader output and coded social needs, including their mistakes. The simplified follow-up and return rules illustrate a workflow; they are not a validated clinical risk score.</p><h3>A stable demonstration</h3><p>The synthetic chart uses a fixed seed and a fixed date, ${date(AS_OF)}. Changes made with “Mark as resolved” live in this browser’s memory and disappear on reload.</p>`,
+    `<p class="about-lead">CareTrace connects hospital facts with the reasons hidden in clinical notes so a care transitions team can choose a useful next step.</p><h3>What runs when you use it</h3><p>Patient membership, counts, primary groups, dates, graph paths, query rows, search rankings, timings and what-if changes are computed in your browser from synthetic records. No calls, messages, bookings or orders leave this prototype.</p><h3>What was prepared</h3><p>Question routes and step explanations were prepared in advance with a language model and are replayed here. Note reading in this prototype uses a pattern-based reader. All counts are computed live from the graph. A production build would run the model at request time.</p><h3>How search is compared</h3><p>The retrieval baseline uses TF-IDF, expanded barrier terms and cosine similarity. PCA projects note vectors into two dimensions. A production build would use an embedding model. Search reads notes; the graph also reads hospital rows.</p><h3>How to read the measurements</h3><p>Precision and recall are note-level measurements against a separate answer key. The graph contains reader output and coded social needs, including their mistakes. The simplified follow-up and return rules illustrate a workflow; they are not a validated clinical risk score.</p><h3>A stable demonstration</h3><p>The synthetic chart uses a fixed seed and a fixed date, ${date(AS_OF)}. Changes made with “Mark as resolved” live in this browser’s memory and disappear on reload.</p>`,
     true,
   );
 }
@@ -1401,7 +1422,41 @@ document.addEventListener("keydown", (e) => {
     $(".workspace-nav")?.classList.remove("open");
     return;
   }
-  if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) || state.modal)
+  if (state.modal) {
+    if (e.key === "Tab") {
+      const controls = [
+        ...$("#overlay-root").querySelectorAll(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]',
+        ),
+      ].filter((element) => !element.hidden && element.getClientRects().length);
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!first) {
+        e.preventDefault();
+        return;
+      }
+      if (
+        e.shiftKey &&
+        (!controls.includes(document.activeElement) ||
+          document.activeElement === first)
+      ) {
+        e.preventDefault();
+        last.focus();
+      } else if (
+        !e.shiftKey &&
+        (!controls.includes(document.activeElement) ||
+          document.activeElement === last)
+      ) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    return;
+  }
+  if (
+    ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"].includes(e.target.tagName) ||
+    e.target.isContentEditable
+  )
     return;
   if (e.key.toLowerCase() === "e") {
     state.engine = !state.engine;

@@ -1,6 +1,6 @@
-# Careweave presenter guide
+# CareTrace presenter guide
 
-The central story: **the hospital already wrote down the reason. Careweave connects it to missed care and prepares a next step.**
+The central story: **the hospital already wrote down the reason. CareTrace connects it to missed care and prepares a next step.**
 
 ## Before judging
 

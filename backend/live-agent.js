@@ -19,6 +19,17 @@ const MAX_INPUT_CHARACTERS = 120000;
 const MAX_RUN_MS = 55000;
 const MAX_TOKENS = 28000;
 
+const barrierPatterns = [
+  ["transportation", /\b(transport\w*|rides?|bus|travel)\b/],
+  ["cost", /\b(cost|afford\w*|expensive|financial|money)\b/],
+  ["food", /\b(food|meals?|hungry|hunger)\b/],
+  ["health_literacy", /\b(literacy|teach.?back|understand\w*|instructions)\b/],
+];
+const namedBarriers = (text) =>
+  barrierPatterns
+    .filter(([, pattern]) => pattern.test(text))
+    .map(([type]) => type);
+
 function simulationRequest(question) {
   const text = String(question).toLowerCase().trim();
   return {
@@ -34,6 +45,10 @@ function simulationRequest(question) {
         ),
       ),
     ],
+    // A trailing explanatory clause may describe other barriers without
+    // authorizing their removal: "What if cost were resolved for P0009,
+    // who has both cost and transportation barriers?"
+    barriers: namedBarriers(text.split(/[;,]/, 1)[0]),
   };
 }
 
@@ -53,6 +68,66 @@ export function parseRulesQuestion(
       ok: false,
       error:
         "Excluding diabetes-related admissions is not a supported filter. You can include all admissions or select only diabetes-related admissions.",
+    };
+  if (
+    /\b(?:no|without|not)\s+(?:an?\s+|any\s+|open\s+|current\s+|documented\s+)*(?:follow[ -]?up\s+)?gaps?\b|\b(?:no|without)\s+(?:a\s+)?missed\s+(?:follow[ -]?up|visits?|appointments?)\b|\b(?:attended|completed)\s+(?:their\s+|the\s+|a\s+)?follow[ -]?up\b/.test(
+      text,
+    )
+  )
+    return {
+      ok: false,
+      error:
+        "Selecting patients with no follow-up gap or a completed visit is not a supported filter. You can select an open gap, or include all patients regardless of gaps.",
+    };
+  if (
+    /\b(?:not|no|without|don't|doesn't|didn't|do not|does not|did not)\s+(?:those\s+|patients?\s+|people\s+)?(?:over|under|older than|younger than|at least|at most|aged?|ages?|between|up to)\b/.test(
+      text,
+    )
+  )
+    return {
+      ok: false,
+      error:
+        "Negated age filters are not supported by the local parser. State the age range directly, for example: 'younger than 66'.",
+    };
+  if (
+    /\b(?:not|no|without)\s+(?:any\s+)?(?:insulin\s+)?(?:pickup|pick-up|collection)\s+(?:problems?|issues?|gaps?|barriers?)\b|\b(?:not|without)\s+(?:a\s+)?missed\s+insulin\b/.test(
+      text,
+    )
+  )
+    return {
+      ok: false,
+      error:
+        "Selecting patients without medication pickup problems is not a supported filter. You can select new insulin that was not picked up, or omit that filter.",
+    };
+  if (
+    (/\b(?:insulin|medication|prescription)\s+(?:was\s+|has been\s+)?(?:picked up|collected)\b|\b(?:picked up|collected)\s+(?:(?:their|the|new)\s+)*(?:insulin|medication|prescription)\b/.test(
+      text,
+    ) &&
+      !/\b(?:not|never|didn't|hasn't|wasn't|did not|has not|was not|not yet)\s+(?:been\s+)?(?:picked up|collected)\b/.test(
+        text,
+      )) ||
+    /\b(?:no|without|not|never|didn't|hasn't|did not|has not)\s+(?:an?\s+|any\s+)?(?:return\w*\s+(?:to\s+)?(?:the\s+)?(?:ed|er|emergency)|(?:ed|er|emergency)\s+(?:return\w*|visits?))\b/.test(
+      text,
+    ) ||
+    /\b(?:not|never|aren't|isn't)\s+(?:likely to return|flagged (?:for|as)\s+(?:a\s+)?return)|\b(?:no|without)\s+(?:a\s+)?(?:return[ -]?risk|readmission|return)\s+flag\b/.test(
+      text,
+    )
+  )
+    return {
+      ok: false,
+      error:
+        "That completed-care or excluded-return filter is not supported. You can ask for uncollected new insulin, observed emergency returns, or the likely-to-return flag; omitting a filter includes both groups.",
+    };
+  if (
+    !requestedSimulation.intent &&
+    /\b(?:can|could|able to)\s+(?:easily\s+)?afford\b|\b(?:no|without)\s+(?:current\s+)?(?:need|difficulty|problems?)\s+(?:for|with)\s+(?:transport\w*|rides?|food|meals?)\b|\b(?:has|have)\s+(?:a\s+)?reliable\s+(?:transport\w*|ride)\b/.test(
+      text,
+    )
+  )
+    return {
+      ok: false,
+      error:
+        "Selecting patients without that difficulty is not a supported filter. Ask for a current documented barrier, or ask for no current documented barriers.",
     };
   if (
     !requestedSimulation.intent &&
@@ -109,17 +184,7 @@ export function parseRulesQuestion(
         "A temporary resolution applies to one patient at a time. Choose a patient ID and one current barrier.",
     };
   let recognized = continuation;
-  const requested = [];
-  for (const [type, pattern] of [
-    ["transportation", /\b(transport\w*|rides?|bus|travel)\b/],
-    ["cost", /\b(cost|afford\w*|expensive|financial|money)\b/],
-    ["food", /\b(food|meals?|hungry|hunger)\b/],
-    [
-      "health_literacy",
-      /\b(literacy|teach.?back|understand\w*|instructions)\b/,
-    ],
-  ])
-    if (pattern.test(text)) requested.push(type);
+  const requested = namedBarriers(text);
   if (requestedSimulation.intent && requested.length !== 1)
     return {
       ok: false,
@@ -365,8 +430,19 @@ function assertObject(args, keys) {
     throw new Error("Tool arguments do not match the declared schema.");
 }
 
-function sourceCitation(source, patientId) {
-  const active = source.assertions.find((item) => item.status === "active");
+function sourceCitation(source, patientId, barrierTypes = []) {
+  const active = source.assertions.filter(
+    (item) =>
+      item.status === "active" &&
+      (!barrierTypes.length || barrierTypes.includes(item.type)),
+  );
+  const quotes = [
+    ...new Set(
+      active
+        .map((item) => item.evidence_sentence || item.quote)
+        .filter(Boolean),
+    ),
+  ];
   return {
     id: source.id,
     sourceId: source.id,
@@ -378,12 +454,8 @@ function sourceCitation(source, patientId) {
       source.row.date ||
       source.row.dischargeDate ||
       null,
-    quote:
-      active?.evidence_sentence ||
-      active?.quote ||
-      source.text ||
-      JSON.stringify(source.row),
-    charSpan: active?.char_span || null,
+    quote: quotes.join("\n") || source.text || JSON.stringify(source.row),
+    charSpan: active.length === 1 ? active[0].char_span || null : null,
     assertions: source.assertions,
   };
 }
@@ -628,6 +700,13 @@ export async function runLiveAgent({
             "A temporary resolution requires a what-if request naming exactly this patient. Do not choose a patient automatically.",
           );
         if (
+          requestedSimulation.barriers.length !== 1 ||
+          requestedSimulation.barriers[0] !== args.barrier
+        )
+          throw new Error(
+            "A temporary resolution requires exactly the barrier named in the what-if request. Do not choose or substitute a different barrier.",
+          );
+        if (
           !result?.ids.includes(args.patientId) ||
           !inspectedPatients.has(args.patientId)
         )
@@ -699,19 +778,22 @@ export async function runLiveAgent({
       (selection.patientId !== null || selection.sourceIds.length)
     )
       throw new Error("An empty result cannot cite an example patient.");
+    const patient = selection.patientId
+      ? graph.getPatient(selection.patientId)
+      : null;
+    const citationBarriers = filters.barriers.length
+      ? filters.barriers
+      : patient?.barriers.map((item) => item.type) || [];
     const citations = [...new Set(selection.sourceIds)].map((id) => {
       const source = readSources.get(id);
       if (!source || source.patientId !== selection.patientId)
         throw new Error(
           "The final citations must be inspected sources for the selected patient.",
         );
-      return sourceCitation(source, selection.patientId);
+      return sourceCitation(source, selection.patientId, citationBarriers);
     });
     if (result.count && !citations.length)
       throw new Error("Read a source before completing a nonempty answer.");
-    const patient = selection.patientId
-      ? graph.getPatient(selection.patientId)
-      : null;
     if (
       patient &&
       (filters.barrierPresence === "present" || filters.barriers.length)

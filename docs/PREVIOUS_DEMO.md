@@ -1,4 +1,4 @@
-# Careweave: three-minute hospital demonstration
+# CareTrace: three-minute hospital demonstration
 
 **Opening:** “We are a hospital system. We discharged these patients, and we wrote down why some of them will struggle at home.”
 
@@ -10,7 +10,7 @@ For the newer **Patient handoff** experience with English/Spanish briefs and rev
 
 ## Before the judges arrive
 
-1. Start the local app with Node 24: `npm install`, then `npm start`. Open [localhost:4173](http://localhost:4173), or press F5 in `Careweave.code-workspace`.
+1. Start the local app with Node 24: `npm install`, then `npm start`. Open [localhost:4173](http://localhost:4173), or press F5 in `CareTrace.code-workspace`.
 2. Confirm the backend is connected and initialization is complete. A hosted presentation needs its own live query and persistence check.
 3. If using OpenAI, set the local key in `.env`, restart and complete a real question. A configured badge alone is not evidence of a successful call. Without a key, describe the labeled deterministic planner accurately.
 4. Run Proof challenge. Check three matching SQL counts, source verification, and the current precision and recall. Use the displayed values rather than memorizing a count that may change after a rehearsal note.

@@ -35,7 +35,7 @@ No key means a clearly labeled rules engine. It accepts supported field combinat
 
 The immutable dataset contains 1,000 fictional adult discharges and 600 notes. The server constructs nodes and typed edges from those files, including pointers back to the source rows. Counts traverse the graph's stored relationships using a validated filter contract. The graph is an in-memory JavaScript implementation, not a hosted Neo4j instance.
 
-The frozen text-pattern reader and its independent synthetic answer key are retained. Model-driven investigation does not change the measured reader or silently revise its extracted barriers. Its known mistakes remain visible in the guided story's evaluation. The main extracted group has 26 patients, while the independent authored answer key has 27.
+The live text-pattern reader is separately versioned at `2026-10-10.2`, with fixes for explicit resolution and independent clauses. The guided story retains the frozen reader and its original evaluation. Live note evaluation against the separate synthetic answer key measures 49 true positives, 6 false positives and 5 false negatives, or 89.09% precision and 90.74% recall. The main extracted group has 26 patients, while the independent authored answer key has 27. Model-driven investigation does not remove these extraction errors.
 
 The snapshot date is October 10, 2026. Rewind reconstructs the available dated facts. What-if runs on a fresh graph copy and returns an explicit simulated result; it never changes the source dataset or asserts a real medical outcome.
 
@@ -58,7 +58,7 @@ Tasks move from draft to approved to completed, with optimistic concurrency chec
 | `POST /api/v1/investigate`                 | Stream actual tool events, then a persisted result                |
 | `GET /api/v1/runs` and `/runs/:id`         | This session's saved investigations                               |
 | `GET /api/v1/patients/:id?asOf=YYYY-MM-DD` | Patient facts and dated graph                                     |
-| `GET /api/v1/sources/:id`                  | Source row or note with extraction details                        |
+| `GET /api/v1/sources/:id?asOf=YYYY-MM-DD`  | Source row or note, masked to the same date as the patient graph  |
 | `GET /api/v1/agent`                        | Versioned system prompt and tool schemas                          |
 | `POST /api/v1/what-if`                     | Isolated barrier-removal calculation                              |
 | `GET/POST /api/v1/tasks`                   | Session queue and evidence-linked draft creation                  |
@@ -68,8 +68,8 @@ The older unversioned mutation APIs remain disabled so the archived implementati
 
 ## Verification boundaries
 
-The October 10 refinement passes 148 automated tests. Browser checks confirmed the 26-patient query, its 19-patient before-day-30 follow-up, exact source viewing, discharge-day rewind, draft approval, reload persistence, and explicit unsupported-question handling. The mobile overview had no horizontal overflow at a 390-pixel viewport.
+The CareTrace audit passes 193 automated tests, including new regressions for stale browser responses, historical source visibility, wrong-barrier simulations and unsupported inverse questions. Current browser and deployment checks are recorded in [the release checklist](RELEASE_CHECKLIST.md).
 
 Unit and integration checks use real synthetic data, real SQLite persistence, the actual D1 SQL adapter, and a mocked OpenAI HTTP transport. The bundle check serves every allowed asset, executes a streamed graph investigation, saves and approves a task, and checks visitor separation. Browser review covers the story and public-facing controls at desktop and mobile sizes.
 
-A real OpenAI key has not been supplied for this build. Real account connectivity and model behavior must be verified after setup. This app is a hackathon demonstration; these tests do not validate clinical decisions or hospital deployment.
+OpenAI, Gemini and ElevenLabs are configured as server secrets. Bounded live requests verify actual account connectivity separately from mocked failure-path tests. This app is a hackathon demonstration; these checks do not validate clinical decisions or hospital deployment.

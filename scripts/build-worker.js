@@ -30,5 +30,5 @@ await build({
 await mkdir("dist/.openai", { recursive: true });
 await copyFile(".openai/hosting.json", "dist/.openai/hosting.json");
 console.log(
-  `Built Careweave workspace Worker with ${PUBLIC_ASSETS.length} embedded assets, D1 persistence and server-side agent tools.`,
+  `Built CareTrace workspace Worker with ${PUBLIC_ASSETS.length} embedded assets, D1 persistence and server-side agent tools.`,
 );

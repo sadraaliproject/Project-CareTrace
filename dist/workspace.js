@@ -83,6 +83,9 @@ let dialogReturnFocus;
 let audioUrl;
 let audioController;
 let briefController;
+let dialogSequence = 0;
+let patientRequestSequence = 0;
+let runRequestSequence = 0;
 function clearAudio() {
   briefController?.abort();
   briefController = null;
@@ -187,7 +190,7 @@ function render() {
   graphCanvas?.destroy();
   const taskCount = state.tasks.filter((t) => t.status === "draft").length;
   $("#app").innerHTML =
-    `<div class="care-workspace"><aside class="w-sidebar ${state.nav ? "open" : ""}"><a href="/" class="w-brand"><span>✳</span><div>careweave<small>CONNECTED CARE. CLEAR NEXT STEPS.</small></div></a><div class="w-hospital"><span class="hospital-monogram">N</span><div>Northstar Hospital System<small>Care transitions workspace</small></div></div><nav aria-label="Workspace"><span class="nav-caption">YOUR WORKSPACE</span>${[
+    `<div class="care-workspace"><aside class="w-sidebar ${state.nav ? "open" : ""}"><a href="/" class="w-brand"><span>✳</span><div>caretrace<small>CONNECTED CARE. CLEAR NEXT STEPS.</small></div></a><div class="w-hospital"><span class="hospital-monogram">N</span><div>Northstar Hospital System<small>Care transitions workspace</small></div></div><nav aria-label="Workspace"><span class="nav-caption">YOUR WORKSPACE</span>${[
       ["overview", "◫", "Overview"],
       ["investigation", "⌕", "Investigation"],
       ["queue", "☷", "Review queue"],
@@ -267,7 +270,7 @@ function patientPanel() {
       ["no_show", "no-show"].includes(a.status),
     ),
     medicine = p.medications?.find((m) => m.newStart && !m.pickedUp);
-  return `<section class="patient-story-panel"><div class="patient-summary"><span class="patient-avatar">${esc(initial(p.name))}</span><div><strong>${esc(p.name)}</strong><small>${esc(p.id)} · Age ${p.age} · ${esc(p.admission?.unit || p.unit)}</small></div><span class="window-badge">Day ${days} of 30</span></div><span class="w-eyebrow">${["WHAT HAPPENED", "WHAT WAS IN THE WAY", "THE NEXT USEFUL STEP"][state.beat]}</span><h2>${state.beat === 0 ? (hasGap ? "The plan did not make it all the way home." : "The discharge plan, connected.") : state.beat === 1 ? (type === "transportation" ? "A missed visit can start with a missing ride." : type === "cost" ? "The prescription was ready. The money was not." : type === "food" ? "Safe care starts with enough to eat." : type === "health_literacy" ? "The instructions were not clear enough." : "The chart needs a closer look.") : BARRIERS[type]?.short || "Start with the discharge call."}</h2>${state.beat === 0 ? `<div class="missed-facts"><div><span>↗</span><p><strong>${appointment ? "Follow-up visit missed" : completedVisit ? "Follow-up completed" : hasGap ? "Follow-up remains open" : "See the follow-up record"}</strong><small>${esc(appointment?.clinic || completedVisit?.clinic || "Care transitions follow-up")}${appointment ? " · " + date(appointment.date) : ""}</small></p></div><div><span>Rx</span><p><strong>${medicine ? esc(medicine.name) + " not collected" : "Review medication pickup"}</strong><small>Check what happened after the discharge prescription.</small></p></div></div>` : quote ? `<button class="evidence-snippet" data-action="source" data-id="${esc(bedside?.sourceId || bedside?.note_id)}"><span>≋ ${esc(note?.note_type || bedside?.note_type || "Clinical note")}</span><blockquote>“${esc(quote)}”</blockquote><small>${esc(note?.author_role || bedside?.authorRole || "Care team")} · ${date(note?.written_datetime || bedside?.date)} <b>↗</b></small></button>` : '<p class="no-barrier-note">No current barrier is documented. The standard discharge call is the next step.</p>'}<div class="matched-action"><span>MATCHED TO ${esc(metadata.owner).toUpperCase()}</span><p>${esc(metadata.action)}</p></div><div class="patient-actions">${type ? btn("Prepare care-team task", "prepare-task", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before preparing a task"' : ""}`, "primary") : btn("Open discharge record", "source", `data-id="${esc(p.admission?.id)}"`, "primary")}${type ? btn("What if we resolve this?", "what-if", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before simulating a change"' : ""}`, "quiet") : ""}</div>${state.status?.geminiConfigured && (type || hasGap) ? `<section class="gemini-entry"><h3>Connect the next steps</h3><p>Gemini can order a care-team brief using this patient’s linked evidence.</p>${btn("Prepare Gemini care brief", "gemini-brief", `data-id="${esc(p.id)}" ${state.asOf ? "disabled" : ""}`, "secondary")}</section>` : ""}<p class="human-note"><span>✓</span> ${state.asOf ? "Historical view. Return to today to prepare a next step." : "A person reviews every next step."}</p></section>`;
+  return `<section class="patient-story-panel"><div class="patient-summary"><span class="patient-avatar">${esc(initial(p.name))}</span><div><strong>${esc(p.name)}</strong><small>${esc(p.id)} · Age ${p.age} · ${esc(p.admission?.unit || p.unit)}</small></div><span class="window-badge">Day ${days} of 30</span></div><span class="w-eyebrow">${["WHAT HAPPENED", "WHAT WAS IN THE WAY", "THE NEXT USEFUL STEP"][state.beat]}</span><h2>${state.beat === 0 ? (hasGap ? "The plan did not make it all the way home." : "The discharge plan, connected.") : state.beat === 1 ? (type === "transportation" ? "A missed visit can start with a missing ride." : type === "cost" ? "The prescription was ready. The money was not." : type === "food" ? "Safe care starts with enough to eat." : type === "health_literacy" ? "The instructions were not clear enough." : "The chart needs a closer look.") : BARRIERS[type]?.short || "Start with the discharge call."}</h2>${state.beat === 0 ? `<div class="missed-facts"><div><span>↗</span><p><strong>${appointment ? "Follow-up visit missed" : completedVisit ? "Follow-up completed" : hasGap ? "Follow-up remains open" : "See the follow-up record"}</strong><small>${esc(appointment?.clinic || completedVisit?.clinic || "Care transitions follow-up")}${appointment ? " · " + date(appointment.date) : ""}</small></p></div><div><span>Rx</span><p><strong>${medicine ? esc(medicine.name) + " not collected" : "Review medication pickup"}</strong><small>Check what happened after the discharge prescription.</small></p></div></div>` : quote ? `<button class="evidence-snippet" data-action="source" data-id="${esc(bedside?.sourceId || bedside?.note_id)}" data-as-of="${esc(state.asOf || "")}"><span>≋ ${esc(note?.note_type || bedside?.note_type || "Clinical note")}</span><blockquote>“${esc(quote)}”</blockquote><small>${esc(note?.author_role || bedside?.authorRole || "Care team")} · ${date(note?.written_datetime || bedside?.date)} <b>↗</b></small></button>` : '<p class="no-barrier-note">No current barrier is documented. The standard discharge call is the next step.</p>'}<div class="matched-action"><span>MATCHED TO ${esc(metadata.owner).toUpperCase()}</span><p>${esc(metadata.action)}</p></div><div class="patient-actions">${type ? btn("Prepare care-team task", "prepare-task", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before preparing a task"' : ""}`, "primary") : btn("Open discharge record", "source", `data-id="${esc(p.admission?.id)}" data-as-of="${esc(state.asOf || "")}"`, "primary")}${type ? btn("What if we resolve this?", "what-if", `data-id="${esc(p.id)}" data-barrier="${esc(type)}" ${state.asOf ? 'disabled title="Return to today before simulating a change"' : ""}`, "quiet") : ""}</div>${state.status?.geminiConfigured && (type || hasGap) ? `<section class="gemini-entry"><h3>Connect the next steps</h3><p>Gemini can order a care-team brief using this patient’s linked evidence.</p>${btn("Prepare Gemini care brief", "gemini-brief", `data-id="${esc(p.id)}" ${state.asOf ? "disabled" : ""}`, "secondary")}</section>` : ""}<p class="human-note"><span>✓</span> ${state.asOf ? "Historical view. Return to today to prepare a next step." : "A person reviews every next step."}</p></section>`;
 }
 function investigationView() {
   const r = state.result?.ok ? state.result.result : null;
@@ -335,7 +338,7 @@ async function openNode(node) {
     source?.key &&
     !["barrier_catalog", "action_catalog"].includes(source.table)
   ) {
-    await openSource(source.key, node);
+    await openSource(source.key, node, state.asOf);
   } else
     showDialog(
       node.label || "Graph fact",
@@ -343,14 +346,21 @@ async function openNode(node) {
     );
 }
 function showDialog(title, body, wide = false) {
+  const sequence = ++dialogSequence;
+  state.trace = false;
   clearAudio();
   if (!state.dialog) dialogReturnFocus = document.activeElement;
   state.dialog = { title };
   $("#overlay-root").innerHTML =
-    `<div class="w-backdrop"><section class="w-dialog ${wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><div><span class="w-eyebrow">CAREWEAVE / CONNECTED EVIDENCE</span><h2>${esc(title)}</h2></div>${btn("×", "close", 'aria-label="Close dialog"', "close-button")}</header><div class="w-dialog-body">${body}</div></section></div>`;
+    `<div class="w-backdrop"><section class="w-dialog ${wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><div><span class="w-eyebrow">CARETRACE / CONNECTED EVIDENCE</span><h2>${esc(title)}</h2></div>${btn("×", "close", 'aria-label="Close dialog"', "close-button")}</header><div class="w-dialog-body">${body}</div></section></div>`;
   $("#overlay-root .close-button")?.focus();
+  return sequence;
+}
+function isCurrentDialog(sequence) {
+  return Boolean(state.dialog) && sequence === dialogSequence;
 }
 function closeDialog() {
+  dialogSequence++;
   clearAudio();
   state.dialog = null;
   state.trace = false;
@@ -372,14 +382,19 @@ function recordHTML(row) {
     )
     .join("")}</dl>`;
 }
-async function openSource(id, node) {
+async function openSource(id, node, asOf = null) {
   if (!id) return;
-  showDialog(
+  const sequence = showDialog(
     "Opening the source…",
     '<div class="dialog-loading">Reading the original record.</div>',
   );
   try {
-    const s = await api("/sources/" + encodeURIComponent(id));
+    const s = await api(
+      "/sources/" +
+        encodeURIComponent(id) +
+        (asOf ? "?asOf=" + encodeURIComponent(asOf) : ""),
+    );
+    if (!isCurrentDialog(sequence)) return;
     const row = s.row || s;
     state.source = s;
     const quote =
@@ -387,30 +402,33 @@ async function openSource(id, node) {
       s.assertions?.find((a) => a.status === "active")?.evidence_sentence;
     showDialog(
       row.note_type || node?.label || "Hospital record",
-      `<div class="source-heading"><span class="source-tag">${esc(s.table || "Clinical note")}</span><strong>${esc(s.id || id)}</strong>${s.patientId ? `<span>${esc(s.patientId)}</span>` : ""}</div>${s.text || row.text ? `<div class="source-note-meta">${esc(row.author_role || row.authorRole || "Care team")} ${esc(row.author_initials || "")}<span>${esc(row.unit || "")} · ${noteTime(row.written_datetime || row.date)}</span></div>${quote ? `<div class="source-evidence"><small>THE SENTENCE BEHIND THE CONNECTION</small><blockquote>“${esc(quote)}”</blockquote></div>` : ""}<p class="source-full-note">${esc(s.text || row.text)}</p>` : recordHTML(row)}<details class="raw-record"><summary>Inspect the original record</summary><pre>${esc(JSON.stringify(s, null, 2))}</pre></details>`,
+      `<div class="source-heading"><span class="source-tag">${esc(s.table || "Clinical note")}</span><strong>${esc(s.id || id)}</strong>${s.patientId ? `<span>${esc(s.patientId)}</span>` : ""}${s.historical ? `<span class="source-tag">HISTORICAL RECORD · ${date(s.asOf)}</span>` : ""}</div>${s.text || row.text ? `<div class="source-note-meta">${esc(row.author_role || row.authorRole || "Care team")} ${esc(row.author_initials || "")}<span>${esc(row.unit || "")} · ${noteTime(row.written_datetime || row.date)}</span></div>${quote ? `<div class="source-evidence"><small>THE SENTENCE BEHIND THE CONNECTION</small><blockquote>“${esc(quote)}”</blockquote></div>` : ""}<p class="source-full-note">${esc(s.text || row.text)}</p>` : recordHTML(row)}<details class="raw-record"><summary>Inspect the original record</summary><pre>${esc(JSON.stringify(s, null, 2))}</pre></details>`,
       true,
     );
   } catch (error) {
+    if (!isCurrentDialog(sequence)) return;
     showDialog(
       "The source could not open",
-      `<p>${esc(error.message)}</p>${btn("Try again", "source", `data-id="${esc(id)}"`, "primary")}`,
+      `<p>${esc(error.message)}</p>${btn("Try again", "source", `data-id="${esc(id)}" data-as-of="${esc(asOf || "")}"`, "primary")}`,
     );
   }
 }
 async function selectPatient(id, asOf = null) {
+  const sequence = ++patientRequestSequence;
   try {
     const detail = await api(
       "/patients/" +
         encodeURIComponent(id) +
         (asOf ? "?asOf=" + encodeURIComponent(asOf) : ""),
     );
+    if (sequence !== patientRequestSequence) return;
     state.patient = detail.patient;
     state.graph = detail.graph;
     state.asOf = asOf;
     state.selectedNode = null;
     render();
   } catch (error) {
-    toast(error.message);
+    if (sequence === patientRequestSequence) toast(error.message);
   }
 }
 async function investigate(question, mode = "auto") {
@@ -420,6 +438,8 @@ async function investigate(question, mode = "auto") {
     return;
   }
   if (state.view === "overview") state.previousFilters = null;
+  patientRequestSequence++;
+  runRequestSequence++;
   state.asOf = null;
   state.busy = true;
   state.error = "";
@@ -429,9 +449,14 @@ async function investigate(question, mode = "auto") {
   state.view = "investigation";
   state.result = null;
   state.group = "all";
-  state.controller = new AbortController();
+  const controller = new AbortController();
+  state.controller = controller;
   render();
-  let timer = setTimeout(() => state.controller?.abort("timeout"), 120000);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, 120000);
   try {
     const response = await fetch("/api/v1/investigate", {
       method: "POST",
@@ -445,7 +470,7 @@ async function investigate(question, mode = "auto") {
         previousFilters: state.previousFilters || undefined,
         mode,
       }),
-      signal: state.controller.signal,
+      signal: controller.signal,
     });
     if (!response.ok) {
       let data = await response.json().catch(() => ({}));
@@ -515,8 +540,9 @@ async function investigate(question, mode = "auto") {
         finalResult.error?.message ||
         "The model could not complete this investigation. You can retry with the rules engine.";
   } catch (error) {
-    state.error =
-      error.name === "AbortError"
+    state.error = timedOut
+      ? "The investigation took too long. You can retry the same question."
+      : error.name === "AbortError"
         ? "The investigation stopped. You can retry the same question."
         : error.message;
   } finally {
@@ -531,6 +557,7 @@ async function prepareTask(patientId, barrier) {
     toast("Open a documented barrier to prepare a matched care-team task.");
     return;
   }
+  const sequence = dialogSequence;
   try {
     const data = await api("/tasks", {
       method: "POST",
@@ -538,7 +565,7 @@ async function prepareTask(patientId, barrier) {
     });
     state.tasks = (await api("/tasks")).tasks || [];
     render();
-    showTask(data.task);
+    if (sequence === dialogSequence) showTask(data.task);
     toast(
       data.created
         ? "Draft prepared with its evidence."
@@ -605,15 +632,25 @@ async function geminiBrief(id) {
   }
 }
 async function previewTaskAudio(id) {
+  const sequence = showDialog(
+    "Opening the reviewed care-team brief",
+    '<p role="status">Reading the exact approved text.</p>',
+  );
   try {
     const brief = await api("/tasks/" + encodeURIComponent(id) + "/brief");
+    if (!isCurrentDialog(sequence)) return;
     showDialog(
       "Listen to the reviewed care-team brief",
       `<p>This is synthetic speech from ElevenLabs. It reads the approved task; it does not contact anyone or confirm a booking.</p><h3>Exact text to be read</h3><p class="audio-transcript">${esc(brief.text)}</p>${btn("Generate audio with ElevenLabs", "audio-generate", `data-id="${esc(id)}"`, "primary")}<div id="task-audio-result" role="status" aria-live="polite"></div>`,
       true,
     );
   } catch (error) {
-    toast(error.message);
+    if (isCurrentDialog(sequence)) {
+      showDialog(
+        "The audio brief could not open",
+        `<p>${esc(error.message)}</p>`,
+      );
+    }
   }
 }
 async function playTaskAudio(id, button) {
@@ -639,7 +676,7 @@ async function playTaskAudio(id, button) {
     const blob = await response.blob();
     if (!output.isConnected || controller.signal.aborted) return;
     audioUrl = URL.createObjectURL(blob);
-    output.innerHTML = `<p>Generated with ElevenLabs. Use the player to listen.</p><audio controls aria-label="Approved care-team brief" src="${audioUrl}"></audio><p><a href="${audioUrl}" download="careweave-reviewed-task.mp3">Download audio</a></p>`;
+    output.innerHTML = `<p>Generated with ElevenLabs. Use the player to listen.</p><audio controls aria-label="Approved care-team brief" src="${audioUrl}"></audio><p><a href="${audioUrl}" download="caretrace-reviewed-task.mp3">Download audio</a></p>`;
     button.textContent = "Audio ready";
   } catch (error) {
     if (!output.isConnected || controller.signal.aborted) return;
@@ -650,6 +687,7 @@ async function playTaskAudio(id, button) {
   }
 }
 async function updateTask(id, status) {
+  const sequence = dialogSequence;
   try {
     const { task } = await api("/tasks/" + encodeURIComponent(id), {
       method: "PATCH",
@@ -657,7 +695,7 @@ async function updateTask(id, status) {
     });
     state.tasks = (await api("/tasks")).tasks || [];
     render();
-    showTask(task);
+    if (sequence === dialogSequence) showTask(task);
     toast(
       status === "approved"
         ? "Draft approved for the demo."
@@ -684,7 +722,7 @@ function simulationSummary(data) {
   return `<section class="simulation-summary"><span class="source-tag">TEMPORARY SIMULATION · ORIGINAL RECORDS UNCHANGED</span><h3>Suppose ${esc(label(barrier).toLowerCase())} is resolved for ${esc(patientId)}</h3><div class="what-if-counts"><div><span>Matching patients now</span><strong>${num(data.before.count)}</strong></div><i>→</i><div><span>With this barrier resolved</span><strong>${num(data.after.count)}</strong></div></div><p class="what-if-reason">${esc(countExplanation)}</p><div class="what-if-routing"><div><small>CURRENT PRIORITY</small><strong>${esc(label(beforeType))}</strong><span>${esc(spec(beforeType).owner)}</span><p>${esc(spec(beforeType).action)}</p></div><i aria-hidden="true">→</i><div><small>PRIORITY IN THE SIMULATION</small><strong>${esc(afterType ? label(afterType) : "No active barrier remains")}</strong><span>${esc(spec(afterType).owner)}</span><p>${esc(spec(afterType).action)}</p></div></div><p>${esc(data.explanation || "The graph query was rerun with the selected barrier marked resolved in a temporary copy.")}</p><div class="review-notice"><span>◈</span><p>The patient graph and evidence show the original record. This comparison belongs to ${esc(patientId)}, even if you select another patient.</p></div></section>`;
 }
 async function whatIf(patientId, barrier) {
-  showDialog(
+  const sequence = showDialog(
     "What if help is arranged?",
     '<div class="dialog-loading">Recomputing the query with this barrier resolved.</div>',
   );
@@ -693,6 +731,7 @@ async function whatIf(patientId, barrier) {
       method: "POST",
       body: { patientId, barrier, filters: state.result?.filters || undefined },
     });
+    if (!isCurrentDialog(sequence)) return;
     showDialog(
       "What if help is arranged?",
       simulationSummary(data) +
@@ -705,6 +744,7 @@ async function whatIf(patientId, barrier) {
       true,
     );
   } catch (error) {
+    if (!isCurrentDialog(sequence)) return;
     showDialog(
       "The comparison could not finish",
       `<p>${esc(error.message)}</p>`,
@@ -721,8 +761,8 @@ function renderTrace() {
 }
 function about() {
   showDialog(
-    "About Careweave",
-    `<p class="about-intro">Careweave helps a hospital care transitions team understand why a next step was missed, connect the evidence, and prepare a useful response.</p><h3>Real software. Fictional patients.</h3><p>The workspace uses a synthetic hospital dataset and a fixed date. The backend runs graph queries, returns source records, simulates changes, and stores this browser session’s task queue and investigation history.</p><h3>How the AI connection works</h3><p>When configured, an OpenAI agent selects validated tools and explains their results. Exact membership and counts come from the graph. Without an API key, the app uses structured rules and clearly labels that mode.</p><h3>Evidence has limits</h3><p>Clinical notes are read with a pattern-based reader. It can miss indirect language or misread a sentence. Counts are exact for the graph, while the guided story includes a separate answer-key evaluation of reading accuracy.</p><h3>Human review stays in the loop</h3><p>No calls, messages, bookings, prescriptions or hospital orders leave this prototype. Task approval demonstrates a care-team review, and what-if comparisons do not predict clinical outcomes.</p><a class="text-link" href="/story.html">Open the guided, measured prototype →</a>`,
+    "About CareTrace",
+    `<p class="about-intro">CareTrace helps a hospital care transitions team understand why a next step was missed, connect the evidence, and prepare a useful response.</p><h3>Real software. Fictional patients.</h3><p>The workspace uses a synthetic hospital dataset and a fixed date. The backend runs graph queries, returns source records, simulates changes, and stores this browser session’s task queue and investigation history.</p><h3>How the AI connection works</h3><p>When configured, an OpenAI agent selects validated tools and explains their results. Exact membership and counts come from the graph. Without an API key, the app uses structured rules and clearly labels that mode.</p><h3>Evidence has limits</h3><p>Clinical notes are read with a pattern-based reader. It can miss indirect language or misread a sentence. Counts are exact for the graph, while the guided story includes a separate answer-key evaluation of reading accuracy.</p><h3>Human review stays in the loop</h3><p>No calls, messages, bookings, prescriptions or hospital orders leave this prototype. Task approval demonstrates a care-team review, and what-if comparisons do not predict clinical outcomes.</p><a class="text-link" href="/story.html">Open the guided, measured prototype →</a>`,
     true,
   );
 }
@@ -816,10 +856,21 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (action === "patient") return selectPatient(el.dataset.id);
-  if (action === "source") return openSource(el.dataset.id);
+  if (action === "source")
+    return openSource(el.dataset.id, undefined, el.dataset.asOf || null);
   if (action === "filter") {
     state.group = el.dataset.group;
-    render();
+    patientRequestSequence++;
+    const visible = (state.result?.result?.patients || []).filter(
+      (patient) => state.group === "all" || primary(patient) === state.group,
+    );
+    if (!visible.some((patient) => patient.id === state.patient?.id)) {
+      state.patient = null;
+      state.graph = null;
+      state.asOf = null;
+      render();
+      if (visible.length) return selectPatient(visible[0].id);
+    } else render();
     return;
   }
   if (action === "prepare-task")
@@ -852,8 +903,13 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (action === "run") {
+    const sequence = ++runRequestSequence;
+    patientRequestSequence++;
     try {
-      state.result = await api("/runs/" + encodeURIComponent(el.dataset.id));
+      const result = await api("/runs/" + encodeURIComponent(el.dataset.id));
+      if (sequence !== runRequestSequence) return;
+      state.result = result;
+      state.group = "all";
       state.error = state.result.ok
         ? ""
         : state.result.answer ||
@@ -871,7 +927,7 @@ document.addEventListener("click", async (e) => {
       if (id) await selectPatient(id);
       else render();
     } catch (error) {
-      toast(error.message);
+      if (sequence === runRequestSequence) toast(error.message);
     }
     return;
   }
@@ -882,7 +938,7 @@ document.addEventListener("click", async (e) => {
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
-    a.download = `careweave-evidence-${state.runId || "investigation"}.json`;
+    a.download = `caretrace-evidence-${state.runId || "investigation"}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast("Evidence export downloaded.");

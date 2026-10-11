@@ -1,9 +1,9 @@
 {
-  "name": "careweave",
+  "name": "caretrace",
   "version": "4.0.0",
   "private": true,
   "type": "module",
-  "description": "Careweave evidence graph workspace with a bounded AI agent and durable review tasks",
+  "description": "CareTrace evidence graph workspace with a bounded AI agent and durable review tasks",
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
@@ -25,6 +25,11 @@
     "esbuild": "0.25.12",
     "drizzle-kit": "0.31.10",
     "drizzle-orm": "0.45.2"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    }
   },
   "engines": {
     "node": ">=24"
