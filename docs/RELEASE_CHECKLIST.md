@@ -60,3 +60,10 @@ The snapshot is fixed at October 10, 2026. All records are fictional. Approval/c
 ## Reproduce the checks
 
 Use Node.js 24 or newer, then run `npm ci`, `npm run check`, `npm test`, `npm run build`, `node scripts/verify-worker.js`, `npm audit`, and `npm audit --omit=dev`. Live AI checks require the already configured local/server secrets; do not put keys in source or browser code. `npm run verify:pilot` regenerates the preserved guided-story measurements rather than measuring the active reader; active reader measurements are asserted independently in `tests/live-reader.test.js`.
+
+## October 11 question handling update
+
+- Passed all 198 automated tests, including ordinary missed-appointment wording, completed visits, medication pickup and editable clarification/retry behavior.
+- Verified the production Worker bundle and D1 workflow.
+- A bounded live OpenAI request for “who didnt come?” returned 60 fictional patients and cited a matching appointment source.
+- Added explicit appointment status, medication pickup and patient name/ID filters. The graph computes counts and verifies cited sources. Questions remain limited to available records and supported analysis.

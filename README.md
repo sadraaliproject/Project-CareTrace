@@ -20,7 +20,7 @@ Mavis Labadie, the featured fictional patient, illustrates the problem. She left
 
 1. Open **Overview** and follow the featured patient through **Find the gap**, **Reveal the reason** and **Prepare the next step**. Select a graph card or quoted note to open its source, author and date.
 2. Ask **“Which discharged patients have a follow-up gap and a documented barrier?”** The current extracted graph returns **26 patients**. The investigation shows the applied filters, individual patients, citations and executed tool calls.
-3. Continue with **“Only those still inside 30 days.”** The result narrows to **19**. Other supported questions can combine age, hospital unit, medication pickup and barrier types.
+3. Continue with **“Only those still inside 30 days.”** The result narrows to **19**. Other supported questions can combine age, hospital unit, medication pickup and barrier types. Everyday wording such as **“Who didn’t come?”** selects recorded missed appointments across all discharges. **“Who completed their follow-up?”** and **“Who did not collect their medication?”** use the appointment and medication records directly. A patient name or ID can open an individual record. These questions do not silently require diabetes, an open gap or a documented barrier unless you ask for those conditions.
 4. Open a patient's evidence and switch between **Today** and **At discharge**. The earlier view hides outcomes and notes that were not yet available. Return to Today to prepare a task.
 5. Choose **Prepare care-team task**, read the proposed action and evidence, and approve it in **Review queue**. Approved work can be marked completed. Reloading preserves the task in this browser's server session.
 6. If the services are configured, prepare a **Gemini care brief** to order the patient's documented next steps. An approved or completed task also offers **Listen to this approved brief**, with an exact-text preview before ElevenLabs audio generation.
@@ -193,7 +193,7 @@ node scripts/verify-worker.js
 | `node scripts/verify-worker.js` | The compiled Worker, actual migrations and SQLite-backed D1 adapter: queries, task persistence, allowed assets and visitor isolation.                                  |
 | `npm run verify:pilot`          | Regenerates the preserved guided-story evaluation report. It does not measure the active reader; active-reader measurements are asserted by its tests.                 |
 
-The October 10 release audit passed **195 automated tests** and the production bundle checks. Separate bounded requests verified live OpenAI investigations, Gemini ordering and playable ElevenLabs MP3 output. Desktop, mobile and keyboard flows were also checked. [The release checklist](docs/RELEASE_CHECKLIST.md) records the scope, corrections and remaining limitations.
+The October 11 question-handling update passed **198 automated tests** and the production bundle checks. Separate bounded requests verified live OpenAI investigations, Gemini ordering and playable ElevenLabs MP3 output. Desktop, mobile and keyboard flows were also checked. [The release checklist](docs/RELEASE_CHECKLIST.md) records the scope, corrections and remaining limitations.
 
 Model failure-path tests use mocked HTTP responses. Passing them does not prove that a newly supplied key has account access, quota or permission to use a selected model. Live service checks remain necessary after changing accounts or configuration.
 

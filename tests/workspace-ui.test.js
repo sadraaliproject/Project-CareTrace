@@ -570,3 +570,25 @@ test("a delayed investigation patient fetch cannot overwrite a newer patient and
   assert.equal(h.app.state.asOf, "2026-09-24");
   assert.equal(h.app.state.result.result.count, 26);
 });
+
+test("unsupported rules questions stay editable and can retry with the configured AI", async () => {
+  const h = harness();
+  h.app.state.status = { aiConfigured: true };
+  const run = h.app.investigate("an unfamiliar question", "rules");
+  h.replyInvestigation(0, {
+    ok: false,
+    mode: "rules",
+    error: "UNSUPPORTED_QUESTION",
+    message: "Please clarify",
+    result: null,
+  });
+  await settle();
+  h.reply(1, { runs: [] });
+  await run;
+  assert.equal(h.app.state.question, "an unfamiliar question");
+  const html = h.elements.get("#app").innerHTML;
+  assert.match(html, /Try this question with AI/);
+  assert.match(html, /AI configured · next question/);
+  assert.match(html, /Let’s clarify the question/);
+  assert.doesNotMatch(html, /Use rules for this question/);
+});

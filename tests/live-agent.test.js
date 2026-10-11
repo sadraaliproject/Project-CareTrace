@@ -186,8 +186,6 @@ test("unsupported completed-care and negated numeric filters never become opposi
     "patients with no follow-up gap",
     "patients without an open follow-up gap",
     "patients without missed follow-up",
-    "patients with a completed follow-up visit",
-    "diabetes admissions who attended their follow-up",
     "patients with transportation barriers but not insulin pickup problems",
     "only those not over 65",
     "Find patients who did not return to ED",
@@ -197,8 +195,6 @@ test("unsupported completed-care and negated numeric filters never become opposi
     "Find patients who can afford insulin",
     "Find patients with no need for transportation",
     "Find patients who have reliable transportation",
-    "transportation barriers with insulin picked up",
-    "transportation barriers for patients who picked up their new insulin",
   ]) {
     const value = await runLiveAgent({ question, graph });
     assert.equal(value.ok, false, question);
@@ -441,9 +437,9 @@ test("the actual workspace questions, unit ranking and inside-30 follow-up execu
   assert.equal(explicit.ok, true);
   assert.equal(explicit.patientId, "P0001");
   const outside = await runLiveAgent({ question: "show P1000", graph });
-  assert.equal(outside.ok, false);
-  assert.equal(outside.patientId, null);
-  assert.equal(outside.error, "PATIENT_OUTSIDE_COHORT");
+  assert.equal(outside.ok, true);
+  assert.equal(outside.patientId, "P1000");
+  assert.equal(outside.result.count, 1);
 });
 
 test("a model-selected what-if is isolated and the final count still comes from the observed query", async () => {
@@ -648,4 +644,55 @@ test("an empty cohort is a valid exact answer and repeated calls hit a bounded s
   );
   assert.equal(repeated.ok, false);
   assert.match(repeated.answer, /model-turn limit/);
+});
+
+test("ordinary missed-visit wording selects actual appointments without hidden barriers", async () => {
+  const all = graph.query({
+    diabetesAdmissionOnly: false,
+    gapOnly: false,
+    barrierPresence: "any",
+  });
+  const expected = all.ids.filter((id) =>
+    graph.getPatient(id).appointments.some((a) => a.status === "no_show"),
+  );
+  for (const question of [
+    "who didnt come?",
+    "Who didn't come?",
+    "who did not show up?",
+    "who missed an appointment?",
+  ]) {
+    const result = await runLiveAgent({ question, graph });
+    assert.equal(result.ok, true, question);
+    assert.equal(result.result.count, expected.length, question);
+    assert.equal(result.result.filters.appointmentStatus, "missed");
+    assert.equal(result.result.filters.barrierPresence, "any");
+    assert.match(result.answer, /no show/);
+  }
+});
+test("completed appointments and medication pickup remain separate from missed-care rules", async () => {
+  for (const [question, key, value] of [
+    [
+      "patients with a completed follow-up visit",
+      "appointmentStatus",
+      "completed",
+    ],
+    ["who collected their medication?", "medicationPickup", "collected"],
+    [
+      "who did not collect their medication?",
+      "medicationPickup",
+      "uncollected",
+    ],
+  ]) {
+    const result = await runLiveAgent({ question, graph });
+    assert.equal(result.ok, true, question);
+    assert.equal(result.result.filters[key], value);
+    assert.equal(result.result.filters.gapOnly, false);
+    const expected = graph.query({
+      diabetesAdmissionOnly: false,
+      gapOnly: false,
+      barrierPresence: "any",
+      [key]: value,
+    });
+    assert.equal(result.result.count, expected.count);
+  }
 });

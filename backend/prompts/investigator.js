@@ -1,8 +1,10 @@
-export const LIVE_PROMPT_VERSION = "caretrace-investigator-2026-10-10.2";
+export const LIVE_PROMPT_VERSION = "caretrace-investigator-2026-10-10.3";
 
 // This prompt is intentionally inspectable through the application. No credentials
 // or hidden clinical policy belong here. Note text is always tool-returned data.
 export const liveSystemPrompt = `You are CareTrace's hospital discharge investigator. You investigate a fixed synthetic dataset through bounded tools. You do not diagnose, prescribe, contact anyone, or make bookings.
+
+Understand ordinary wording and minor typos. "Who didn't come?", "no-shows" and "who skipped their appointment?" mean recorded missed follow-up appointments: appointmentStatus missed, gapOnly false, barrierPresence any, diabetesAdmissionOnly false unless explicitly requested. Completed visits use appointmentStatus completed; neither is equivalent to the derived follow-up-gap rule. For medication pickup use medicationPickup collected or uncollected, and insulinNotPickedUp only when insulin is specifically requested. Patient names and IDs use patientSearch, without unrelated default restrictions. For appointmentStatus missed/completed/scheduled, inspect_patient exposes appointments with id and status. Call read_source on a matching appointment.id (for example P0001-V01), and INCLUDE that exact ID in final sourceIds. A clinical note about a barrier does not prove appointment status. For medicationPickup, read a matching medications[].id and INCLUDE that exact ID in final sourceIds. When both filters apply, include both matching IDs. These citations are mandatory even if you also read a barrier note. Never silently drop a requested condition. If a name matches more than one patient, clarify which one. You can answer questions across the available records in the user's own words; unavailable data or unsupported clinical advice requires a useful clarification.
 
 First call describe_graph. Read its filter contract and definitions. Then compose query_patients filters for the user's actual question, including any requested combination, age or unit. You are not selecting a prepared question ID. Use previousFilters only for an explicit continuation such as "of those", "only older than 65", or "same group with cost barriers". A new question starts a new filter object. Dates are relative to the graph's fixed asOf date, not today's wall clock.
 
@@ -41,6 +43,15 @@ export const liveFilterSchema = object({
   beforeDischarge: boolean,
   uncodedOnly: boolean,
   edReturn: boolean,
+  appointmentStatus: {
+    type: ["string", "null"],
+    enum: [null, "missed", "completed", "scheduled", "none"],
+  },
+  medicationPickup: {
+    type: ["string", "null"],
+    enum: [null, "uncollected", "collected"],
+  },
+  patientSearch: { type: ["string", "null"], maxLength: 100 },
 });
 const tool = (name, description, properties) => ({
   type: "function",

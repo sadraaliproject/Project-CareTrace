@@ -56,8 +56,44 @@ export function parseRulesQuestion(
   question,
   previousFilters = null,
   units = [],
+  patients = [],
 ) {
-  const text = question.toLowerCase().replace(/[’]/g, "'").trim();
+  const text = question
+    .toLowerCase()
+    .replace(/[’]/g, "'")
+    .replace(/\b(?:didnt|didn't)\b/g, "did not")
+    .replace(/\b(?:hasnt|hasn't)\b/g, "has not")
+    .replace(/\b(?:havent|haven't)\b/g, "have not")
+    .replace(/\bappts?\b/g, "appointment")
+    .trim();
+  const missedVisit =
+    /\b(?:did not|never|has not|have not)\s+(?:come|show(?:ed)?\s*up|turn(?:ed)?\s*up|attend)\b|\b(?:missed|skipped)\s*(?:their\s+|the\s+|an?\s+)?(?:appointments?|visits?|follow[ -]?up)\b|\b(?:no[ -]?shows?|noshow)\b/.test(
+      text,
+    );
+  const completedVisit =
+    !missedVisit &&
+    /\b(?:completed|attended)\s+(?:their\s+|the\s+|a\s+)?(?:follow[ -]?up|appointments?|visits?)\b|\bwho (?:came|showed up)\b|\b(?:came|showed up) (?:to )?(?:their |the )?(?:appointments?|visits?|follow[ -]?up)\b/.test(
+      text,
+    );
+  const pickupSubject =
+    /\b(?:medications?|meds|medicines?|prescriptions?|insulin)\b/.test(text);
+  const uncollected =
+    pickupSubject &&
+    /\b(?:not|never)\s+(?:been\s+)?(?:picked up|collected|collect|pick up|got|get)\b|\b(?:uncollected|no pickup|did not get)\b/.test(
+      text,
+    );
+  const collected =
+    pickupSubject &&
+    !uncollected &&
+    /\b(?:picked up|collected|collect|pick up)\b/.test(text);
+  const scheduledVisit =
+    /\b(?:scheduled|upcoming|booked)\s+(?:follow[ -]?up\s+)?(?:appointments?|visits?)\b/.test(
+      text,
+    );
+  const noAppointment =
+    /\b(?:no|without)\s+(?:a\s+|any\s+)?(?:follow[ -]?up\s+)?appointments?\b/.test(
+      text,
+    );
   const requestedSimulation = simulationRequest(question);
   if (
     /\b(?:without|no|not|non)[ -]+(?:a diagnosis of )?diabet\w*\b|\b(?:don't|doesn't|didn't|do not|does not|did not) have diabet\w*\b/.test(
@@ -70,7 +106,7 @@ export function parseRulesQuestion(
         "Excluding diabetes-related admissions is not a supported filter. You can include all admissions or select only diabetes-related admissions.",
     };
   if (
-    /\b(?:no|without|not)\s+(?:an?\s+|any\s+|open\s+|current\s+|documented\s+)*(?:follow[ -]?up\s+)?gaps?\b|\b(?:no|without)\s+(?:a\s+)?missed\s+(?:follow[ -]?up|visits?|appointments?)\b|\b(?:attended|completed)\s+(?:their\s+|the\s+|a\s+)?follow[ -]?up\b/.test(
+    /\b(?:no|without|not)\s+(?:an?\s+|any\s+|open\s+|current\s+|documented\s+)*(?:follow[ -]?up\s+)?gaps?\b|\b(?:no|without)\s+(?:a\s+)?missed\s+(?:follow[ -]?up|visits?|appointments?)\b/.test(
       text,
     )
   )
@@ -100,12 +136,6 @@ export function parseRulesQuestion(
         "Selecting patients without medication pickup problems is not a supported filter. You can select new insulin that was not picked up, or omit that filter.",
     };
   if (
-    (/\b(?:insulin|medication|prescription)\s+(?:was\s+|has been\s+)?(?:picked up|collected)\b|\b(?:picked up|collected)\s+(?:(?:their|the|new)\s+)*(?:insulin|medication|prescription)\b/.test(
-      text,
-    ) &&
-      !/\b(?:not|never|didn't|hasn't|wasn't|did not|has not|was not|not yet)\s+(?:been\s+)?(?:picked up|collected)\b/.test(
-        text,
-      )) ||
     /\b(?:no|without|not|never|didn't|hasn't|did not|has not)\s+(?:an?\s+|any\s+)?(?:return\w*\s+(?:to\s+)?(?:the\s+)?(?:ed|er|emergency)|(?:ed|er|emergency)\s+(?:return\w*|visits?))\b/.test(
       text,
     ) ||
@@ -184,6 +214,54 @@ export function parseRulesQuestion(
         "A temporary resolution applies to one patient at a time. Choose a patient ID and one current barrier.",
     };
   let recognized = continuation;
+  const knownPeople = patients.filter((patient) => {
+    const names = patient.name.toLowerCase().split(/\s+/);
+    return names.some(
+      (name) => name.length >= 3 && text.split(/[^a-z]+/).includes(name),
+    );
+  });
+  const fullMatches = knownPeople.filter((patient) =>
+    text.includes(patient.name.toLowerCase()),
+  );
+  const people = fullMatches.length ? fullMatches : knownPeople;
+  if (people.length > 1 && !/\bP\d{4}\b/i.test(question))
+    return {
+      ok: false,
+      error:
+        "Which patient do you mean? " +
+        people
+          .slice(0, 4)
+          .map((patient) => patient.name + " (" + patient.id + ")")
+          .join(", ") +
+        ". Use the full name or patient ID.",
+    };
+  const namedPatient = people.length === 1 ? people[0] : null;
+  if (
+    missedVisit ||
+    completedVisit ||
+    scheduledVisit ||
+    noAppointment ||
+    uncollected ||
+    collected ||
+    namedPatient
+  ) {
+    recognized = true;
+    if (!continuation && !requestedSimulation.intent) {
+      filters.diabetesAdmissionOnly = /\b(?:diabet\w*|dka)\b/.test(text);
+      filters.gapOnly = /\b(?:open\s+)?(?:follow[ -]?up\s+)?gaps?\b/.test(text);
+      filters.barrierPresence = /\b(?:barriers?|obstacles?)\b/.test(text)
+        ? "present"
+        : "any";
+    }
+    if (missedVisit || completedVisit)
+      filters.appointmentStatus = missedVisit ? "missed" : "completed";
+    if (scheduledVisit) filters.appointmentStatus = "scheduled";
+    if (noAppointment) filters.appointmentStatus = "none";
+    if (uncollected || collected)
+      filters.medicationPickup = uncollected ? "uncollected" : "collected";
+    if (namedPatient && !requestedSimulation.intent)
+      filters.patientSearch = namedPatient.id;
+  }
   const requested = namedBarriers(text);
   if (requestedSimulation.intent && requested.length !== 1)
     return {
@@ -397,13 +475,33 @@ export function parseRulesQuestion(
     )
       filters.gapOnly = false;
   }
-  const patientId = question.match(/\bP\d{4}\b/i)?.[0].toUpperCase() || null;
-  if (patientId) recognized = true;
+  const patientId =
+    question.match(/\bP\d{4}\b/i)?.[0].toUpperCase() ||
+    namedPatient?.id ||
+    null;
+  if (patientId) {
+    recognized = true;
+    if (!requestedSimulation.intent) {
+      filters.patientSearch = patientId;
+      if (
+        !continuation &&
+        !requested.length &&
+        !missedVisit &&
+        !completedVisit &&
+        !uncollected &&
+        !collected
+      ) {
+        filters.diabetesAdmissionOnly = false;
+        filters.gapOnly = false;
+        filters.barrierPresence = "any";
+      }
+    }
+  }
   if (!recognized)
     return {
       ok: false,
       error:
-        "I could not map that question to supported filters. Try: 'Find transport barriers after a diabetes discharge', then 'Only those over 65'.",
+        "I could not answer that from the available records. Ask about missed or completed visits, medication pickup, a patient name or ID, barriers, age, or a hospital unit. For example: 'Who did not come to follow-up?'",
     };
   try {
     filters = validateFilters(filters, units);
@@ -471,6 +569,22 @@ function groundedAnswer(
   let answer = `${result.count} synthetic ${result.count === 1 ? "patient matches" : "patients match"} the requested filters: ${describeFilters(result.filters).join("; ")}.`;
   if (patient) {
     answer += ` ${patient.name} (${patient.id}) is one example.`;
+    if (result.filters.patientSearch)
+      answer += ` Age ${patient.age}; discharged ${patient.admission.dischargeDate} from ${patient.admission.unit}.`;
+    if (
+      result.filters.appointmentStatus ||
+      (result.filters.patientSearch &&
+        /\b(?:visit|appointment|follow[ -]?up)\b/i.test(question))
+    )
+      answer += ` Recorded follow-up: ${patient.appointments.map((row) => `${row.clinic} on ${row.date}: ${row.status.replaceAll("_", " ")}`).join("; ") || "no appointment recorded"}.`;
+    if (
+      result.filters.medicationPickup ||
+      (result.filters.patientSearch &&
+        /\b(?:meds|medications?|medicines?|insulin|prescriptions?)\b/i.test(
+          question,
+        ))
+    )
+      answer += ` Recorded discharge medications: ${patient.medications.map((row) => `${row.name}: ${row.pickedUp ? "pickup recorded" : "no pickup recorded"}`).join("; ") || "none recorded"}.`;
     const types = patient.barriers.map((item) =>
       BARRIERS[item.type].label.toLowerCase(),
     );
@@ -792,6 +906,40 @@ export async function runLiveAgent({
         );
       return sourceCitation(source, selection.patientId, citationBarriers);
     });
+    if (
+      patient &&
+      filters.appointmentStatus &&
+      filters.appointmentStatus !== "none"
+    ) {
+      const statuses = {
+        missed: ["no_show", "no-show"],
+        completed: ["completed", "attended"],
+        scheduled: ["scheduled"],
+      };
+      if (
+        !patient.appointments.some(
+          (row) =>
+            statuses[filters.appointmentStatus].includes(row.status) &&
+            selection.sourceIds.includes(row.id),
+        )
+      )
+        throw new Error(
+          "Read the matching appointment source before completing this answer.",
+        );
+    }
+    if (
+      patient &&
+      filters.medicationPickup &&
+      !patient.medications.some(
+        (row) =>
+          (filters.medicationPickup === "collected"
+            ? row.pickedUp === true
+            : row.pickedUp === false) && selection.sourceIds.includes(row.id),
+      )
+    )
+      throw new Error(
+        "Read the matching medication pickup source before completing this answer.",
+      );
     if (result.count && !citations.length)
       throw new Error("Read a source before completing a nonempty answer.");
     if (
@@ -857,6 +1005,13 @@ export async function runLiveAgent({
         question,
         previousFilters,
         graph.describe().units,
+        graph
+          .query({
+            diabetesAdmissionOnly: false,
+            gapOnly: false,
+            barrierPresence: "any",
+          })
+          .ids.map((id) => graph.getPatient(id)),
       );
       if (!parsed.ok)
         return finish({
@@ -877,6 +1032,25 @@ export async function runLiveAgent({
       if (patientId) {
         await execute("inspect_patient", { patientId });
         const patient = graph.getPatient(patientId);
+        if (filters.appointmentStatus && filters.appointmentStatus !== "none") {
+          const statuses = {
+            missed: ["no_show", "no-show"],
+            completed: ["completed", "attended"],
+            scheduled: ["scheduled"],
+          };
+          const row = patient.appointments.find((row) =>
+            statuses[filters.appointmentStatus].includes(row.status),
+          );
+          if (row) sourceIds.push(row.id);
+        }
+        if (filters.medicationPickup) {
+          const row = patient.medications.find((row) =>
+            filters.medicationPickup === "collected"
+              ? row.pickedUp === true
+              : row.pickedUp === false,
+          );
+          if (row) sourceIds.push(row.id);
+        }
         const matching = patient.barriers.filter(
           (item) =>
             !filters.barriers.length || filters.barriers.includes(item.type),

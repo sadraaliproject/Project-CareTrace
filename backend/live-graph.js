@@ -34,6 +34,9 @@ export const defaultFilters = Object.freeze({
   beforeDischarge: false,
   uncodedOnly: false,
   edReturn: false,
+  appointmentStatus: null,
+  medicationPickup: null,
+  patientSearch: null,
 });
 
 export function validateFilters(input = {}, units = null) {
@@ -43,6 +46,23 @@ export function validateFilters(input = {}, units = null) {
     if (!Object.hasOwn(defaultFilters, key))
       throw new Error(`Unsupported filter: ${key}.`);
   const filters = { ...defaultFilters, ...input };
+  if (
+    ![null, "missed", "completed", "scheduled", "none"].includes(
+      filters.appointmentStatus,
+    )
+  )
+    throw new Error(
+      "Choose a recorded appointment status: missed, completed, scheduled or none.",
+    );
+  if (![null, "uncollected", "collected"].includes(filters.medicationPickup))
+    throw new Error("Choose collected or uncollected medication.");
+  if (
+    filters.patientSearch !== null &&
+    (typeof filters.patientSearch !== "string" ||
+      !filters.patientSearch.trim() ||
+      filters.patientSearch.length > 100)
+  )
+    throw new Error("Use a patient name or ID up to 100 characters.");
   for (const [key, value] of Object.entries(defaultFilters))
     if (typeof value === "boolean" && typeof filters[key] !== "boolean")
       throw new Error(`${key} must be true or false.`);
@@ -111,6 +131,20 @@ export function describeFilters(filters) {
   if (filters.ageMin !== null) parts.push(`age ${filters.ageMin} or older`);
   if (filters.ageMax !== null) parts.push(`age ${filters.ageMax} or younger`);
   if (filters.unit) parts.push(`discharged from ${filters.unit}`);
+  if (filters.patientSearch)
+    parts.push(`patient name or ID matching ${filters.patientSearch}`);
+  if (filters.appointmentStatus)
+    parts.push(
+      filters.appointmentStatus === "none"
+        ? "no recorded follow-up appointment"
+        : `${filters.appointmentStatus} follow-up appointment`,
+    );
+  if (filters.medicationPickup)
+    parts.push(
+      filters.medicationPickup === "uncollected"
+        ? "a discharge medication with no recorded pickup"
+        : "a discharge medication with a recorded pickup",
+    );
   if (filters.within30) parts.push("fewer than 30 days since discharge");
   if (filters.insulinNotPickedUp) parts.push("new insulin not picked up");
   if (filters.likelyToReturn)
@@ -270,6 +304,44 @@ export function createLiveGraph(inputPatients = rawPatients) {
         )
           return false;
         if (filters.gapOnly && !follow(patient, "HAS_GAP").length) return false;
+        if (
+          filters.patientSearch &&
+          !`${patient.id} ${patient.name}`
+            .toLowerCase()
+            .includes(filters.patientSearch.toLowerCase().trim())
+        )
+          return false;
+        if (filters.appointmentStatus) {
+          const appointments = follow(patient, "HAS_APPOINTMENT")
+            .map((edge) => localNodes.get(edge.target)?.properties)
+            .filter(Boolean);
+          const statuses = {
+            missed: ["no_show", "no-show"],
+            completed: ["completed", "attended"],
+            scheduled: ["scheduled"],
+          };
+          if (
+            filters.appointmentStatus === "none"
+              ? appointments.length > 0
+              : !appointments.some((row) =>
+                  statuses[filters.appointmentStatus].includes(row.status),
+                )
+          )
+            return false;
+        }
+        if (
+          filters.medicationPickup &&
+          !follow(patient, "PRESCRIBED_AT_DISCHARGE").some((edge) => {
+            const row = localNodes.get(edge.target)?.properties;
+            return (
+              row &&
+              (filters.medicationPickup === "collected"
+                ? row.pickedUp === true
+                : row.pickedUp === false)
+            );
+          })
+        )
+          return false;
         if (filters.ageMin !== null && patient.age < filters.ageMin)
           return false;
         if (filters.ageMax !== null && patient.age > filters.ageMax)
@@ -514,6 +586,10 @@ export function createLiveGraph(inputPatients = rawPatients) {
         barrierTypes,
         definitions: {
           gap: ontology.followUpGapRule,
+          appointmentStatus:
+            "Recorded follow-up appointment status; missed means no_show/no-show, completed means completed/attended. This is separate from the derived follow-up-gap rule.",
+          medicationPickup:
+            "At least one discharge medication with or without a recorded pickup. Uncollected does not imply the pickup deadline has passed.",
           likelyToReturn: ontology.likelyToReturnRule,
           beforeDischarge:
             "A currently active barrier has a clinical note written before discharge with no action recorded in that note.",
